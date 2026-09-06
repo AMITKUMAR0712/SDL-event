@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import react from "@vitejs/plugin-react";
 import { loadEnv } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -13,8 +15,18 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [tsconfigPaths(), react()],
+    resolve: {
+      alias: {
+        // The real package throws unconditionally unless bundled by
+        // something that understands Next's "react-server" export
+        // condition (Vite/Vitest doesn't) — see tests/mocks/server-only.ts.
+        "server-only": path.resolve(__dirname, "tests/mocks/server-only.ts"),
+      },
+    },
     test: {
       environment: "jsdom",
+      // Integration tests hit real Node/DB APIs, not the DOM.
+      environmentMatchGlobs: [["tests/integration/**", "node"]],
       include: ["tests/unit/**/*.test.{ts,tsx}", "tests/integration/**/*.test.{ts,tsx}"],
       setupFiles: ["./tests/unit/setup.ts"],
       coverage: {

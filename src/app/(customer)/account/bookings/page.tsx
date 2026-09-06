@@ -29,6 +29,14 @@ export default async function MyBookingsPage() {
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <BookingActions bookingId={b.id} status={b.status} actorRole="CUSTOMER" />
               {b.status === "PENDING" && <PayNowButton bookingId={b.id} />}
+              {b.status === "COMPLETED" && (
+                <a
+                  href={`/api/invoices/${b.id}`}
+                  className="text-sm font-medium underline underline-offset-2"
+                >
+                  Download invoice
+                </a>
+              )}
             </div>
             {b.status === "COMPLETED" && !b.review && <ReviewForm bookingId={b.id} />}
           </div>

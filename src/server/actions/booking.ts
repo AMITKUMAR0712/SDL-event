@@ -2,6 +2,7 @@
 
 import { requireOwnership, requireRole } from "@/lib/authz";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import {
   createBeautyBookingSchema,
   createVenueEnquirySchema,
@@ -36,6 +37,11 @@ export async function createBeautyBookingAction(
     return { ok: false, error: "Sign in as a customer to book." };
   }
 
+  const limit = await rateLimit(`booking-create:${session.user.id}`, 10, 60 * 60);
+  if (!limit.allowed) {
+    return { ok: false, error: "Too many booking attempts. Try again later." };
+  }
+
   const parsed = createBeautyBookingSchema.safeParse(input);
   if (!parsed.success)
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -63,6 +69,11 @@ export async function createVenueEnquiryAction(
     session = await requireRole(["CUSTOMER"]);
   } catch {
     return { ok: false, error: "Sign in as a customer to send an enquiry." };
+  }
+
+  const limit = await rateLimit(`booking-create:${session.user.id}`, 10, 60 * 60);
+  if (!limit.allowed) {
+    return { ok: false, error: "Too many booking attempts. Try again later." };
   }
 
   const parsed = createVenueEnquirySchema.safeParse(input);

@@ -440,3 +440,86 @@ to, allowed actors`), unit tested — including that a customer cannot confirm t
 4. `view-source:` a `/vendor/[slug]` page — confirm a `<title>`, canonical `<link>`, and OpenGraph
    tags are now present.
 5. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.
+
+## Phase 8 — Notifications, GST invoices, hardening, and launch prep
+
+- **New schema, real GST invoices (previously deferred from Phase 5):** an `Invoice` model
+  (immutable once issued — invoice fields are a frozen snapshot, per Indian GST law) plus an
+  `InvoiceSequence` counter table for gap-free-per-year numbering (`INV-2026-000123`), incremented
+  atomically inside the same transaction that creates the invoice. `BanquetProfile` gained a
+  `gstin` field to match `VendorProfile`'s. `ensureInvoiceForBooking()` runs on a booking's
+  `COMPLETED` transition (alongside the existing wallet credit), and is idempotent. PDFs are
+  rendered on demand from the stored invoice row (never re-derived from the booking, so a PDF
+  can't drift from what was actually issued) via `pdf-lib`, downloadable from
+  `/api/invoices/[bookingId]` and linked from `/account/bookings`. **Known simplification,
+  documented rather than hidden:** tax is always split CGST+SGST (intra-state) — the booking flow
+  books a vendor/venue local to the customer's own city, which covers the overwhelming majority of
+  real bookings, but doesn't capture the customer's billing state, which a true inter-state IGST
+  path would need. Also found and fixed mid-implementation: pdf-lib's standard fonts use
+  WinAnsiEncoding, which predates the ₹ sign (added to Unicode in 2010) and throws on it — the PDF
+  renderer uses "Rs." instead, the standard workaround for base-14-font PDFs.
+- **Notifications**, previously just a DB model with no service: `src/server/services/notification.ts`
+  creates a `Notification` row and attempts delivery immediately (EMAIL via the existing Resend
+  service; IN_APP is delivered by the row's own existence). Wired into real triggers: a vendor/
+  banquet owner is emailed when a booking comes in, and when their KYC is approved/rejected.
+  `POST /api/cron/retry-notifications` (bearer-token authenticated via `CRON_SECRET`) sweeps
+  anything left `PENDING`/`FAILED`/`RETRYING` — meant to be hit by an external scheduler.
+  **Deliberately not implemented:** SMS/WhatsApp notification delivery — India's TRAI rules
+  require a DLT-registered template for any SMS, and neither channel has one configured; those
+  notifications are created and marked `FAILED` with a clear reason rather than silently dropped
+  or faked as sent.
+- **Razorpay Standard Checkout completed end-to-end** (the backend order-creation and signature-
+  verification were already built in Phase 5; only the actual browser checkout modal was
+  missing). `PayNowButton` now loads `checkout.razorpay.com/v1/checkout.js`, opens the real
+  Razorpay modal with the order from the existing `initiateBookingPaymentAction`, and on success
+  calls a new `verifyBookingPaymentAction`. Payment capture logic (mark `Payment` `CAPTURED`,
+  transition the booking to `CONFIRMED`) was extracted out of the webhook handler into a shared,
+  idempotent `capturePayment()` — the client-verify call is an optimistic fast path so the
+  customer doesn't wait on webhook delivery lag, but the webhook remains the authoritative path
+  and reaches the same state even if the client call never happens. Verified against the real
+  Razorpay test-mode API (`https://api.razorpay.com/v1/orders`) with the project's test
+  credentials, not just mocked.
+- **Security headers** (`next.config.ts`): CSP, HSTS, X-Frame-Options, X-Content-Type-Options,
+  Referrer-Policy, Permissions-Policy on every route. **Known limitation, documented rather than
+  silently shipped:** the CSP's `script-src`/`style-src` include `'unsafe-inline'` rather than
+  being nonce-strict — a nonce-based CSP needs to be injected from `src/proxy.ts`, which is
+  currently Auth.js's own proxy scoped to `/dashboard` and `/account` only; widening its matcher
+  to every route to also carry CSP nonces is a real improvement left for a follow-up rather than
+  risking the working auth gate under this phase's time budget.
+- **Rate-limit audit**: only `src/server/actions/auth.ts` had rate limiting before this phase.
+  Added it to booking creation and payment initiation (`booking-create`/`payment-initiate`, keyed
+  per user) — the two actions with the clearest spam/abuse impact (tying up vendor slots, spamming
+  vendor inboxes via the new booking-notification email, hammering the Razorpay Orders API).
+  Admin and onboarding actions are already role-gated and lower-risk; left as-is.
+- **Sentry** (`@sentry/nextjs`): `src/instrumentation.ts` (server/edge) and
+  `src/instrumentation-client.ts` (browser), both no-ops unless `SENTRY_DSN`/
+  `NEXT_PUBLIC_SENTRY_DSN` are set — same "real but silent when unconfigured" pattern as every
+  other optional integration in this codebase.
+- **Legal pages**: `/terms`, `/privacy`, `/refund-policy`, `/contact`, linked from a new sitewide
+  footer. Real, structured content (DPDP Act 2023 rights, the actual cancellation windows this app
+  enforces) — not lorem ipsum — but written by an engineer, not reviewed by a lawyer; see
+  `docs/LAUNCH_CHECKLIST.md`.
+- `docs/RUNBOOK.md` and `docs/LAUNCH_CHECKLIST.md`: real operational procedures (deploys, MySQL
+  backup script + restore-testing guidance, a k6 load-test starting script) rather than claiming
+  ops work was performed against infrastructure this sandbox doesn't have — there is no staging
+  deployment here to load-test against or a live Sentry/Razorpay-live account to verify.
+- Fixed a second real test-infra gap found this phase (after Phase 7's `.env`-loading one):
+  `server-only` throws unconditionally under Vitest (it relies on a webpack-only "react-server"
+  export condition Vite doesn't understand) — any test importing `server/services/payment.ts`
+  would fail regardless of which function it called. `vitest.config.ts` now aliases it to a no-op
+  for tests, and integration tests run under a `node` environment instead of `jsdom` (they hit
+  real Node/DB APIs, not the DOM).
+
+### Manual smoke test
+
+1. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green (63 tests).
+2. `curl -I localhost:3000/` — confirm `Content-Security-Policy`, `Strict-Transport-Security`,
+   `X-Frame-Options` headers are present.
+3. As a customer with a `PENDING` booking, click "Pay now" — confirm the real Razorpay checkout
+   modal opens (verified via a live test-mode order against `api.razorpay.com`, not mocked).
+4. Complete a booking to `COMPLETED`, then download its invoice from `/account/bookings` — confirm
+   the PDF opens and its numbers (taxable value + CGST + SGST) sum to the total.
+5. Approve a vendor's KYC as admin — confirm they receive an "Your listing is live" email (logged,
+   not actually delivered, unless `RESEND_API_KEY` is configured).
+6. Visit `/terms`, `/privacy`, `/refund-policy`, `/contact` — confirm the footer links to all four
+   from any page.

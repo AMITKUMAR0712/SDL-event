@@ -484,6 +484,7 @@ model BanquetProfile {
   venueName                String
   slug                     String    @unique
   about                    String?   @db.Text
+  gstin                    String?
   venueType                String?
   totalHalls               Int       @default(0)
   parkingCapacity          Int?
@@ -674,10 +675,42 @@ model Booking {
   walletTransactions WalletTransaction[]
   couponRedemptions  CouponRedemption[]
   review             Review?
+  invoice            Invoice?
 
   @@index([ownerType, ownerId])
   @@index([customerId])
   @@index([status, scheduledAt])
+}
+
+/// A GST document generated once a booking completes, and never edited afterward —
+/// amounts are a frozen snapshot of the booking at that moment, exactly as Indian
+/// GST law requires an issued invoice to be immutable.
+model Invoice {
+  id                 String   @id @default(cuid())
+  bookingId          String   @unique
+  invoiceNumber      String   @unique
+  issuedAt           DateTime @default(now())
+  sellerName         String
+  sellerGstin        String?
+  sellerState        String
+  buyerName          String
+  taxableAmountPaise Int
+  cgstPaise          Int      @default(0)
+  sgstPaise          Int      @default(0)
+  igstPaise          Int      @default(0)
+  totalPaise         Int
+  createdAt          DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+}
+
+/// Backs sequential, gap-free-per-year invoice numbering (INV-<year>-<counter>).
+/// A dedicated row (rather than incrementing inside `Invoice` itself) keeps the
+/// counter atomic under MySQL row locking even though the invoice count and the
+/// counter value happen to be the same thing here.
+model InvoiceSequence {
+  year    Int @id
+  counter Int @default(0)
 }
 
 model BookingItem {

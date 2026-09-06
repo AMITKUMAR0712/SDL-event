@@ -48,3 +48,6 @@ next-env.d.ts
 # prisma
 /prisma/dev.db
 
+# Claude Code runtime state (not project source)
+/.claude/
+

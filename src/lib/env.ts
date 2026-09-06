@@ -61,6 +61,11 @@ const envSchema = z.object({
 
   // Observability
   SENTRY_DSN: z.string().optional().default(""),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().optional().default(""),
+
+  // Scheduled jobs (retry notifications, etc.) — the shared secret an external
+  // scheduler (Vercel Cron, GitHub Actions) must send to trigger one.
+  CRON_SECRET: z.string().optional().default(""),
 });
 
 function loadEnv() {

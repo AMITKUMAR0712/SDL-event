@@ -3,9 +3,15 @@
 import { requireOwnership, requireRole } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
+import { rateLimit } from "@/lib/rate-limit";
 import type { ActionResult } from "@/server/actions/auth";
 import { findBookingById } from "@/server/repositories/booking";
-import { initiateBookingPayment, initiateSubscriptionPayment } from "@/server/services/payment";
+import {
+  capturePayment,
+  initiateBookingPayment,
+  initiateSubscriptionPayment,
+} from "@/server/services/payment";
+import { verifyCheckoutSignature } from "@/server/services/razorpay";
 
 export type CheckoutOrder = { orderId: string; amountPaise: number; keyId: string };
 
@@ -14,7 +20,12 @@ export async function initiateBookingPaymentAction(
 ): Promise<ActionResult<CheckoutOrder>> {
   const booking = await findBookingById(bookingId);
   if (!booking) return { ok: false, error: "Booking not found." };
-  await requireOwnership(booking.customerId);
+  const session = await requireOwnership(booking.customerId);
+
+  const limit = await rateLimit(`payment-initiate:${session.user.id}`, 20, 60 * 60);
+  if (!limit.allowed) {
+    return { ok: false, error: "Too many payment attempts. Try again later." };
+  }
 
   if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
     return { ok: false, error: "Payments aren't configured on this environment yet." };
@@ -34,6 +45,42 @@ export async function initiateBookingPaymentAction(
   };
 }
 
+/**
+ * Called from the browser right after Razorpay Checkout's `handler` fires —
+ * an optimistic fast path so the customer sees "Confirmed" immediately
+ * instead of waiting on webhook delivery lag. The webhook
+ * (`/api/webhooks/razorpay`) remains the authoritative path and will reach
+ * the same state even if this call never happens (network drop, tab closed
+ * mid-redirect); `capturePayment` is idempotent, so whichever arrives first
+ * does the work.
+ */
+export async function verifyBookingPaymentAction(
+  bookingId: string,
+  razorpayOrderId: string,
+  razorpayPaymentId: string,
+  razorpaySignature: string,
+): Promise<ActionResult> {
+  const booking = await findBookingById(bookingId);
+  if (!booking) return { ok: false, error: "Booking not found." };
+  await requireOwnership(booking.customerId);
+
+  const payment = await db.payment.findFirst({
+    where: { bookingId, providerOrderId: razorpayOrderId },
+  });
+  if (!payment) return { ok: false, error: "No matching payment order for this booking." };
+
+  const valid = verifyCheckoutSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+  if (!valid) return { ok: false, error: "Payment verification failed." };
+
+  await capturePayment(razorpayOrderId, razorpayPaymentId, {
+    source: "client-verify",
+    razorpayOrderId,
+    razorpayPaymentId,
+  });
+
+  return { ok: true, data: undefined };
+}
+
 export async function initiateSubscriptionPaymentAction(
   subscriptionId: string,
 ): Promise<ActionResult<CheckoutOrder>> {
@@ -42,6 +89,11 @@ export async function initiateSubscriptionPaymentAction(
   const subscription = await db.subscription.findUnique({ where: { id: subscriptionId } });
   if (!subscription || subscription.userId !== session.user.id) {
     return { ok: false, error: "Subscription not found." };
+  }
+
+  const limit = await rateLimit(`payment-initiate:${session.user.id}`, 20, 60 * 60);
+  if (!limit.allowed) {
+    return { ok: false, error: "Too many payment attempts. Try again later." };
   }
 
   if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {

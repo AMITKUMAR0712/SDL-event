@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { transitionBooking } from "@/server/services/booking";
+import { capturePayment } from "@/server/services/payment";
 import { verifyWebhookSignature } from "@/server/services/razorpay";
 
 export const runtime = "nodejs";
@@ -58,40 +58,7 @@ export async function POST(req: NextRequest) {
 async function handlePaymentCaptured(body: RazorpayWebhookPayload) {
   const entity = body.payload.payment?.entity;
   if (!entity) return;
-
-  const payment = await db.payment.findFirst({ where: { providerOrderId: entity.order_id } });
-  if (!payment || payment.status === "CAPTURED") return; // already processed — idempotent no-op
-
-  await db.payment.update({
-    where: { id: payment.id },
-    data: { status: "CAPTURED", providerPaymentId: entity.id, rawPayload: body as object },
-  });
-
-  if (payment.bookingId) {
-    await transitionBooking(payment.bookingId, "CONFIRMED", "OWNER");
-  } else if (payment.subscriptionId) {
-    const subscription = await db.subscription.findUnique({
-      where: { id: payment.subscriptionId },
-      include: { plan: true },
-    });
-    if (subscription) {
-      const periodDays =
-        subscription.plan.billingPeriod === "MONTHLY"
-          ? 30
-          : subscription.plan.billingPeriod === "QUARTERLY"
-            ? 90
-            : subscription.plan.billingPeriod === "HALF_YEARLY"
-              ? 182
-              : 365;
-      await db.subscription.update({
-        where: { id: subscription.id },
-        data: {
-          status: "ACTIVE",
-          currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
-        },
-      });
-    }
-  }
+  await capturePayment(entity.order_id, entity.id, body);
 }
 
 async function handlePaymentFailed(body: RazorpayWebhookPayload) {

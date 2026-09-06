@@ -18,6 +18,8 @@ import {
   refundPercentFor,
 } from "@/server/services/booking-status";
 import { redeemCoupon, validateCoupon } from "@/server/services/coupon";
+import { ensureInvoiceForBooking } from "@/server/services/invoice";
+import { notify } from "@/server/services/notification";
 import { generateSlots } from "@/server/services/slots";
 import { creditBookingEarning } from "@/server/services/wallet";
 
@@ -157,6 +159,11 @@ export async function createBeautyBooking(
     });
   }
 
+  await notify(vendor.userId, "EMAIL", "booking.created.owner", {
+    bookingNo: booking.bookingNo,
+    scheduledAt: input.scheduledAt.toISOString(),
+  });
+
   return { ok: true, bookingId: booking.id, bookingNo: booking.bookingNo };
 }
 
@@ -198,6 +205,11 @@ export async function createVenueEnquiry(
     notes: `Guests: ${input.guestCount}, plate: ${input.plateType}${input.hallId ? `, hall: ${input.hallId}` : ""}`,
   });
 
+  await notify(banquet.userId, "EMAIL", "booking.created.owner", {
+    bookingNo: booking.bookingNo,
+    scheduledAt: input.scheduledAt.toISOString(),
+  });
+
   return { ok: true, bookingId: booking.id, bookingNo: booking.bookingNo };
 }
 
@@ -233,6 +245,7 @@ export async function transitionBooking(
 
   if (to === "COMPLETED") {
     await creditBookingEarning(booking);
+    await ensureInvoiceForBooking(bookingId);
   }
 
   return { ok: true };

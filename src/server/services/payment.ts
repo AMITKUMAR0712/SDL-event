@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import { db } from "@/lib/db";
 import { findBookingById } from "@/server/repositories/booking";
+import { transitionBooking } from "@/server/services/booking";
 import { createRazorpayOrder } from "@/server/services/razorpay";
 
 export type InitiatePaymentResult =
@@ -62,4 +63,52 @@ export async function initiateSubscriptionPayment(
   });
 
   return { ok: true, orderId: order.id, amountPaise: subscription.priceSnapshotPaise, keyId };
+}
+
+/**
+ * Applies a captured payment's effects — shared by the Razorpay webhook (the
+ * authoritative path, always processed eventually) and the client-side
+ * post-checkout verification call (an optimistic fast path so the customer
+ * isn't stuck waiting on webhook delivery lag). Idempotent by construction:
+ * whichever caller arrives first does the work, the other is a no-op because
+ * `payment.status` is already `CAPTURED`.
+ */
+export async function capturePayment(
+  providerOrderId: string,
+  providerPaymentId: string,
+  rawPayload: unknown,
+): Promise<void> {
+  const payment = await db.payment.findFirst({ where: { providerOrderId } });
+  if (!payment || payment.status === "CAPTURED") return;
+
+  await db.payment.update({
+    where: { id: payment.id },
+    data: { status: "CAPTURED", providerPaymentId, rawPayload: rawPayload as object },
+  });
+
+  if (payment.bookingId) {
+    await transitionBooking(payment.bookingId, "CONFIRMED", "OWNER");
+  } else if (payment.subscriptionId) {
+    const subscription = await db.subscription.findUnique({
+      where: { id: payment.subscriptionId },
+      include: { plan: true },
+    });
+    if (subscription) {
+      const periodDays =
+        subscription.plan.billingPeriod === "MONTHLY"
+          ? 30
+          : subscription.plan.billingPeriod === "QUARTERLY"
+            ? 90
+            : subscription.plan.billingPeriod === "HALF_YEARLY"
+              ? 182
+              : 365;
+      await db.subscription.update({
+        where: { id: subscription.id },
+        data: {
+          status: "ACTIVE",
+          currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
+  }
 }

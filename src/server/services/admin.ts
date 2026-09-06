@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
+import { notify } from "@/server/services/notification";
 import { notifySearchEnginesOfUpdate } from "@/server/services/search-engine-ping";
 
 type AuditContext = { actorId: string; ip?: string; userAgent?: string };
@@ -35,6 +36,10 @@ export async function approveVendorKyc(vendorId: string, ctx: AuditContext) {
   });
   await logAdminAction(ctx, "vendor.kyc_approve", "VendorProfile", vendorId, before, after);
   notifySearchEnginesOfUpdate([`/vendor/${after.slug}`]).catch(() => {});
+  await notify(after.userId, "EMAIL", "kyc.approved", {
+    name: after.businessName,
+    profileUrl: `/vendor/${after.slug}`,
+  });
   return after;
 }
 
@@ -45,6 +50,7 @@ export async function rejectVendorKyc(vendorId: string, ctx: AuditContext) {
     data: { kycStatus: "REJECTED", isPublished: false },
   });
   await logAdminAction(ctx, "vendor.kyc_reject", "VendorProfile", vendorId, before, after);
+  await notify(after.userId, "EMAIL", "kyc.rejected", { name: after.businessName });
   return after;
 }
 
@@ -56,6 +62,10 @@ export async function approveBanquetKyc(banquetId: string, ctx: AuditContext) {
   });
   await logAdminAction(ctx, "banquet.kyc_approve", "BanquetProfile", banquetId, before, after);
   notifySearchEnginesOfUpdate([`/banquet/${after.slug}`]).catch(() => {});
+  await notify(after.userId, "EMAIL", "kyc.approved", {
+    name: after.venueName,
+    profileUrl: `/banquet/${after.slug}`,
+  });
   return after;
 }
 
@@ -66,6 +76,7 @@ export async function rejectBanquetKyc(banquetId: string, ctx: AuditContext) {
     data: { kycStatus: "REJECTED", isPublished: false },
   });
   await logAdminAction(ctx, "banquet.kyc_reject", "BanquetProfile", banquetId, before, after);
+  await notify(after.userId, "EMAIL", "kyc.rejected", { name: after.venueName });
   return after;
 }
 
