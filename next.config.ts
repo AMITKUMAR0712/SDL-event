@@ -7,13 +7,19 @@ import type { NextConfig } from "next";
 // its matcher to every route to also carry CSP nonces is a real improvement,
 // left for a follow-up rather than risking the working auth gate under this
 // phase's time budget. 'unsafe-inline' below is the honest cost of that.
+//
+// Dev-only additions, never shipped in a production build: 'unsafe-eval'
+// (React dev mode uses eval() to reconstruct stack traces across Turbopack's
+// module boundaries — never used in production React) and a `ws:` allowance
+// for Turbopack's hot-reload websocket.
+const isDev = process.env.NODE_ENV !== "production";
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com",
+  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.sentry.io https://*.ingest.us.sentry.io",
+  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
   "frame-src 'self' https://api.razorpay.com",
   "object-src 'none'",
   "base-uri 'self'",
