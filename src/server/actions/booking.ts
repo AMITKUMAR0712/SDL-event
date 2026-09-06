@@ -48,6 +48,7 @@ export async function createBeautyBookingAction(
       MIN_ORDER_NOT_MET: "This order doesn't meet the vendor's minimum for at-home service.",
       OUT_OF_RADIUS: "This address is outside the vendor's home-service area.",
       SLOT_UNAVAILABLE: "That time is no longer available — please pick another slot.",
+      COUPON_INVALID: "That coupon code isn't valid for this order.",
     };
     return { ok: false, error: messages[result.reason] };
   }

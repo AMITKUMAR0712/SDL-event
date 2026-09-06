@@ -1,4 +1,5 @@
 import { BookingActions } from "@/components/shared/booking-actions";
+import { PayNowButton } from "@/components/shared/pay-now-button";
 import { ReviewForm } from "@/components/shared/review-form";
 import { auth } from "@/lib/auth";
 import { formatPaiseAsINR } from "@/lib/money";
@@ -25,8 +26,9 @@ export default async function MyBookingsPage() {
               {new Date(b.scheduledAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
             </p>
             <p className="mt-1 text-sm">Total: {formatPaiseAsINR(b.totalPaise)}</p>
-            <div className="mt-3">
+            <div className="mt-3 flex flex-wrap items-center gap-3">
               <BookingActions bookingId={b.id} status={b.status} actorRole="CUSTOMER" />
+              {b.status === "PENDING" && <PayNowButton bookingId={b.id} />}
             </div>
             {b.status === "COMPLETED" && !b.review && <ReviewForm bookingId={b.id} />}
           </div>

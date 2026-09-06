@@ -17,7 +17,9 @@ import {
   canTransition,
   refundPercentFor,
 } from "@/server/services/booking-status";
+import { redeemCoupon, validateCoupon } from "@/server/services/coupon";
 import { generateSlots } from "@/server/services/slots";
+import { creditBookingEarning } from "@/server/services/wallet";
 
 const GST_PERCENT_DEFAULT = 18;
 
@@ -59,6 +61,7 @@ export type CreateBeautyBookingInput = {
   type: "IN_STUDIO" | "AT_HOME";
   scheduledAt: Date;
   addressId?: string;
+  couponCode?: string;
 };
 
 export type CreateBookingResult =
@@ -70,7 +73,8 @@ export type CreateBookingResult =
         | "SERVICES_NOT_FOUND"
         | "MIN_ORDER_NOT_MET"
         | "OUT_OF_RADIUS"
-        | "SLOT_UNAVAILABLE";
+        | "SLOT_UNAVAILABLE"
+        | "COUPON_INVALID";
     };
 
 export async function createBeautyBooking(
@@ -101,10 +105,23 @@ export async function createBeautyBooking(
   );
   if (conflict) return { ok: false, reason: "SLOT_UNAVAILABLE" };
 
+  let discountPaise = 0;
+  if (input.couponCode) {
+    const validation = await validateCoupon(
+      input.couponCode,
+      "BOOKING",
+      subtotalPaise,
+      input.customerId,
+    );
+    if (!validation.ok) return { ok: false, reason: "COUPON_INVALID" };
+    discountPaise = validation.discountPaise;
+  }
+
   const gstPercent = await getSetting("gst_percent", GST_PERCENT_DEFAULT);
-  const taxPaise = percentOfPaise(subtotalPaise, gstPercent);
+  const taxableAmount = Math.max(0, subtotalPaise - discountPaise);
+  const taxPaise = percentOfPaise(taxableAmount, gstPercent);
   const commissionPercent = await getSetting("commission_percent_beauty", 15);
-  const totalPaise = subtotalPaise + travelFeePaise + taxPaise;
+  const totalPaise = taxableAmount + travelFeePaise + taxPaise;
 
   const booking = await createBooking({
     bookingNo: generateBookingNo(),
@@ -117,10 +134,12 @@ export async function createBeautyBooking(
     ...(input.addressId ? { address: { connect: { id: input.addressId } } } : {}),
     status: "PENDING",
     subtotalPaise,
+    discountPaise,
     travelFeePaise,
     taxPaise,
     totalPaise,
-    commissionPaise: percentOfPaise(subtotalPaise, commissionPercent),
+    commissionPaise: percentOfPaise(taxableAmount, commissionPercent),
+    ...(input.couponCode ? { coupon: { connect: { code: input.couponCode.toUpperCase() } } } : {}),
     items: {
       create: services.map((s) => ({
         vendorServiceId: s.id,
@@ -131,6 +150,12 @@ export async function createBeautyBooking(
       })),
     },
   });
+
+  if (input.couponCode) {
+    await redeemCoupon(input.couponCode, "BOOKING", subtotalPaise, input.customerId, {
+      bookingId: booking.id,
+    });
+  }
 
   return { ok: true, bookingId: booking.id, bookingNo: booking.bookingNo };
 }
@@ -205,6 +230,11 @@ export async function transitionBooking(
   }
 
   await updateBookingStatus(bookingId, { status: to });
+
+  if (to === "COMPLETED") {
+    await creditBookingEarning(booking);
+  }
+
   return { ok: true };
 }
 

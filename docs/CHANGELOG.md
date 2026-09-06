@@ -268,3 +268,56 @@ to, allowed actors`), unit tested — including that a customer cannot confirm t
 3. As the customer, leave a review on the now-COMPLETED booking; confirm the vendor's profile
    page rating updates and a second review attempt on the same booking is refused.
 4. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.
+
+## Phase 5 — Payments, subscriptions, and coupons
+
+- **Deliberate scope cut, flagged up front:** this phase uses one-off Razorpay **Orders** per
+  booking and per subscription billing period, not Razorpay's native recurring **Subscriptions**
+  entity (auto-debit mandates, proration, dunning). That's a materially larger integration
+  needing real production traffic to validate correctly, and there are no live Razorpay
+  credentials in this environment to test against either way. A plan period lapses and is
+  renewed by another one-time payment rather than being auto-charged. Everything else — signature
+  verification, webhook idempotency, entitlements, coupon atomicity, commission/payout ledger —
+  is implemented for real, not stubbed.
+- `server/services/razorpay.ts`: order creation, checkout-signature verification, and webhook
+  signature verification, built directly against the installed `razorpay` SDK's actual type
+  declarations (not guessed) — including one real gap found in the SDK's own types:
+  `validatePaymentVerification` is exported from `razorpay/dist/utils/razorpay-utils`, not
+  exposed as a `Razorpay` static the way `validateWebhookSignature` is, despite blog posts
+  suggesting otherwise.
+- `/api/webhooks/razorpay`: verifies the raw-body signature before parsing anything, then handles
+  only `payment.captured`/`payment.failed` (see the scope cut above). Idempotent by construction —
+  re-delivery of an already-`CAPTURED` payment is a no-op because the check is "is this payment
+  already in its terminal state", not a separately-tracked processed-events table.
+- `server/services/coupon.ts`: validation (active window, min order, total/per-user usage caps,
+  `appliesTo` scoping, max-discount cap) is a pure read; redemption is atomic, backstopped by the
+  `CouponRedemption` unique constraints from Phase 1 so two concurrent redemptions of the same
+  coupon+user+booking cannot both succeed even if both pass validation first. Wired into
+  `createBeautyBooking` end-to-end: subtotal → coupon discount → tax → travel fee → total, all
+  recomputed server-side, coupon code never trusted as a price.
+- `server/services/entitlements.ts`: `can()`/`consume()` against `PlanFeature`/`FeatureUsage`,
+  resetting on the calendar month — the single gate every future feature check should go through
+  rather than hand-rolling subscription lookups.
+- `server/services/wallet.ts`: booking completion credits the owner's wallet (total minus
+  commission minus discount) as a new append-only `WalletTransaction` row carrying the running
+  balance forward — never an update to a prior row. `reconcileWallet()` (integration tested,
+  including a deliberately-corrupted case) asserts `SUM(amountPaise) === latest balanceAfterPaise`
+  per CLAUDE.md §5 Phase 5's explicit ask for this invariant.
+- Admin-safe plan pricing was already correct from Phase 1's `priceSnapshotPaise`/
+  `featureSnapshot` design — changing a `SubscriptionPlan`'s price only ever affects new
+  `Subscription` rows, never existing ones, with no extra code needed here.
+- **Not built this phase:** GST invoice PDF generation. It pairs naturally with Phase 8's legal/
+  compliance pages (DPDP-aware Terms, Refund policy, Razorpay activation requirements) and is
+  better done alongside those than half-implemented in isolation here.
+
+### Manual smoke test
+
+1. `pnpm test` — the two new integration suites (`coupon.test.ts`, `wallet.test.ts`) hit the real
+   local dev database directly and clean up after themselves.
+2. `curl -X POST /api/webhooks/razorpay` with a wrong `x-razorpay-signature` header — confirm 400,
+   not a crash.
+3. Book a vendor service with coupon code `WELCOME10` (seeded in Phase 1); confirm the booking's
+   `discountPaise` reflects 10% off (capped at the coupon's `maxDiscountPaise`) and a
+   `CouponRedemption` row exists; attempt the same code again as the same user beyond its
+   `usageLimitPerUser` and confirm it's refused.
+4. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.

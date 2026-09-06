@@ -6,6 +6,7 @@ export const createBeautyBookingSchema = z.object({
   type: z.enum(["IN_STUDIO", "AT_HOME"]),
   scheduledAt: z.coerce.date(),
   addressId: z.string().optional(),
+  couponCode: z.string().optional(),
 });
 export type CreateBeautyBookingInput = z.infer<typeof createBeautyBookingSchema>;
 

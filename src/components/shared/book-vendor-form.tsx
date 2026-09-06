@@ -17,6 +17,7 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [type, setType] = useState<"IN_STUDIO" | "AT_HOME">("IN_STUDIO");
+  const [couponCode, setCouponCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -38,6 +39,7 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
       vendorServiceIds: selected,
       type,
       scheduledAt,
+      couponCode: couponCode || undefined,
     });
     setPending(false);
     if (!result.ok) {
@@ -106,6 +108,12 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
         <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
       </div>
+
+      <Input
+        placeholder="Coupon code (optional)"
+        value={couponCode}
+        onChange={(e) => setCouponCode(e.target.value)}
+      />
 
       <div className="flex items-center justify-between pt-2">
         <span className="font-medium">Total: {formatPaiseAsINR(totalPaise)}</span>
