@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { AuthError } from "next-auth";
 
-import { signIn } from "@/lib/auth";
+import { signIn, signOut } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import {
   ForgotPasswordInput,
@@ -174,4 +174,8 @@ export async function resetPasswordAction(input: ResetPasswordInput): Promise<Ac
   }
 
   return { ok: true, data: undefined };
+}
+
+export async function signOutAction(): Promise<void> {
+  await signOut({ redirectTo: "/" });
 }

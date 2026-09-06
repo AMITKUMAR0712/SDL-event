@@ -5,6 +5,7 @@ import { Fraunces, Inter } from "next/font/google";
 
 import { SessionProvider } from "@/components/shared/session-provider";
 import { SiteFooter } from "@/components/shared/site-footer";
+import { SiteHeader } from "@/components/shared/site-header";
 import { SmoothScrollProvider } from "@/components/shared/smooth-scroll-provider";
 import { env } from "@/lib/env";
 
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <SessionProvider>
+          <SiteHeader />
           <SmoothScrollProvider>{children}</SmoothScrollProvider>
         </SessionProvider>
         <SiteFooter />
