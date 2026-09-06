@@ -28,7 +28,7 @@ export function SiteHeader() {
   const dashboard = session?.user ? DASHBOARD_LINK[session.user.role] : undefined;
 
   return (
-    <header className="border-b border-border">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
         <Link href="/" className="font-heading text-xl font-semibold tracking-tight">
           GlowMakeOver
