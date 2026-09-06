@@ -1,4 +1,33 @@
+import { unstable_cache } from "next/cache";
+
 import { db } from "@/lib/db";
+
+/**
+ * Cities/categories for the navbar's search box, mounted in the root layout —
+ * meaning it runs on every single page request across the whole site,
+ * including dynamic dashboard pages. Cached for an hour so that doesn't mean
+ * two extra queries per page view forever; cities/categories change rarely
+ * enough that staleness of up to an hour is a non-issue.
+ */
+export const getHeaderSearchOptions = unstable_cache(
+  async () => {
+    const [cities, categories] = await Promise.all([
+      db.city.findMany({
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+        select: { slug: true, name: true },
+      }),
+      db.category.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: "asc" },
+        select: { slug: true, name: true },
+      }),
+    ]);
+    return { cities, categories };
+  },
+  ["header-search-options"],
+  { revalidate: 3600 },
+);
 
 /** Real counts for the home page's trust-stats row — never hardcoded marketing numbers. */
 export async function getMarketplaceStats() {

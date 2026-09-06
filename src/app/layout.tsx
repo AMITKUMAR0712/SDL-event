@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/shared/site-header";
 import { SmoothScrollProvider } from "@/components/shared/smooth-scroll-provider";
 import { WhatsAppFloatButton } from "@/components/shared/whatsapp-float-button";
 import { env } from "@/lib/env";
+import { getHeaderSearchOptions } from "@/server/repositories/catalog";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -35,7 +36,9 @@ export const metadata: Metadata = {
     : {}),
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { cities, categories } = await getHeaderSearchOptions();
+
   return (
     <html
       lang="en"
@@ -45,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <SessionProvider>
-          <SiteHeader />
+          <SiteHeader cities={cities} categories={categories} />
           <SmoothScrollProvider>{children}</SmoothScrollProvider>
         </SessionProvider>
         <SiteFooter />

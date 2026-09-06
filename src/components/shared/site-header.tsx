@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+import { QuickSearchForm } from "@/components/shared/quick-search-form";
 import { buttonVariants } from "@/components/ui/button";
 import { signOutAction } from "@/server/actions/auth";
 
@@ -14,6 +15,8 @@ const DASHBOARD_LINK: Record<string, { href: string; label: string }> = {
   SUPPORT: { href: "/dashboard/admin", label: "Admin dashboard" },
 };
 
+type SelectOption = { slug: string; name: string };
+
 /**
  * Client-side on purpose: reading the session via `auth()` in a Server
  * Component here would make `cookies()` part of every page's render tree —
@@ -21,24 +24,35 @@ const DASHBOARD_LINK: Record<string, { href: string; label: string }> = {
  * site (including pages with no auth-dependent content at all, like /terms
  * or /login) out of static rendering. `useSession()` fetches session state
  * client-side after the static HTML ships, so pages stay static/cacheable
- * and only the header itself updates once hydrated.
+ * and only the header itself updates once hydrated. `cities`/`categories`
+ * are safe to fetch server-side in the layout instead, since they don't
+ * depend on cookies/headers/the visitor at all.
  */
-export function SiteHeader() {
+export function SiteHeader({
+  cities,
+  categories,
+}: {
+  cities: SelectOption[];
+  categories: SelectOption[];
+}) {
   const { data: session, status } = useSession();
   const dashboard = session?.user ? DASHBOARD_LINK[session.user.role] : undefined;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <Link href="/" className="font-heading text-xl font-semibold tracking-tight">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-3 px-6 py-3">
+        <Link
+          href="/"
+          className="order-1 shrink-0 font-heading text-xl font-semibold tracking-tight"
+        >
           GlowMakeOver
         </Link>
 
-        <nav className="flex items-center gap-3 text-sm">
-          <Link href="/search" className="text-muted-foreground hover:text-foreground">
-            Search
-          </Link>
+        <div className="order-3 w-full md:order-2 md:w-auto md:flex-1 md:px-4">
+          <QuickSearchForm cities={cities} categories={categories} compact />
+        </div>
 
+        <nav className="order-2 flex items-center gap-3 text-sm md:order-3">
           {
             status === "authenticated" ? (
               <>

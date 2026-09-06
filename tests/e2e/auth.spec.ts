@@ -27,7 +27,10 @@ test("vendor registration redirects to onboarding, which is guarded from other r
   const email = `e2e-vendor-${Date.now()}@example.com`;
 
   await page.goto("/register");
-  await page.locator('button[role="combobox"], [data-slot="select-trigger"]').first().click();
+  // Scoped to the "I am a..." field specifically — the navbar's own City/Service
+  // selects are also on this page now, so a generic "first select" locator
+  // would grab one of those instead.
+  await page.getByRole("combobox", { name: "I am a..." }).click();
   await page.getByRole("option", { name: "Beauty vendor / salon / artist" }).click();
   await page.getByLabel("Full name").fill("E2E Test Vendor");
   await page.getByLabel("Email").fill(email);
