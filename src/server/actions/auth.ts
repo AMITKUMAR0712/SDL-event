@@ -20,6 +20,7 @@ import {
   verifyOtpSchema,
 } from "@/schemas/auth";
 import {
+  authenticateWithPassword,
   registerWithPassword,
   requestPasswordReset,
   requestPhoneOtpLogin,
@@ -68,7 +69,7 @@ export async function registerAction(
   return { ok: true, data: { role: result.user.role } };
 }
 
-export async function loginAction(input: LoginInput): Promise<ActionResult> {
+export async function loginAction(input: LoginInput): Promise<ActionResult<{ role: string }>> {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -80,6 +81,14 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     return { ok: false, error: "Too many attempts. Try again later." };
   }
 
+  // Checked directly (rather than re-reading auth() after signIn()) because the
+  // JWT session cookie signIn() sets is not guaranteed visible to auth() within
+  // the same server action invocation.
+  const result = await authenticateWithPassword(parsed.data.email, parsed.data.password, { ip });
+  if (!result.ok) {
+    return { ok: false, error: "Incorrect email or password." };
+  }
+
   try {
     await signIn("credentials", { ...parsed.data, redirect: false });
   } catch (error) {
@@ -89,7 +98,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     throw error;
   }
 
-  return { ok: true, data: undefined };
+  return { ok: true, data: { role: result.user.role } };
 }
 
 export async function requestOtpAction(input: RequestOtpInput): Promise<ActionResult> {

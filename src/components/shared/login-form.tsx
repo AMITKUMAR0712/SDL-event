@@ -19,6 +19,14 @@ import { Input } from "@/components/ui/input";
 import { LoginInput, loginSchema } from "@/schemas/auth";
 import { loginAction } from "@/server/actions/auth";
 
+const ROLE_REDIRECT: Record<string, string> = {
+  CUSTOMER: "/account",
+  VENDOR: "/dashboard/vendor",
+  BANQUET_OWNER: "/dashboard/banquet",
+  ADMIN: "/dashboard/admin",
+  SUPPORT: "/dashboard/admin",
+};
+
 export function LoginForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -34,7 +42,7 @@ export function LoginForm() {
       setServerError(result.error);
       return;
     }
-    router.push("/account");
+    router.push(ROLE_REDIRECT[result.data.role] ?? "/account");
     router.refresh();
   }
 

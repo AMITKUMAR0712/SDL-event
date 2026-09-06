@@ -22,6 +22,7 @@ import {
   UnlockSource,
   VendorServiceMode,
 } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const db = new PrismaClient();
 
@@ -404,12 +405,18 @@ async function seedPlans() {
   return plans;
 }
 
+/** Dev-only default password for the seeded admin/support accounts — never used for real users. */
+const SEED_STAFF_PASSWORD = "AdminPass123";
+
 async function seedAdmins() {
+  const passwordHash = await bcrypt.hash(SEED_STAFF_PASSWORD, 12);
+
   const admin = await db.user.create({
     data: {
       name: "MakeGlowOver Admin",
       email: "admin@makeglowover.com",
       phone: nextIndianPhone(),
+      passwordHash,
       role: Role.ADMIN,
       status: "ACTIVE",
       emailVerifiedAt: new Date(),
@@ -420,6 +427,7 @@ async function seedAdmins() {
       name: "Support Agent",
       email: "support@makeglowover.com",
       phone: nextIndianPhone(),
+      passwordHash,
       role: Role.SUPPORT,
       status: "ACTIVE",
       emailVerifiedAt: new Date(),
@@ -969,6 +977,9 @@ async function main() {
     customers: customers.length,
     plans: plans.length,
   });
+  console.log(
+    `Admin login: admin@makeglowover.com / ${SEED_STAFF_PASSWORD} (support@makeglowover.com uses the same password)`,
+  );
 }
 
 main()

@@ -321,3 +321,54 @@ to, allowed actors`), unit tested — including that a customer cannot confirm t
    `CouponRedemption` row exists; attempt the same code again as the same user beyond its
    `usageLimitPerUser` and confirm it's refused.
 4. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.
+
+## Phase 6 — Admin panel
+
+- `server/repositories/admin.ts` + `server/actions/admin.ts`: every admin page reads through the
+  repository (real Prisma queries, no mocked data) and every mutation goes through an action
+  wrapped by an `adminContext()` helper that calls `requireRole(["ADMIN"])` before touching the
+  database — the same double-authorization rule as every other mutation in this codebase, not a
+  special case for admin.
+- Dashboard (`/dashboard/admin`): live counts (users, pending vendor/banquet KYC, bookings,
+  GMV) computed from the database at request time, not cached or precomputed.
+- KYC review (`/dashboard/admin/kyc`): approve/reject actions for both vendor and banquet
+  profiles, each writing an `AuditLog` row with the acting admin's id.
+- Settings (`/dashboard/admin/settings`), coupons (`/dashboard/admin/coupons`), users
+  (`/dashboard/admin/users`), bookings (`/dashboard/admin/bookings`), and audit log
+  (`/dashboard/admin/audit-log`) pages, each backed by cursor-paginated repository queries
+  (max 50/page, per CLAUDE.md §5) rather than loading full tables.
+- Fixed two auth bugs surfaced while wiring this phase's own e2e test:
+  1. `loginAction` returned the signed-in user's role by calling `auth()` again right after
+     `signIn()` — but the fresh JWT session cookie `signIn()` sets is not reliably visible to a
+     second `auth()` call within the same server action invocation, so every password login
+     silently fell back to the `"CUSTOMER"` default and every role redirected to `/account`.
+     Fixed by reading the role from `authenticateWithPassword()`'s own return value instead
+     (matching the pattern `registerAction` already used correctly).
+  2. `LoginForm` had no role-based redirect at all — it always pushed to `/account` regardless of
+     role, so this was invisible for customers and only surfaced for staff/vendor/banquet logins.
+     Added the same `ROLE_REDIRECT` map `RegisterForm` already uses.
+  3. Seeded `admin@makeglowover.com`/`support@makeglowover.com` accounts had no `passwordHash` at
+     all, so they could never log in via the password form. `prisma/seed.ts` now hashes a
+     `SEED_STAFF_PASSWORD` ("AdminPass123", dev-only) for both; the already-seeded local database
+     was patched in place with a targeted `updateMany()` rather than re-running a destructive
+     `migrate reset`.
+- `tests/e2e/admin.spec.ts`: logs in as the seeded admin, confirms the `/dashboard/admin` redirect
+  and live metrics render, then confirms the KYC page loads — run against a production
+  (`next build && next start`) server, not `next dev`.
+- **Deliberately trimmed given the pace target:** no CSV export, no bulk row actions, and no
+  per-table column-visibility toggles on any admin list. Every table still supports its core
+  read/paginate/act flow; these are pure convenience affordances layered on top, better added
+  once real admin usage shows which tables actually need them.
+
+### Manual smoke test
+
+1. `pnpm prisma db seed` (or reuse the existing local database) — confirms
+   `admin@makeglowover.com` / `AdminPass123` and `support@makeglowover.com` / `AdminPass123`.
+2. Log in as the admin via `/login` — confirm the redirect lands on `/dashboard/admin`, not
+   `/account`, and the dashboard shows non-zero counts matching the seed data.
+3. Visit `/dashboard/admin/kyc`, approve a pending vendor — confirm the vendor's `VendorProfile`
+   status flips and a corresponding `AuditLog` row appears at `/dashboard/admin/audit-log`.
+4. Log in as a `VENDOR` or `CUSTOMER` account and confirm `/dashboard/admin` redirects away
+   (route guard from `src/lib/access-control.ts`, unchanged this phase).
+5. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green; then
+   `pnpm exec playwright test tests/e2e/admin.spec.ts` against `pnpm start` — passing.
