@@ -1,5 +1,15 @@
 import { db } from "@/lib/db";
 
+/** Real counts for the home page's trust-stats row — never hardcoded marketing numbers. */
+export async function getMarketplaceStats() {
+  const [cities, vendors, banquets] = await Promise.all([
+    db.city.count({ where: { isActive: true } }),
+    db.vendorProfile.count({ where: { isPublished: true } }),
+    db.banquetProfile.count({ where: { isPublished: true } }),
+  ]);
+  return { cities, vendors, banquets };
+}
+
 export function listCitiesForSelect() {
   return db.city.findMany({
     where: { isActive: true },
