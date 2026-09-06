@@ -2,6 +2,7 @@ import {
   CalendarCheck,
   Gem,
   MapPin,
+  ScanSearch,
   Scissors,
   ShieldCheck,
   Sparkles,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { QuickSearchForm } from "@/components/shared/quick-search-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -50,11 +52,16 @@ export default async function HomePage() {
             Compare verified salons, makeup artists, and banquet halls near you — real ratings,
             transparent pricing, instant booking.
           </p>
+          <QuickSearchForm
+            cities={cities.map((c) => ({ slug: c.slug, name: c.name }))}
+            categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
+          />
+
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/search" className={buttonVariants({ size: "lg" })}>
-              Explore MakeGlowOver
+            <Link href="/search" className={buttonVariants({ variant: "ghost" })}>
+              Or browse everything
             </Link>
-            <Link href="/register" className={buttonVariants({ size: "lg", variant: "outline" })}>
+            <Link href="/register" className={buttonVariants({ variant: "outline" })}>
               Register as a vendor
             </Link>
           </div>
@@ -111,6 +118,45 @@ export default async function HomePage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="bg-accent/30 py-16">
+        <div className="mx-auto w-full max-w-5xl px-6">
+          <h2 className="text-center font-heading text-2xl">How it works</h2>
+          <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-3">
+            {[
+              {
+                step: "1",
+                icon: ScanSearch,
+                title: "Search your city",
+                body: "Pick a city and the service you need — bridal makeup, salon, or a banquet hall.",
+              },
+              {
+                step: "2",
+                icon: ShieldCheck,
+                title: "Compare & choose",
+                body: "Check real ratings, transparent pricing, and availability from verified listings.",
+              },
+              {
+                step: "3",
+                icon: CalendarCheck,
+                title: "Book instantly",
+                body: "Pick a slot, pay securely, and get confirmed — invoice included.",
+              },
+            ].map((item) => (
+              <div key={item.step} className="flex flex-col items-center text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <item.icon className="size-6" aria-hidden="true" />
+                </div>
+                <p className="mt-4 font-medium">
+                  {item.step}. {item.title}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{item.body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
