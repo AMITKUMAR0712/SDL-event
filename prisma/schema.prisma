@@ -1,0 +1,1016 @@
+// MakeGlowOver — Prisma schema (Phase 1: full data model).
+//
+// Conventions used throughout this file:
+// - Money is always Int paise (see CLAUDE.md §4.2) — never Float, never Decimal.
+// - Geo coordinates are Decimal(10,7) — see src/lib/geo.ts for why we bounding-box
+//   prefilter + Haversine instead of MySQL spatial types.
+// - Several relationships are "polymorphic" (one row can belong to a vendor OR a
+//   banquet, e.g. a booking, a review, a media asset). Prisma has no first-class
+//   polymorphic-FK support, so these use an `ownerType` enum + a loose `ownerId`
+//   string (indexed, but NOT a real foreign key) instead of two nullable FK
+//   columns. See docs/CHANGELOG.md Phase 1 entry for the tradeoffs.
+// - Soft-delete (`deletedAt`) is applied to business records an admin/owner edits
+//   (User, VendorProfile, BanquetProfile, VendorService, Package, Hall, Address,
+//   Coupon). Transactional/ledger/audit rows (Booking, Payment, Refund, Payout,
+//   WalletTransaction, Review, AuditLog, Notification, UnlockEvent,
+//   CouponRedemption) are event-sourced and are never deleted — their status
+//   field carries the lifecycle instead.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  CUSTOMER
+  VENDOR
+  BANQUET_OWNER
+  ADMIN
+  SUPPORT
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  PENDING_VERIFICATION
+}
+
+enum AddressType {
+  HOME
+  WORK
+  STUDIO
+  OTHER
+}
+
+enum CategoryType {
+  BEAUTY
+  BANQUET
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VendorServiceMode {
+  IN_STUDIO
+  AT_HOME
+  BOTH
+}
+
+/// Shared shape for every "belongs to a vendor OR a banquet" polymorphic relation.
+enum ProfileOwnerType {
+  VENDOR
+  BANQUET
+}
+
+/// MediaAsset attaches to more owner kinds than the other polymorphic tables
+/// (halls and packages have their own galleries too), so it gets its own enum.
+enum MediaOwnerType {
+  VENDOR
+  BANQUET
+  HALL
+  PACKAGE
+}
+
+enum BookingType {
+  IN_STUDIO
+  AT_HOME
+  VENUE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  REFUNDED
+}
+
+enum PaymentProvider {
+  RAZORPAY
+}
+
+enum PaymentStatus {
+  CREATED
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+enum RefundStatus {
+  REQUESTED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  PAID
+  REJECTED
+}
+
+enum WalletTxnType {
+  BOOKING_EARNING
+  COMMISSION_DEDUCTION
+  PAYOUT
+  REFUND_DEDUCTION
+  ADJUSTMENT
+}
+
+enum PlanAudience {
+  VENDOR
+  BANQUET
+  CUSTOMER
+}
+
+enum BillingPeriod {
+  MONTHLY
+  QUARTERLY
+  HALF_YEARLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  GRACE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum CouponOwnerType {
+  PLATFORM
+  VENDOR
+  BANQUET
+}
+
+enum CouponDiscountType {
+  PERCENT
+  FLAT
+}
+
+enum CouponAppliesTo {
+  BOOKING
+  SUBSCRIPTION
+  UNLOCK
+}
+
+enum UnlockSource {
+  SUBSCRIPTION
+  COUPON
+  FREE_QUOTA
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  LOST
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  RETRYING
+}
+
+// ---------------------------------------------------------------------------
+// Identity (Auth.js Prisma adapter shape for Account/Session/VerificationToken
+// is intentionally exact — the adapter reads/writes these field names directly)
+// ---------------------------------------------------------------------------
+
+model User {
+  id              String     @id @default(cuid())
+  name            String?
+  email           String?    @unique
+  phone           String?    @unique
+  passwordHash    String?
+  role            Role       @default(CUSTOMER)
+  status          UserStatus @default(ACTIVE)
+  avatar          String?
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+  referralCode    String?    @unique
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  accounts Account[]
+  sessions Session[]
+
+  vendorProfile  VendorProfile?
+  banquetProfile BanquetProfile?
+  addresses      Address[]
+
+  bookingsAsCustomer Booking[]          @relation("BookingCustomer")
+  reviews            Review[]
+  subscriptions      Subscription[]
+  leadsAsCustomer    Lead[]             @relation("LeadCustomer")
+  notifications      Notification[]
+  unlockEvents       UnlockEvent[]
+  couponRedemptions  CouponRedemption[]
+  refundsRequested   Refund[]           @relation("RefundRequestedBy")
+  payoutsApproved    Payout[]           @relation("PayoutApprovedBy")
+  auditLogsAsActor   AuditLog[]         @relation("AuditActor")
+
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Address {
+  id         String      @id @default(cuid())
+  userId     String?
+  vendorId   String?
+  line1      String
+  line2      String?
+  localityId String?
+  cityId     String
+  stateId    String
+  pincode    String
+  lat        Decimal?    @db.Decimal(10, 7)
+  lng        Decimal?    @db.Decimal(10, 7)
+  isDefault  Boolean     @default(false)
+  type       AddressType @default(OTHER)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  deletedAt  DateTime?
+
+  user     User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor   VendorProfile? @relation("VendorAddresses", fields: [vendorId], references: [id], onDelete: Cascade)
+  locality Locality?      @relation(fields: [localityId], references: [id])
+  city     City           @relation(fields: [cityId], references: [id])
+  state    State          @relation(fields: [stateId], references: [id])
+
+  vendorBaseFor  VendorProfile[]  @relation("VendorBaseAddress")
+  banquetBaseFor BanquetProfile[] @relation("BanquetAddress")
+  bookings       Booking[]
+
+  @@index([userId])
+  @@index([vendorId])
+  @@index([cityId])
+  @@index([localityId])
+  @@index([stateId])
+}
+
+// ---------------------------------------------------------------------------
+// Geo / SEO taxonomy
+// ---------------------------------------------------------------------------
+
+model State {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  cities    City[]
+  addresses Address[]
+}
+
+model City {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  stateId        String
+  lat            Decimal  @db.Decimal(10, 7)
+  lng            Decimal  @db.Decimal(10, 7)
+  population     Int?
+  isActive       Boolean  @default(true)
+  seoTitle       String?
+  seoDescription String?  @db.Text
+  introContent   String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  state State @relation(fields: [stateId], references: [id])
+
+  localities Locality[]
+  addresses  Address[]
+  vendors    VendorProfile[]
+  banquets   BanquetProfile[]
+
+  @@index([stateId])
+}
+
+model Locality {
+  id        String   @id @default(cuid())
+  slug      String
+  name      String
+  cityId    String
+  lat       Decimal? @db.Decimal(10, 7)
+  lng       Decimal? @db.Decimal(10, 7)
+  pincode   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  city City @relation(fields: [cityId], references: [id])
+
+  addresses Address[]
+  vendors   VendorProfile[]
+  banquets  BanquetProfile[]
+
+  @@unique([cityId, slug])
+  @@index([cityId])
+}
+
+model Category {
+  id              String       @id @default(cuid())
+  slug            String       @unique
+  name            String
+  parentId        String?
+  type            CategoryType
+  icon            String?
+  seoTitle        String?
+  seoDescription  String?      @db.Text
+  longDescription String?      @db.Text
+  sortOrder       Int          @default(0)
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+
+  serviceCatalogs ServiceCatalog[]
+  vendorsPrimary  VendorProfile[]
+  banquetsPrimary BanquetProfile[]
+
+  @@index([parentId])
+  @@index([type, isActive])
+}
+
+model ServiceCatalog {
+  id                    String   @id @default(cuid())
+  slug                  String   @unique
+  name                  String
+  categoryId            String
+  defaultDurationMin    Int
+  isHomeServiceEligible Boolean  @default(false)
+  createdAt             DateTime @default(now())
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  vendorServices VendorService[]
+
+  @@index([categoryId])
+}
+
+// ---------------------------------------------------------------------------
+// Supply
+// ---------------------------------------------------------------------------
+
+model VendorProfile {
+  id                       String    @id @default(cuid())
+  userId                   String    @unique
+  businessName             String
+  slug                     String    @unique
+  about                    String?   @db.Text
+  coverImage               String?
+  yearsExperience          Int?
+  teamSize                 Int?
+  gstin                    String?
+  panMasked                String?
+  kycStatus                KycStatus @default(PENDING)
+  isPublished              Boolean   @default(false)
+  ratingAvg                Decimal   @default(0) @db.Decimal(3, 2)
+  ratingCount              Int       @default(0)
+  viewCount                Int       @default(0)
+  leadCount                Int       @default(0)
+  baseAddressId            String?
+  cityId                   String
+  localityId               String?
+  primaryCategoryId        String?
+  servesInStudio           Boolean   @default(true)
+  servesAtHome             Boolean   @default(false)
+  homeServiceRadiusKm      Int       @default(0)
+  homeServiceMinOrderPaise Int       @default(0)
+  travelFeePaise           Int       @default(0)
+  lat                      Decimal?  @db.Decimal(10, 7)
+  lng                      Decimal?  @db.Decimal(10, 7)
+  subscriptionTier         String?
+  boostScore               Int       @default(0)
+  publishedAt              DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  deletedAt                DateTime?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  baseAddress     Address?  @relation("VendorBaseAddress", fields: [baseAddressId], references: [id])
+  addresses       Address[] @relation("VendorAddresses")
+  city            City      @relation(fields: [cityId], references: [id])
+  locality        Locality? @relation(fields: [localityId], references: [id])
+  primaryCategory Category? @relation(fields: [primaryCategoryId], references: [id])
+
+  services VendorService[]
+  packages Package[]
+
+  @@index([isPublished, cityId, primaryCategoryId, boostScore])
+  @@index([lat, lng])
+  @@index([localityId])
+}
+
+model BanquetProfile {
+  id                       String    @id @default(cuid())
+  userId                   String    @unique
+  venueName                String
+  slug                     String    @unique
+  about                    String?   @db.Text
+  venueType                String?
+  totalHalls               Int       @default(0)
+  parkingCapacity          Int?
+  hasRooms                 Boolean   @default(false)
+  roomCount                Int       @default(0)
+  vegPricePerPlatePaise    Int?
+  nonVegPricePerPlatePaise Int?
+  rentPaise                Int?
+  alcoholAllowed           Boolean   @default(false)
+  decorAllowed             Boolean   @default(true)
+  outsideCatererAllowed    Boolean   @default(false)
+  offersHomeService        Boolean   @default(false)
+  kycStatus                KycStatus @default(PENDING)
+  isPublished              Boolean   @default(false)
+  ratingAvg                Decimal   @default(0) @db.Decimal(3, 2)
+  ratingCount              Int       @default(0)
+  lat                      Decimal?  @db.Decimal(10, 7)
+  lng                      Decimal?  @db.Decimal(10, 7)
+  addressId                String?
+  cityId                   String
+  localityId               String?
+  primaryCategoryId        String?
+  boostScore               Int       @default(0)
+  publishedAt              DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  deletedAt                DateTime?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address         Address?  @relation("BanquetAddress", fields: [addressId], references: [id])
+  city            City      @relation(fields: [cityId], references: [id])
+  locality        Locality? @relation(fields: [localityId], references: [id])
+  primaryCategory Category? @relation(fields: [primaryCategoryId], references: [id])
+
+  halls    Hall[]
+  packages Package[]
+
+  @@index([isPublished, cityId, primaryCategoryId, boostScore])
+  @@index([lat, lng])
+  @@index([localityId])
+}
+
+model Hall {
+  id               String    @id @default(cuid())
+  banquetId        String
+  name             String
+  seatingCapacity  Int?
+  floatingCapacity Int?
+  area             Int?
+  isAC             Boolean   @default(true)
+  photos           Json?
+  rentPaise        Int?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  banquet BanquetProfile @relation(fields: [banquetId], references: [id], onDelete: Cascade)
+
+  @@index([banquetId])
+}
+
+model VendorService {
+  id                      String            @id @default(cuid())
+  vendorId                String
+  serviceCatalogId        String
+  title                   String
+  description             String?           @db.Text
+  pricePaise              Int
+  strikeThroughPricePaise Int?
+  durationMin             Int
+  mode                    VendorServiceMode @default(IN_STUDIO)
+  isActive                Boolean           @default(true)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  deletedAt               DateTime?
+
+  vendor         VendorProfile  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  serviceCatalog ServiceCatalog @relation(fields: [serviceCatalogId], references: [id])
+
+  bookingItems BookingItem[]
+
+  @@index([vendorId])
+  @@index([serviceCatalogId])
+}
+
+/// Polymorphic owner via two nullable FKs (not ownerType/ownerId) — a package
+/// is either a vendor's bridal package or a banquet's plate/rent package, and
+/// callers always know statically which kind they're creating, so a real FK
+/// (with referential integrity) is strictly better here than the loose
+/// ownerType/ownerId pattern used for the "any owner, generic reader" tables.
+/// Application code enforces "exactly one of vendorId/banquetId is set."
+model Package {
+  id          String    @id @default(cuid())
+  vendorId    String?
+  banquetId   String?
+  name        String
+  description String?   @db.Text
+  inclusions  Json
+  pricePaise  Int
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  vendor  VendorProfile?  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  banquet BanquetProfile? @relation(fields: [banquetId], references: [id], onDelete: Cascade)
+
+  bookingItems BookingItem[]
+
+  @@index([vendorId])
+  @@index([banquetId])
+}
+
+model MediaAsset {
+  id        String         @id @default(cuid())
+  ownerType MediaOwnerType
+  ownerId   String
+  url       String
+  publicId  String?
+  width     Int?
+  height    Int?
+  alt       String?
+  sortOrder Int            @default(0)
+  isCover   Boolean        @default(false)
+  createdAt DateTime       @default(now())
+
+  @@index([ownerType, ownerId])
+}
+
+model Availability {
+  id        String           @id @default(cuid())
+  ownerType ProfileOwnerType
+  ownerId   String
+  weekday   Int
+  startTime DateTime         @db.Time(0)
+  endTime   DateTime         @db.Time(0)
+
+  @@index([ownerType, ownerId, weekday])
+}
+
+model BlockedDate {
+  id        String           @id @default(cuid())
+  ownerType ProfileOwnerType
+  ownerId   String
+  date      DateTime         @db.Date
+  reason    String?
+  createdAt DateTime         @default(now())
+
+  @@unique([ownerType, ownerId, date])
+}
+
+// ---------------------------------------------------------------------------
+// Demand & transactions
+// ---------------------------------------------------------------------------
+
+model Booking {
+  id              String           @id @default(cuid())
+  bookingNo       String           @unique
+  customerId      String
+  ownerType       ProfileOwnerType
+  ownerId         String
+  type            BookingType
+  scheduledAt     DateTime
+  durationMin     Int
+  addressId       String?
+  status          BookingStatus    @default(PENDING)
+  subtotalPaise   Int
+  discountPaise   Int              @default(0)
+  travelFeePaise  Int              @default(0)
+  taxPaise        Int              @default(0)
+  totalPaise      Int
+  commissionPaise Int              @default(0)
+  payoutPaise     Int              @default(0)
+  couponId        String?
+  notes           String?          @db.Text
+  cancelledBy     String?
+  cancelReason    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  customer User     @relation("BookingCustomer", fields: [customerId], references: [id])
+  address  Address? @relation(fields: [addressId], references: [id])
+  coupon   Coupon?  @relation(fields: [couponId], references: [id])
+
+  items              BookingItem[]
+  payments           Payment[]
+  refunds            Refund[]
+  walletTransactions WalletTransaction[]
+  couponRedemptions  CouponRedemption[]
+  review             Review?
+
+  @@index([ownerType, ownerId])
+  @@index([customerId])
+  @@index([status, scheduledAt])
+}
+
+model BookingItem {
+  id              String  @id @default(cuid())
+  bookingId       String
+  vendorServiceId String?
+  packageId       String?
+  titleSnapshot   String
+  unitPricePaise  Int
+  qty             Int     @default(1)
+  lineTotalPaise  Int
+
+  booking       Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  vendorService VendorService? @relation(fields: [vendorServiceId], references: [id])
+  package       Package?       @relation(fields: [packageId], references: [id])
+
+  @@index([bookingId])
+  @@index([vendorServiceId])
+  @@index([packageId])
+}
+
+model Payment {
+  id                String          @id @default(cuid())
+  bookingId         String?
+  subscriptionId    String?
+  provider          PaymentProvider @default(RAZORPAY)
+  providerOrderId   String?
+  providerPaymentId String?
+  amountPaise       Int
+  status            PaymentStatus   @default(CREATED)
+  method            String?
+  rawPayload        Json?
+  idempotencyKey    String          @unique
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  booking      Booking?      @relation(fields: [bookingId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  refunds      Refund[]
+
+  @@index([bookingId])
+  @@index([subscriptionId])
+}
+
+model Refund {
+  id                String       @id @default(cuid())
+  bookingId         String
+  paymentId         String
+  amountPaise       Int
+  reason            String?
+  status            RefundStatus @default(REQUESTED)
+  providerRefundId  String?
+  rawPayload        Json?
+  requestedByUserId String?
+  processedAt       DateTime?
+  createdAt         DateTime     @default(now())
+
+  booking     Booking @relation(fields: [bookingId], references: [id])
+  payment     Payment @relation(fields: [paymentId], references: [id])
+  requestedBy User?   @relation("RefundRequestedBy", fields: [requestedByUserId], references: [id])
+
+  walletTransactions WalletTransaction[]
+
+  @@index([bookingId])
+  @@index([paymentId])
+}
+
+model Payout {
+  id               String           @id @default(cuid())
+  ownerType        ProfileOwnerType
+  ownerId          String
+  amountPaise      Int
+  status           PayoutStatus     @default(PENDING)
+  periodStart      DateTime
+  periodEnd        DateTime
+  bankReference    String?
+  requestedAt      DateTime         @default(now())
+  approvedAt       DateTime?
+  paidAt           DateTime?
+  approvedByUserId String?
+  notes            String?          @db.Text
+  createdAt        DateTime         @default(now())
+
+  approvedBy User? @relation("PayoutApprovedBy", fields: [approvedByUserId], references: [id])
+
+  walletTransactions WalletTransaction[]
+
+  @@index([ownerType, ownerId])
+}
+
+/// Append-only ledger. Balances are derived by summing amountPaise, never
+/// updated in place; `balanceAfterPaise` is a denormalized running balance
+/// written once at insert time for fast reads.
+model WalletTransaction {
+  id                String           @id @default(cuid())
+  ownerType         ProfileOwnerType
+  ownerId           String
+  type              WalletTxnType
+  amountPaise       Int
+  bookingId         String?
+  payoutId          String?
+  refundId          String?
+  balanceAfterPaise Int
+  description       String?
+  createdAt         DateTime         @default(now())
+
+  booking Booking? @relation(fields: [bookingId], references: [id])
+  payout  Payout?  @relation(fields: [payoutId], references: [id])
+  refund  Refund?  @relation(fields: [refundId], references: [id])
+
+  @@index([ownerType, ownerId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Monetisation
+// ---------------------------------------------------------------------------
+
+model SubscriptionPlan {
+  id                  String        @id @default(cuid())
+  audience            PlanAudience
+  code                String        @unique
+  name                String
+  description         String?       @db.Text
+  pricePaise          Int
+  compareAtPricePaise Int?
+  billingPeriod       BillingPeriod
+  trialDays           Int           @default(0)
+  isActive            Boolean       @default(true)
+  sortOrder           Int           @default(0)
+  razorpayPlanId      String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  features      PlanFeature[]
+  subscriptions Subscription[]
+
+  @@index([audience, isActive])
+}
+
+model PlanFeature {
+  id        String   @id @default(cuid())
+  planId    String
+  key       String
+  label     String
+  valueInt  Int?
+  valueBool Boolean?
+  valueText String?
+
+  plan SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, key])
+}
+
+/// Snapshotted price/features so an admin changing a plan never retroactively
+/// alters an existing subscriber — see Phase 5.
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String
+  planId             String
+  status             SubscriptionStatus @default(ACTIVE)
+  startedAt          DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  priceSnapshotPaise Int
+  featureSnapshot    Json
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user User             @relation(fields: [userId], references: [id])
+  plan SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  payments          Payment[]
+  featureUsages     FeatureUsage[]
+  couponRedemptions CouponRedemption[]
+
+  @@index([userId, status])
+  @@index([planId])
+}
+
+model FeatureUsage {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  featureKey     String
+  periodStart    DateTime
+  used           Int      @default(0)
+  limit          Int
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, featureKey, periodStart])
+}
+
+model Coupon {
+  id                String             @id @default(cuid())
+  code              String             @unique
+  ownerType         CouponOwnerType
+  ownerId           String?
+  discountType      CouponDiscountType
+  value             Int
+  maxDiscountPaise  Int?
+  minOrderPaise     Int?
+  appliesTo         CouponAppliesTo
+  usageLimitTotal   Int?
+  usageLimitPerUser Int?
+  startsAt          DateTime
+  endsAt            DateTime
+  isStackable       Boolean            @default(false)
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?
+
+  redemptions CouponRedemption[]
+  bookings    Booking[]
+
+  @@index([ownerType, ownerId])
+  @@index([isActive, startsAt, endsAt])
+}
+
+model CouponRedemption {
+  id             String   @id @default(cuid())
+  couponId       String
+  userId         String
+  bookingId      String?
+  subscriptionId String?
+  discountPaise  Int
+  redeemedAt     DateTime @default(now())
+
+  coupon       Coupon        @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id])
+  booking      Booking?      @relation(fields: [bookingId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@unique([couponId, userId, bookingId])
+  @@unique([couponId, userId, subscriptionId])
+  @@index([userId])
+}
+
+model UnlockEvent {
+  id         String           @id @default(cuid())
+  userId     String
+  targetType ProfileOwnerType
+  targetId   String
+  source     UnlockSource
+  createdAt  DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([targetType, targetId])
+}
+
+// ---------------------------------------------------------------------------
+// Trust & ops
+// ---------------------------------------------------------------------------
+
+model Review {
+  id        String           @id @default(cuid())
+  bookingId String           @unique
+  authorId  String
+  ownerType ProfileOwnerType
+  ownerId   String
+  rating    Int
+  title     String?
+  body      String?          @db.Text
+  photos    Json?
+  status    ReviewStatus     @default(PENDING)
+  reply     String?          @db.Text
+  repliedAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  author  User    @relation(fields: [authorId], references: [id])
+
+  @@index([ownerType, ownerId, status])
+}
+
+model Lead {
+  id            String           @id @default(cuid())
+  customerId    String?
+  ownerType     ProfileOwnerType
+  ownerId       String
+  source        String
+  phoneRevealed Boolean          @default(false)
+  status        LeadStatus       @default(NEW)
+  createdAt     DateTime         @default(now())
+
+  customer User? @relation("LeadCustomer", fields: [customerId], references: [id])
+
+  @@index([ownerType, ownerId])
+  @@index([customerId])
+}
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  channel   NotificationChannel
+  template  String
+  payload   Json
+  status    NotificationStatus  @default(PENDING)
+  sentAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model FeatureFlag {
+  key            String  @id
+  isEnabled      Boolean @default(false)
+  rolloutPercent Int     @default(0)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+}
