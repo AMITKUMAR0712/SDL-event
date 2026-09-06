@@ -210,20 +210,22 @@ enum NotificationStatus {
 // ---------------------------------------------------------------------------
 
 model User {
-  id              String     @id @default(cuid())
-  name            String?
-  email           String?    @unique
-  phone           String?    @unique
-  passwordHash    String?
-  role            Role       @default(CUSTOMER)
-  status          UserStatus @default(ACTIVE)
-  avatar          String?
-  emailVerifiedAt DateTime?
-  phoneVerifiedAt DateTime?
-  referralCode    String?    @unique
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  id               String     @id @default(cuid())
+  name             String?
+  email            String?    @unique
+  phone            String?    @unique
+  passwordHash     String?
+  role             Role       @default(CUSTOMER)
+  status           UserStatus @default(ACTIVE)
+  avatar           String?
+  emailVerifiedAt  DateTime?
+  phoneVerifiedAt  DateTime?
+  referralCode     String?    @unique
+  failedLoginCount Int        @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
 
   accounts Account[]
   sessions Session[]

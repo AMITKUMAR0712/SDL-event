@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 
+import { SessionProvider } from "@/components/shared/session-provider";
 import { SmoothScrollProvider } from "@/components/shared/smooth-scroll-provider";
 
 const inter = Inter({
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        <SessionProvider>
+          <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        </SessionProvider>
       </body>
     </html>
   );

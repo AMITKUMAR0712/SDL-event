@@ -114,3 +114,68 @@ minute, 0))`, meaning "what date is stored" is meaningless and must never be rea
 3. `pnpm exec prisma studio` — browse `VendorProfile`, confirm 60 rows with real-looking Indian
    cities, categories, services, and photos; confirm every `City` has ≥3 vendors.
 4. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.
+
+## Phase 2 — Auth, roles, and onboarding
+
+- Auth.js v5 (`next-auth@beta` + `@auth/prisma-adapter`) with three providers: email+password
+  (`bcryptjs`, JWT session strategy — Credentials providers cannot use database sessions),
+  phone OTP (a Credentials provider backed by `server/services/otp.ts`), and Google (registered
+  only when `AUTH_GOOGLE_ID`/`SECRET` are set). `src/lib/auth.ts` also embeds `role`, `vendorId`,
+  `banquetId`, and `subscriptionTier` into the session via the `jwt`/`session` callbacks.
+- `src/lib/access-control.ts`: the route-guard rules as a pure, dependency-free function
+  (`isPathAuthorized`) — kept separate from `auth.ts` specifically so it's unit-testable without
+  pulling in `next-auth`'s `next/server` dependency, which Vitest's Node environment can't
+  resolve the way Next's own bundler does. `src/proxy.ts` (Next 16's renamed `middleware.ts`)
+  wires it into the `authorized` callback and guards `/admin`, `/vendor`, `/banquet`, `/account`.
+- `src/lib/authz.ts`: `requireRole()`/`requireOwnership()` — the second, server-action-level
+  authorisation check required by `CLAUDE.md` §4.4 (the proxy only covers page navigation, not
+  direct server action/route handler invocation).
+- `src/lib/redis.ts`: an Upstash Redis client with an in-memory dev/CI fallback (loud warning,
+  never silent) when `UPSTASH_REDIS_REST_URL`/`TOKEN` aren't set — used by
+  `src/lib/rate-limit.ts` (fixed-window limiter on register/login/OTP/forgot-password) and OTP
+  storage (5-minute TTL, 3 attempts, 60s resend cooldown, per MSG91's Flow API — verified against
+  MSG91's docs, not guessed — with a console-log fallback when `MSG91_AUTH_KEY` is unset).
+- Account lockout after 10 failed logins (30 minutes), password reset via `VerificationToken`
+  (reused rather than adding a new model) + `resend`, and every auth-relevant event logged to
+  `AuditLog` as the security-events audit trail (`server/services/audit.ts`) — reusing the
+  generic admin audit log instead of a bespoke table.
+- Registration UI with a role picker (customer/vendor/banquet owner) sharing one account-creation
+  step, then role-specific onboarding: a real multi-step wizard (localStorage-persisted so a
+  drop-off resumes) for vendors (business details → location → services → documents → plan) and
+  banquet owners (venue → location → pricing → documents → plan). The documents step collects
+  metadata only — real file upload waits for Phase 8's signed-upload infrastructure — and the
+  plan step creates a real trial `Subscription` against the Phase 1 seed data.
+- `tests/unit/authz.test.ts`: the explicit role-matrix test from the phase brief — every role
+  (including "no session") against every guarded route prefix, plus a check that a route whose
+  name merely _starts with_ a guarded prefix (e.g. `/vendor-something-else`) isn't accidentally
+  caught by it.
+- `tests/e2e/auth.spec.ts`: registration → auto-login → role-based redirect, and guests bounced
+  off `/account`, driven through a real browser against the real seeded database.
+- Schema change (approved before implementing, per `CLAUDE.md` §7): added
+  `failedLoginCount`/`lockedUntil` to `User` for the lockout requirement — everything else in
+  this phase needed no schema change.
+
+### Known issue
+
+`tests/e2e/onboarding.spec.ts` (vendor/banquet onboarding wizard completion) passes reliably
+against `next dev`, and the underlying feature is confirmed correct — verified twice via clean
+Playwright runs and directly via server logs showing the expected `VendorProfile`/
+`BanquetProfile`/`Subscription` rows committed to MySQL. Against a production build (`next
+start`, i.e. what `pnpm test:e2e` and CI actually run), the final "Finish setup" click is flaky:
+Playwright intermittently cannot land a stable click on it. Root cause is still open — candidates
+include a Base UI `Button` interaction quirk under headless automation specifically in minified
+production output. Filed as a known issue rather than papered over; not a regression in the
+onboarding feature itself, which Phase 3+ can safely build on.
+
+### Manual smoke test
+
+1. `pnpm dev`, visit `/register`, create a customer, vendor, and banquet-owner account — confirm
+   each redirects correctly (`/account`, `/vendor/onboarding`, `/banquet/onboarding`).
+2. Complete the vendor onboarding wizard; confirm `/vendor` shows the new business name and
+   "Not published yet"; refresh and confirm a drop-off mid-wizard resumes from localStorage.
+3. Log out (clear cookies) and confirm `/account`, `/vendor`, `/banquet`, `/admin` all redirect
+   guests to `/login`; confirm a customer session gets 403'd (via `requireRole`) from vendor-only
+   server actions.
+4. Fail a password login 10 times in a row; confirm the account locks and `AuditLog` records
+   `auth.login_failed` and `auth.account_locked` rows.
+5. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.
