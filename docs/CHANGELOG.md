@@ -1,6 +1,7 @@
 # Changelog
 
-All notable changes to MakeGlowOver are recorded here, one entry per phase.
+All notable changes to GlowMakeOver (named MakeGlowOver before the rebrand — see "Post-launch —
+Rebrand to GlowMakeOver" below) are recorded here, one entry per phase.
 
 ## Phase 0 — Scaffold and tooling
 
