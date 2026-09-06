@@ -58,10 +58,20 @@ export default async function HomePage() {
           />
 
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/search" className={buttonVariants({ variant: "ghost" })}>
+            <Link
+              href="/search"
+              className={buttonVariants({ variant: "secondary", className: "font-semibold" })}
+            >
               Or browse everything
             </Link>
-            <Link href="/register" className={buttonVariants({ variant: "outline" })}>
+            <Link
+              href="/register"
+              className={buttonVariants({
+                variant: "outline",
+                className:
+                  "border-2! border-primary! font-semibold! text-primary! hover:bg-primary! hover:text-primary-foreground!",
+              })}
+            >
               Register as a vendor
             </Link>
           </div>

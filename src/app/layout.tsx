@@ -7,6 +7,7 @@ import { SessionProvider } from "@/components/shared/session-provider";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
 import { SmoothScrollProvider } from "@/components/shared/smooth-scroll-provider";
+import { WhatsAppFloatButton } from "@/components/shared/whatsapp-float-button";
 import { env } from "@/lib/env";
 
 const inter = Inter({
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <SmoothScrollProvider>{children}</SmoothScrollProvider>
         </SessionProvider>
         <SiteFooter />
+        <WhatsAppFloatButton />
       </body>
     </html>
   );
