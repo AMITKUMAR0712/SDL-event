@@ -179,3 +179,48 @@ onboarding feature itself, which Phase 3+ can safely build on.
 4. Fail a password login 10 times in a row; confirm the account locks and `AuditLog` records
    `auth.login_failed` and `auth.account_locked` rows.
 5. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.
+
+## Phase 3 — Public catalogue, geo search, and the unlock gate
+
+- **Route rename (fixes a Phase 2 conflict):** owner/admin dashboards moved from `/vendor`,
+  `/banquet`, `/admin` to `/dashboard/vendor`, `/dashboard/banquet`, `/dashboard/admin`. Phase 3
+  needs `/vendor/[slug]` and `/banquet/[slug]` as public profile URLs, which would otherwise
+  collide with Phase 2's dashboard routes under the same prefix. `proxy.ts` and
+  `src/lib/access-control.ts` updated to match; `tests/unit/authz.test.ts` now explicitly checks
+  that `/vendor/some-slug` stays public despite `/dashboard/vendor` being guarded.
+- `server/services/ranking.ts`: the admin-tunable weighted ranking formula (distance, rating,
+  profile completeness, response rate, boostScore, recency), unit tested. Response rate is
+  neutral-fixed at 0.5 — nothing in the schema tracks Lead response times yet.
+- `server/repositories/listings.ts`: cursor-paginated (`orderBy: [boostScore desc, id asc]`,
+  `cursor`/`skip`/`take`, capped at 50/page per `CLAUDE.md` §4.5) vendor/banquet search, with an
+  optional bounding-box prefilter (`src/lib/geo.ts`, from Phase 1) for "near me" queries. Each
+  fetched page is re-sorted by the full ranking formula for display order without affecting
+  pagination correctness.
+- The gate (`src/lib/gate.ts`, `server/services/unlock.ts`): identical markup for guests and
+  signed-in customers — no user-agent sniffing, nothing crawler-specific. Guests get a
+  **positional** free quota (first 3 cards per results page, since guests have no persistent
+  identity to track across visits); signed-in customers get a **real** rolling-30-day
+  `UnlockEvent` count against their quota, or unconditional access with an active Plus
+  subscription. Teaser copy always cites a real active platform coupon (`bestTeaserCoupon()`),
+  never a fabricated discount.
+- Public profile pages (`/vendor/[slug]`, `/banquet/[slug]`): fully crawlable — name, about,
+  services **with real prices**, photos, ratings, reviews all render unconditionally. Only the
+  contact-reveal block is gated, marked with JSON-LD `hasPart` + `cssSelector` +
+  `isAccessibleForFree: false` pointing at `#gated-contact`, per the phase brief's exact
+  requirement. `BeautySalon`/`EventVenue` JSON-LD only emits `aggregateRating` when real reviews
+  exist. Contact reveal (`server/actions/contact-reveal.ts`) logs a `Lead` row and consumes one
+  unit of quota; view counts increment on each profile render (bot-filtering/debouncing deferred
+  — nothing in the schema distinguishes bot traffic yet).
+- `/search`: city/category/home-service/rating filters, ranked results, cursor "Load more".
+
+### Manual smoke test
+
+1. `pnpm dev`, visit `/search` — results render ranked; visit `/vendor/[a-seeded-slug]` — services
+   and prices are visible without signing in, but "Show contact number" requires sign-in.
+2. View page source on a vendor profile; confirm a `<script type="application/ld+json">` block
+   with `"@type":"BeautySalon"` and a `hasPart` entry targeting `#gated-contact`.
+3. Sign in as a customer, click "Show contact number" 6 times across different profiles in one
+   session; confirm the 6th is refused ("used all your free unlocks") and an `UnlockEvent` row
+   exists for each of the first 5.
+4. Confirm `/dashboard/vendor` still redirects guests to `/login`, and `/vendor/[slug]` does not.
+5. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.

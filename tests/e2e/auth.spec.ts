@@ -34,5 +34,5 @@ test("vendor registration redirects to onboarding, which is guarded from other r
   await page.getByLabel("Password").fill("Password123");
   await page.getByRole("button", { name: "Create account" }).click();
 
-  await expect(page).toHaveURL(/\/vendor\/onboarding$/, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/dashboard\/vendor\/onboarding$/, { timeout: 10_000 });
 });

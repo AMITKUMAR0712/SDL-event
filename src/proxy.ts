@@ -6,5 +6,5 @@
 export { auth as proxy } from "@/lib/auth";
 
 export const config = {
-  matcher: ["/admin/:path*", "/vendor/:path*", "/banquet/:path*", "/account/:path*"],
+  matcher: ["/dashboard/:path*", "/account/:path*"],
 };

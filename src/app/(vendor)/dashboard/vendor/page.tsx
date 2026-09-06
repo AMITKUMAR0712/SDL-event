@@ -17,7 +17,10 @@ export default async function VendorDashboardPage() {
       <main className="mx-auto max-w-2xl px-6 py-16 text-center">
         <h1 className="font-heading text-3xl">Finish setting up your business</h1>
         <p className="mt-2 text-muted-foreground">You haven&apos;t completed onboarding yet.</p>
-        <Link href="/vendor/onboarding" className="mt-6 inline-block text-primary underline">
+        <Link
+          href="/dashboard/vendor/onboarding"
+          className="mt-6 inline-block text-primary underline"
+        >
           Continue onboarding
         </Link>
       </main>

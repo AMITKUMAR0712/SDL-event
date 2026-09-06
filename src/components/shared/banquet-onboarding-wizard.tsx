@@ -98,7 +98,7 @@ export function BanquetOnboardingWizard({ cities, plans }: Props) {
     }
     localStorage.removeItem(STORAGE_KEY);
     await update(); // refresh the JWT so session.user.banquetId picks up the new profile
-    router.push("/banquet");
+    router.push("/dashboard/banquet");
     router.refresh();
   }
 

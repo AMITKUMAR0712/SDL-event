@@ -4,16 +4,16 @@ import { isPathAuthorized } from "@/lib/access-control";
 
 const ROLES = ["CUSTOMER", "VENDOR", "BANQUET_OWNER", "ADMIN", "SUPPORT"] as const;
 const GUARDED_ROUTES = [
-  "/admin/dashboard",
-  "/vendor/dashboard",
-  "/banquet/dashboard",
+  "/dashboard/admin",
+  "/dashboard/vendor",
+  "/dashboard/banquet",
   "/account/bookings",
 ];
 
 const ALLOWED: Record<string, readonly string[]> = {
-  "/admin/dashboard": ["ADMIN", "SUPPORT"],
-  "/vendor/dashboard": ["VENDOR"],
-  "/banquet/dashboard": ["BANQUET_OWNER"],
+  "/dashboard/admin": ["ADMIN", "SUPPORT"],
+  "/dashboard/vendor": ["VENDOR"],
+  "/dashboard/banquet": ["BANQUET_OWNER"],
   "/account/bookings": ["CUSTOMER", "VENDOR", "BANQUET_OWNER", "ADMIN", "SUPPORT"],
 };
 
@@ -36,12 +36,20 @@ describe("isPathAuthorized — role matrix", () => {
     }
   });
 
-  it("leaves ungated routes public for guests and every role", () => {
-    const publicRoutes = ["/", "/bridal-makeup/noida", "/vendor-something-else-entirely"];
+  it("leaves ungated routes public for guests and every role, including the public profile namespace that shares a prefix with a guarded dashboard", () => {
+    const publicRoutes = [
+      "/",
+      "/bridal-makeup/noida",
+      "/dashboard-something-else-entirely",
+      // Public profile pages live at /vendor/[slug] and /banquet/[slug] —
+      // must stay guest-accessible even though /dashboard/vendor is guarded.
+      "/vendor/some-salon-slug",
+      "/banquet/some-venue-slug",
+    ];
     for (const route of publicRoutes) {
-      expect(isPathAuthorized(route, undefined)).toBe(true);
+      expect(isPathAuthorized(route, undefined), `guest on ${route} should be allowed`).toBe(true);
       for (const role of ROLES) {
-        expect(isPathAuthorized(route, role)).toBe(true);
+        expect(isPathAuthorized(route, role), `${role} on ${route} should be allowed`).toBe(true);
       }
     }
   });

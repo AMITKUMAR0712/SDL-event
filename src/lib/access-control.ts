@@ -6,10 +6,13 @@
  * own bundler does.
  */
 
+// Owner/admin dashboards live under /dashboard/* specifically so they don't
+// collide with the public profile namespace at /vendor/[slug] and
+// /banquet/[slug] (Phase 3) — those must stay guest-accessible.
 const ROLE_PREFIX_GUARDS: { prefix: string; roles: string[] }[] = [
-  { prefix: "/admin", roles: ["ADMIN", "SUPPORT"] },
-  { prefix: "/vendor", roles: ["VENDOR"] },
-  { prefix: "/banquet", roles: ["BANQUET_OWNER"] },
+  { prefix: "/dashboard/admin", roles: ["ADMIN", "SUPPORT"] },
+  { prefix: "/dashboard/vendor", roles: ["VENDOR"] },
+  { prefix: "/dashboard/banquet", roles: ["BANQUET_OWNER"] },
   { prefix: "/account", roles: ["CUSTOMER", "VENDOR", "BANQUET_OWNER", "ADMIN", "SUPPORT"] },
 ];
 

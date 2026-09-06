@@ -28,8 +28,8 @@ import { registerAction } from "@/server/actions/auth";
 
 const ROLE_REDIRECT: Record<string, string> = {
   CUSTOMER: "/account",
-  VENDOR: "/vendor/onboarding",
-  BANQUET_OWNER: "/banquet/onboarding",
+  VENDOR: "/dashboard/vendor/onboarding",
+  BANQUET_OWNER: "/dashboard/banquet/onboarding",
 };
 
 export function RegisterForm() {

@@ -38,3 +38,18 @@ export function findPlanByCode(code: string) {
 export function findServiceCatalogByIds(ids: string[]) {
   return db.serviceCatalog.findMany({ where: { id: { in: ids } } });
 }
+
+export function findCityBySlug(slug: string) {
+  return db.city.findUnique({ where: { slug } });
+}
+
+export function findCategoryBySlug(slug: string) {
+  return db.category.findUnique({ where: { slug } });
+}
+
+export function listCategories(type?: "BEAUTY" | "BANQUET") {
+  return db.category.findMany({
+    where: { isActive: true, ...(type ? { type } : {}) },
+    orderBy: { sortOrder: "asc" },
+  });
+}

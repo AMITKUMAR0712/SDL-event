@@ -13,7 +13,7 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("Password123");
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/vendor\/onboarding$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/dashboard\/vendor\/onboarding$/, { timeout: 15_000 });
 
   // Step 1: business
   await page.getByLabel("Business name").fill(businessName);
@@ -38,7 +38,7 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
   await expect(page.getByText("Choose a plan")).toBeVisible();
   await page.getByRole("button", { name: "Finish setup" }).click();
 
-  await expect(page).toHaveURL(/\/vendor$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/dashboard\/vendor$/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: businessName })).toBeVisible();
   await expect(page.getByText(/Not published yet/)).toBeVisible();
 });
@@ -56,7 +56,7 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("Password123");
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/banquet\/onboarding$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/dashboard\/banquet\/onboarding$/, { timeout: 15_000 });
 
   // Step 1: venue
   await page.getByLabel("Venue name").fill(venueName);
@@ -77,7 +77,7 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
   await expect(page.getByText("Choose a plan")).toBeVisible();
   await page.getByRole("button", { name: "Finish setup" }).click();
 
-  await expect(page).toHaveURL(/\/banquet$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/dashboard\/banquet$/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: venueName })).toBeVisible();
   await expect(page.getByText(/Not published yet/)).toBeVisible();
 });

@@ -102,7 +102,7 @@ export function VendorOnboardingWizard({ cities, serviceCatalog, plans }: Props)
     }
     localStorage.removeItem(STORAGE_KEY);
     await update(); // refresh the JWT so session.user.vendorId picks up the new profile
-    router.push("/vendor");
+    router.push("/dashboard/vendor");
     router.refresh();
   }
 
