@@ -27,14 +27,14 @@ function renderEmail<T extends NotificationTemplate>(
     case "kyc.approved": {
       const p = payload as TemplatePayloads["kyc.approved"];
       return {
-        subject: "Your MakeGlowOver listing is live",
-        html: `<p>Your profile "${p.name}" has been approved and is now live on MakeGlowOver. <a href="${p.profileUrl}">View it here</a>.</p>`,
+        subject: "Your GlowMakeOver listing is live",
+        html: `<p>Your profile "${p.name}" has been approved and is now live on GlowMakeOver. <a href="${p.profileUrl}">View it here</a>.</p>`,
       };
     }
     case "kyc.rejected": {
       const p = payload as TemplatePayloads["kyc.rejected"];
       return {
-        subject: "Your MakeGlowOver listing needs changes",
+        subject: "Your GlowMakeOver listing needs changes",
         html: `<p>Your profile "${p.name}" was not approved this time. Please review your details and resubmit.</p>`,
       };
     }

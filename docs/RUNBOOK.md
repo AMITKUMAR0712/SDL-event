@@ -1,6 +1,6 @@
 # Runbook
 
-Operational procedures for running MakeGlowOver in production. This is a
+Operational procedures for running GlowMakeOver in production. This is a
 living document — update it whenever a procedure below turns out to be wrong
 or incomplete.
 

@@ -25,8 +25,8 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   title: {
-    template: "%s | MakeGlowOver",
-    default: "MakeGlowOver — Beauty & Banquet Bookings Near You",
+    template: "%s | GlowMakeOver",
+    default: "GlowMakeOver — Beauty & Banquet Bookings Near You",
   },
   description:
     "Find and book trusted beauty vendors and wedding banquet venues near you, anywhere in India.",

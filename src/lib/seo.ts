@@ -1,6 +1,6 @@
 import { env } from "@/lib/env";
 
-const SITE_NAME = "MakeGlowOver";
+const SITE_NAME = "GlowMakeOver";
 
 export function absoluteUrl(path: string): string {
   return new URL(path, env.NEXT_PUBLIC_APP_URL).toString();

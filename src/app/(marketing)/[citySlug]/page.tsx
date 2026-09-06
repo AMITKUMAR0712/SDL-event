@@ -22,7 +22,7 @@ export async function generateMetadata(props: PageProps<"/[citySlug]">): Promise
   const title = pageTitle(city.seoTitle ?? `Beauty & Banquet Services in ${city.name}`);
   const description = pageDescription(
     city.seoDescription ??
-      `Discover verified beauty vendors and banquet venues in ${city.name} on MakeGlowOver.`,
+      `Discover verified beauty vendors and banquet venues in ${city.name} on GlowMakeOver.`,
   );
 
   return {

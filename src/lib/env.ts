@@ -41,7 +41,7 @@ const envSchema = z.object({
 
   // Email
   RESEND_API_KEY: z.string().optional().default(""),
-  EMAIL_FROM: z.string().optional().default("MakeGlowOver <no-reply@makeglowover.com>"),
+  EMAIL_FROM: z.string().optional().default("GlowMakeOver <no-reply@makeglowover.com>"),
 
   // WhatsApp Cloud API
   WHATSAPP_PHONE_NUMBER_ID: z.string().optional().default(""),

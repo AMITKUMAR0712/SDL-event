@@ -18,7 +18,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-sm border-none shadow-lg">
           <CardHeader>
             <CardTitle className="font-heading text-2xl">Welcome back</CardTitle>
-            <CardDescription>Sign in to MakeGlowOver</CardDescription>
+            <CardDescription>Sign in to GlowMakeOver</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="password">
@@ -46,7 +46,7 @@ export default function LoginPage() {
               </TabsContent>
             </Tabs>
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              New to MakeGlowOver?{" "}
+              New to GlowMakeOver?{" "}
               <Link href="/register" className="font-medium text-foreground hover:underline">
                 Create an account
               </Link>

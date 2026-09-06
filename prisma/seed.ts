@@ -208,8 +208,8 @@ async function seedTaxonomy() {
         lng: city.lng,
         population: city.population,
         seoTitle: `Beauty & Banquet Services in ${city.name}`,
-        seoDescription: `Discover verified beauty vendors and banquet venues in ${city.name} on MakeGlowOver.`,
-        introContent: `${city.name} is one of MakeGlowOver's launch cities, with salons, makeup artists, and banquet venues across every major locality.`,
+        seoDescription: `Discover verified beauty vendors and banquet venues in ${city.name} on GlowMakeOver.`,
+        introContent: `${city.name} is one of GlowMakeOver's launch cities, with salons, makeup artists, and banquet venues across every major locality.`,
       },
     });
     cityRecords.push({ ...created, lat: city.lat, lng: city.lng });
@@ -308,19 +308,19 @@ async function seedPlans() {
   const customerPlans = [
     {
       code: "PLUS_MONTHLY",
-      name: "MakeGlowOver Plus (Monthly)",
+      name: "GlowMakeOver Plus (Monthly)",
       pricePaise: 9_900,
       period: BillingPeriod.MONTHLY,
     },
     {
       code: "PLUS_QUARTERLY",
-      name: "MakeGlowOver Plus (Quarterly)",
+      name: "GlowMakeOver Plus (Quarterly)",
       pricePaise: 24_900,
       period: BillingPeriod.QUARTERLY,
     },
     {
       code: "PLUS_YEARLY",
-      name: "MakeGlowOver Plus (Yearly)",
+      name: "GlowMakeOver Plus (Yearly)",
       pricePaise: 89_900,
       period: BillingPeriod.YEARLY,
     },
@@ -413,7 +413,7 @@ async function seedAdmins() {
 
   const admin = await db.user.create({
     data: {
-      name: "MakeGlowOver Admin",
+      name: "GlowMakeOver Admin",
       email: "admin@makeglowover.com",
       phone: nextIndianPhone(),
       passwordHash,

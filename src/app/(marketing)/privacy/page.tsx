@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "What personal data MakeGlowOver collects, why, and your rights under India's DPDP Act.",
+    "What personal data GlowMakeOver collects, why, and your rights under India's DPDP Act.",
 };
 
 export default function PrivacyPage() {

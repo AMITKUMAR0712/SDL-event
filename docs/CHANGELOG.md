@@ -523,3 +523,22 @@ to, allowed actors`), unit tested — including that a customer cannot confirm t
    not actually delivered, unless `RESEND_API_KEY` is configured).
 6. Visit `/terms`, `/privacy`, `/refund-policy`, `/contact` — confirm the footer links to all four
    from any page.
+
+## Post-launch — Rebrand to GlowMakeOver
+
+- Every user-facing "MakeGlowOver" mention (site header/footer wordmark, page titles and meta
+  descriptions, JSON-LD `Organization`/`BeautySalon`/`EventVenue` names, email subject/body copy,
+  the Razorpay checkout modal's merchant name, the WhatsApp pre-filled message, legal pages)
+  renamed to "GlowMakeOver". A case-sensitive replace of the literal string was safe here — email
+  domains and the MySQL database name use the all-lowercase `makeglowover`, a different string
+  entirely, so neither needed touching.
+- The already-seeded dev database had "MakeGlowOver" baked into `City.seoTitle/seoDescription/
+introContent` (20 rows) and the three `SubscriptionPlan.name` values ("MakeGlowOver Plus ...").
+  Patched those rows directly with a one-off script rather than a destructive `migrate reset` —
+  same non-destructive-patch approach used for the Phase 6 seed-password fix.
+- `docs/CHANGELOG.md` itself is intentionally NOT rewritten — every phase entry above accurately
+  records what the product was called at the time; rewriting history here would make the log
+  actively misleading about when the rename happened.
+- Real contact details added to `/contact`: phone, email, and registered office address, replacing
+  the placeholder "(to be added on incorporation)" text and the three invented @makeglowover.com
+  addresses with the one real inbox provided.

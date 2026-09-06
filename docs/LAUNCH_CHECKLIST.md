@@ -1,6 +1,6 @@
 # Launch Checklist
 
-Everything below must be true before MakeGlowOver takes real payments from
+Everything below must be true before GlowMakeOver takes real payments from
 real customers. Items are grouped by who typically owns them — check off as
 completed, don't skip silently.
 

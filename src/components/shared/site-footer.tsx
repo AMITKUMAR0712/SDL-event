@@ -18,7 +18,7 @@ export function SiteFooter() {
         </Link>
       </nav>
       <p className="mx-auto mt-4 max-w-5xl">
-        © {new Date().getFullYear()} MakeGlowOver. All rights reserved.
+        © {new Date().getFullYear()} GlowMakeOver. All rights reserved.
       </p>
     </footer>
   );

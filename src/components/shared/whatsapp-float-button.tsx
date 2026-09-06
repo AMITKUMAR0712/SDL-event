@@ -1,5 +1,5 @@
 const WHATSAPP_NUMBER = "919992196879";
-const MESSAGE = "Hi! I'd like to know more about MakeGlowOver.";
+const MESSAGE = "Hi! I'd like to know more about GlowMakeOver.";
 
 export function WhatsAppFloatButton() {
   return (

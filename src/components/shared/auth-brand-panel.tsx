@@ -20,7 +20,7 @@ export function AuthBrandPanel({ title, body }: { title: string; body: string })
 
       <p className="flex items-center gap-2 text-sm font-medium tracking-wide uppercase opacity-80">
         <Sparkles className="size-4" aria-hidden="true" />
-        MakeGlowOver
+        GlowMakeOver
       </p>
       <h2 className="mt-4 max-w-sm font-heading text-3xl text-balance">{title}</h2>
       <p className="mt-3 max-w-sm text-primary-foreground/80">{body}</p>

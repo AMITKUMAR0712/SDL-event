@@ -18,7 +18,7 @@ export async function revealContactAction(
       error:
         result.reason === "SIGN_IN_REQUIRED"
           ? "Sign in to view contact details."
-          : "You've used all your free unlocks this month — upgrade to MakeGlowOver Plus for unlimited access.",
+          : "You've used all your free unlocks this month — upgrade to GlowMakeOver Plus for unlimited access.",
     };
   }
 

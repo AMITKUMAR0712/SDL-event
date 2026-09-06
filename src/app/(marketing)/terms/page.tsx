@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "The terms that govern using MakeGlowOver as a customer, vendor, or venue owner.",
+  description: "The terms that govern using GlowMakeOver as a customer, vendor, or venue owner.",
 };
 
 export default function TermsPage() {
@@ -12,9 +12,9 @@ export default function TermsPage() {
       <h1 className="font-heading text-3xl">Terms of Service</h1>
       <p className="text-muted-foreground">Last updated: 6 September 2026</p>
 
-      <h2>1. What MakeGlowOver is</h2>
+      <h2>1. What GlowMakeOver is</h2>
       <p>
-        MakeGlowOver is a marketplace connecting customers with independent beauty vendors and
+        GlowMakeOver is a marketplace connecting customers with independent beauty vendors and
         banquet/venue owners across India. We do not employ vendors or own venues — each listing is
         an independent business responsible for the service or venue it provides.
       </p>
@@ -29,7 +29,7 @@ export default function TermsPage() {
       <h2>3. Bookings and payments</h2>
       <p>
         When you book a vendor or venue, you enter into a direct arrangement with that vendor or
-        venue; MakeGlowOver facilitates the booking and payment but is not a party to the underlying
+        venue; GlowMakeOver facilitates the booking and payment but is not a party to the underlying
         service contract. All amounts are shown in Indian Rupees (INR), inclusive of applicable
         taxes unless stated otherwise. Payments are processed by Razorpay; we never store your card
         or bank details.
@@ -43,7 +43,7 @@ export default function TermsPage() {
 
       <h2>5. Vendor and venue obligations</h2>
       <p>
-        Vendors and venue owners listed on MakeGlowOver must hold any licenses their business
+        Vendors and venue owners listed on GlowMakeOver must hold any licenses their business
         requires, honor confirmed bookings, and keep their KYC information (including GSTIN, where
         applicable) accurate and current. We may remove a listing that fails KYC review or receives
         credible complaints of fraud or unsafe conduct.
@@ -58,14 +58,14 @@ export default function TermsPage() {
 
       <h2>7. Prohibited conduct</h2>
       <p>
-        You may not use MakeGlowOver to circumvent platform fees by arranging payment outside the
+        You may not use GlowMakeOver to circumvent platform fees by arranging payment outside the
         platform for a booking made through it, post false reviews, scrape the platform, or
         misrepresent your identity, pricing, or qualifications.
       </p>
 
       <h2>8. Liability</h2>
       <p>
-        MakeGlowOver is not liable for the quality, safety, or legality of services or venues listed
+        GlowMakeOver is not liable for the quality, safety, or legality of services or venues listed
         by vendors and venue owners, who remain independently responsible for what they provide. To
         the extent permitted by Indian law, our liability for any claim is limited to the amount you
         paid us for the booking or subscription giving rise to that claim.
