@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
@@ -5,11 +6,31 @@ import { ContactRevealButton } from "@/components/shared/contact-reveal-button";
 import { EnquireBanquetForm } from "@/components/shared/enquire-banquet-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatPaiseAsINR } from "@/lib/money";
+import { breadcrumbJsonLd, pageDescription, pageTitle } from "@/lib/seo";
 import {
   getApprovedReviewsFor,
   getBanquetBySlug,
   getMediaFor,
 } from "@/server/repositories/listings";
+
+export async function generateMetadata(props: PageProps<"/banquet/[slug]">): Promise<Metadata> {
+  const { slug } = await props.params;
+  const banquet = await getBanquetBySlug(slug);
+  if (!banquet) return {};
+
+  const title = pageTitle(`${banquet.venueName} — ${banquet.city.name}`);
+  const description = pageDescription(
+    banquet.about ??
+      `Book ${banquet.venueName} in ${banquet.city.name} on MakeGlowOver — halls, pricing, and availability.`,
+  );
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/banquet/${banquet.slug}` },
+    openGraph: { title, description, type: "website" },
+  };
+}
 
 export default async function BanquetProfilePage(props: PageProps<"/banquet/[slug]">) {
   const { slug } = await props.params;
@@ -21,31 +42,46 @@ export default async function BanquetProfilePage(props: PageProps<"/banquet/[slu
     getApprovedReviewsFor("BANQUET", banquet.id),
   ]);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "EventVenue",
-    name: banquet.venueName,
-    description: banquet.about ?? undefined,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: banquet.city.name,
-      addressCountry: "IN",
+  const jsonLd = [
+    breadcrumbJsonLd([
+      { name: "Home", path: "/" },
+      { name: banquet.city.name, path: `/${banquet.city.slug}` },
+      ...(banquet.primaryCategory
+        ? [
+            {
+              name: banquet.primaryCategory.name,
+              path: `/${banquet.city.slug}/${banquet.primaryCategory.slug}`,
+            },
+          ]
+        : []),
+      { name: banquet.venueName, path: `/banquet/${banquet.slug}` },
+    ]),
+    {
+      "@context": "https://schema.org",
+      "@type": "EventVenue",
+      name: banquet.venueName,
+      description: banquet.about ?? undefined,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: banquet.city.name,
+        addressCountry: "IN",
+      },
+      ...(banquet.ratingCount > 0
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: Number(banquet.ratingAvg),
+              reviewCount: banquet.ratingCount,
+            },
+          }
+        : {}),
+      hasPart: {
+        "@type": "WebPageElement",
+        isAccessibleForFree: false,
+        cssSelector: "#gated-contact",
+      },
     },
-    ...(banquet.ratingCount > 0
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: Number(banquet.ratingAvg),
-            reviewCount: banquet.ratingCount,
-          },
-        }
-      : {}),
-    hasPart: {
-      "@type": "WebPageElement",
-      isAccessibleForFree: false,
-      cssSelector: "#gated-contact",
-    },
-  };
+  ];
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">

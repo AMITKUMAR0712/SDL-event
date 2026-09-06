@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
+import { notifySearchEnginesOfUpdate } from "@/server/services/search-engine-ping";
 
 type AuditContext = { actorId: string; ip?: string; userAgent?: string };
 
@@ -33,6 +34,7 @@ export async function approveVendorKyc(vendorId: string, ctx: AuditContext) {
     data: { kycStatus: "APPROVED", isPublished: true, publishedAt: new Date() },
   });
   await logAdminAction(ctx, "vendor.kyc_approve", "VendorProfile", vendorId, before, after);
+  notifySearchEnginesOfUpdate([`/vendor/${after.slug}`]).catch(() => {});
   return after;
 }
 
@@ -53,6 +55,7 @@ export async function approveBanquetKyc(banquetId: string, ctx: AuditContext) {
     data: { kycStatus: "APPROVED", isPublished: true, publishedAt: new Date() },
   });
   await logAdminAction(ctx, "banquet.kyc_approve", "BanquetProfile", banquetId, before, after);
+  notifySearchEnginesOfUpdate([`/banquet/${after.slug}`]).catch(() => {});
   return after;
 }
 

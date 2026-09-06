@@ -5,6 +5,7 @@ import { Fraunces, Inter } from "next/font/google";
 
 import { SessionProvider } from "@/components/shared/session-provider";
 import { SmoothScrollProvider } from "@/components/shared/smooth-scroll-provider";
+import { env } from "@/lib/env";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -19,12 +20,16 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   title: {
     template: "%s | MakeGlowOver",
     default: "MakeGlowOver — Beauty & Banquet Bookings Near You",
   },
   description:
     "Find and book trusted beauty vendors and wedding banquet venues near you, anywhere in India.",
+  ...(env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

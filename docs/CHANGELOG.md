@@ -372,3 +372,71 @@ to, allowed actors`), unit tested — including that a customer cannot confirm t
    (route guard from `src/lib/access-control.ts`, unchanged this phase).
 5. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green; then
    `pnpm exec playwright test tests/e2e/admin.spec.ts` against `pnpm start` — passing.
+
+## Phase 7 — SEO engine
+
+- Two new pillar route types, both driven by the `City`/`Category` `seoTitle`/`seoDescription`/
+  `introContent`/`longDescription` fields that Phase 1 already seeded for exactly this purpose:
+  - `/[citySlug]` — city hub, statically generated (`generateStaticParams` over every active city)
+    linking to every category that city actually has published listings in.
+  - `/categories/[categorySlug]` — category hub, statically generated the same way, linking to
+    every city with published listings in that category.
+  - `/[citySlug]/[categorySlug]` — the money page: reuses Phase 3's `runSearch()` service
+    unchanged, so it respects the same guest/customer unlock gate as `/search`.
+    `generateStaticParams` only emits combinations that actually have a published listing (no
+    thin/empty SEO pages), but the page still renders dynamically per request — `runSearch()`
+    calls `getGateContext()`, which reads the session cookie, so full static caching would leak
+    one visitor's unlock state to another. Same reasoning `/vendor/[slug]` and `/search` already
+    render dynamically for.
+  - None of this needed a schema change — `City`/`Category`'s SEO columns and the
+    `[isPublished, cityId, primaryCategoryId, boostScore]` index on both `VendorProfile` and
+    `BanquetProfile` (from Phase 1) already covered every query these pages need.
+- `src/components/shared/listing-grid.tsx`: the vendor/banquet card grid (locked-teaser blur +
+  unlock CTA included) extracted out of `/search` so the new city×category page renders identical
+  cards instead of a second copy of the same markup.
+- `/search` is now `noindex, follow` — with real content now living at `/[city]/[category]`, the
+  raw query-string filter view is a duplicate-content liability if indexed; `follow` keeps its
+  outbound links crawlable.
+- `src/lib/seo.ts`: `absoluteUrl`, word-boundary-safe `truncate`/`pageTitle`/`pageDescription`,
+  and `breadcrumbJsonLd`/`itemListJsonLd` builders. `itemListJsonLd` is documented to only ever
+  receive the visibly-rendered (unlocked) items — a blurred teaser card is not a real listed item,
+  matching the `isAccessibleForFree: false` honesty rule the vendor/banquet profile pages already
+  followed.
+- `generateMetadata` (title/description/canonical/OG) added to `/vendor/[slug]` and
+  `/banquet/[slug]`, which previously had none, plus a `BreadcrumbList` alongside their existing
+  `BeautySalon`/`EventVenue` JSON-LD.
+- `src/app/sitemap.ts` (revalidates hourly) and `src/app/robots.ts`: every city hub, category hub,
+  city×category combination with real listings, and every published vendor/banquet, with
+  `lastModified` from each row's `updatedAt`.
+- `src/server/services/search-engine-ping.ts`: real IndexNow (Bing/Yandex/Seznam) and Google
+  Indexing API pings, fired (fire-and-forget, never blocking or failing the mutation) when an
+  admin approves a vendor/banquet's KYC. Ownership of the IndexNow key is proven via
+  `/indexnow-key.txt` (a route handler, not a static file, since the key comes from `env.ts`).
+  **Worth knowing:** Google's own docs state the Indexing API only affects crawl priority for
+  `JobPosting`/`BroadcastEvent` pages — neither applies here, so calling it is real and harmless
+  but likely won't speed up indexing beyond what the sitemap already does. Kept because
+  `GOOGLE_INDEXING_API_CLIENT_EMAIL`/`PRIVATE_KEY` were already provisioned in `env.ts` since
+  Phase 0 and a future job-fair-style feature could reuse the same plumbing.
+- Fixed a real gap found while adding this: Vitest never actually loaded `.env`, so any test that
+  imported `src/lib/env.ts` (nothing did, until this phase's own tests) would fail with "missing
+  NEXT_PUBLIC_APP_URL/DATABASE_URL/AUTH_SECRET" even in a correctly configured checkout.
+  `vitest.config.ts` now loads `.env` via Vite's `loadEnv()` before tests run.
+- **Known pre-existing issue, not caused by this phase:** `tests/e2e/booking.spec.ts` intermittently
+  fails with "That time is no longer available" — it books whichever vendor search returns first
+  for a hardcoded "tomorrow 11:00" slot, and that vendor's seeded availability doesn't cover every
+  day of the week. Confirmed unrelated to this phase's changes (the search ordering and vendor
+  href markup are byte-for-byte the same as before, just extracted into `ListingGrid`) — flagging
+  it here since it surfaced while re-running the full e2e suite as part of this phase's checks.
+
+### Manual smoke test
+
+1. `pnpm build && pnpm start`, then `curl localhost:3000/robots.txt` and
+   `curl localhost:3000/sitemap.xml` — confirm both list the seeded cities/categories/vendors.
+2. Visit `/mumbai` — confirm it lists only categories Mumbai actually has published listings in,
+   each linking to `/mumbai/<category>`.
+3. Visit `/mumbai/bridal-makeup` (or any combo from the sitemap) as a guest — confirm the same
+   locked/unlocked card behavior as `/search`, plus `BreadcrumbList` + `ItemList` JSON-LD in the
+   page source.
+4. `view-source:` a `/vendor/[slug]` page — confirm a `<title>`, canonical `<link>`, and OpenGraph
+   tags are now present.
+5. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,6 +7,7 @@ import { BookVendorForm } from "@/components/shared/book-vendor-form";
 import { ContactRevealButton } from "@/components/shared/contact-reveal-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatPaiseAsINR } from "@/lib/money";
+import { breadcrumbJsonLd, pageDescription, pageTitle } from "@/lib/seo";
 import {
   getApprovedReviewsFor,
   getMediaFor,
@@ -13,6 +15,30 @@ import {
   incrementVendorViewCount,
   similarVendorsNearby,
 } from "@/server/repositories/listings";
+
+export async function generateMetadata(props: PageProps<"/vendor/[slug]">): Promise<Metadata> {
+  const { slug } = await props.params;
+  const vendor = await getVendorBySlug(slug);
+  if (!vendor) return {};
+
+  const title = pageTitle(`${vendor.businessName} — ${vendor.city.name}`);
+  const description = pageDescription(
+    vendor.about ??
+      `Book ${vendor.businessName} in ${vendor.city.name} on MakeGlowOver — ratings, pricing, and instant booking.`,
+  );
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/vendor/${vendor.slug}` },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: vendor.coverImage ? [vendor.coverImage] : undefined,
+    },
+  };
+}
 
 export default async function VendorProfilePage(props: PageProps<"/vendor/[slug]">) {
   const { slug } = await props.params;
@@ -27,38 +53,53 @@ export default async function VendorProfilePage(props: PageProps<"/vendor/[slug]
 
   incrementVendorViewCount(vendor.id).catch(() => {});
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BeautySalon",
-    name: vendor.businessName,
-    description: vendor.about ?? undefined,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: vendor.city.name,
-      addressRegion: vendor.city.stateId,
-      addressCountry: "IN",
+  const jsonLd = [
+    breadcrumbJsonLd([
+      { name: "Home", path: "/" },
+      { name: vendor.city.name, path: `/${vendor.city.slug}` },
+      ...(vendor.primaryCategory
+        ? [
+            {
+              name: vendor.primaryCategory.name,
+              path: `/${vendor.city.slug}/${vendor.primaryCategory.slug}`,
+            },
+          ]
+        : []),
+      { name: vendor.businessName, path: `/vendor/${vendor.slug}` },
+    ]),
+    {
+      "@context": "https://schema.org",
+      "@type": "BeautySalon",
+      name: vendor.businessName,
+      description: vendor.about ?? undefined,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: vendor.city.name,
+        addressRegion: vendor.city.stateId,
+        addressCountry: "IN",
+      },
+      ...(vendor.ratingCount > 0
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: Number(vendor.ratingAvg),
+              reviewCount: vendor.ratingCount,
+            },
+          }
+        : {}),
+      makesOffer: vendor.services.map((s) => ({
+        "@type": "Offer",
+        itemOffered: { "@type": "Service", name: s.title },
+        price: s.pricePaise / 100,
+        priceCurrency: "INR",
+      })),
+      hasPart: {
+        "@type": "WebPageElement",
+        isAccessibleForFree: false,
+        cssSelector: "#gated-contact",
+      },
     },
-    ...(vendor.ratingCount > 0
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: Number(vendor.ratingAvg),
-            reviewCount: vendor.ratingCount,
-          },
-        }
-      : {}),
-    makesOffer: vendor.services.map((s) => ({
-      "@type": "Offer",
-      itemOffered: { "@type": "Service", name: s.title },
-      price: s.pricePaise / 100,
-      priceCurrency: "INR",
-    })),
-    hasPart: {
-      "@type": "WebPageElement",
-      isAccessibleForFree: false,
-      cssSelector: "#gated-contact",
-    },
-  };
+  ];
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">

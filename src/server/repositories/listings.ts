@@ -173,6 +173,22 @@ export function incrementVendorViewCount(vendorId: string) {
   });
 }
 
+/** Published vendor slugs + last-modified, for the sitemap. */
+export function listPublishedVendorSlugs() {
+  return db.vendorProfile.findMany({
+    where: { isPublished: true, deletedAt: null },
+    select: { slug: true, updatedAt: true },
+  });
+}
+
+/** Published banquet slugs + last-modified, for the sitemap. */
+export function listPublishedBanquetSlugs() {
+  return db.banquetProfile.findMany({
+    where: { isPublished: true, deletedAt: null },
+    select: { slug: true, updatedAt: true },
+  });
+}
+
 export function similarVendorsNearby(vendorId: string, cityId: string, categoryId: string | null) {
   return db.vendorProfile.findMany({
     where: {
