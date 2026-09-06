@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BookVendorForm } from "@/components/shared/book-vendor-form";
 import { ContactRevealButton } from "@/components/shared/contact-reveal-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatPaiseAsINR } from "@/lib/money";
@@ -105,6 +106,18 @@ export default async function VendorProfilePage(props: PageProps<"/vendor/[slug]
           </li>
         ))}
       </ul>
+
+      <div className="mt-6">
+        <BookVendorForm
+          vendorId={vendor.id}
+          services={vendor.services.map((s) => ({
+            id: s.id,
+            title: s.title,
+            pricePaise: s.pricePaise,
+            mode: s.mode,
+          }))}
+        />
+      </div>
 
       <div id="gated-contact" className="mt-8 rounded-lg border border-border p-4">
         <h2 className="font-heading text-xl">Contact</h2>

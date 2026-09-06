@@ -2,6 +2,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import { ContactRevealButton } from "@/components/shared/contact-reveal-button";
+import { EnquireBanquetForm } from "@/components/shared/enquire-banquet-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatPaiseAsINR } from "@/lib/money";
 import {
@@ -97,6 +98,10 @@ export default async function BanquetProfilePage(props: PageProps<"/banquet/[slu
           ? formatPaiseAsINR(banquet.nonVegPricePerPlatePaise)
           : "On request"}
       </p>
+
+      <div className="mt-6">
+        <EnquireBanquetForm banquetId={banquet.id} />
+      </div>
 
       <div id="gated-contact" className="mt-8 rounded-lg border border-border p-4">
         <h2 className="font-heading text-xl">Contact</h2>

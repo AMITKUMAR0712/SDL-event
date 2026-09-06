@@ -224,3 +224,47 @@ onboarding feature itself, which Phase 3+ can safely build on.
    exists for each of the first 5.
 4. Confirm `/dashboard/vendor` still redirects guests to `/login`, and `/vendor/[slug]` does not.
 5. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.
+
+## Phase 4 — Booking, home service, and calendars
+
+- `server/services/slots.ts`: pure slot-generation function (Availability minus BlockedDate minus
+  existing bookings-with-buffer minus at-home travel time), unit tested including the
+  midnight-boundary case and a wrong-weekday case. UTC in, UTC out — it never touches wall-clock
+  time, so it carries no IST/DST edge cases of its own; the Asia/Kolkata display conversion
+  happens only at the UI boundary (`toLocaleString(..., { timeZone: "Asia/Kolkata" })`).
+- `server/services/booking-status.ts`: the status machine as one explicit transition table (`from,
+to, allowed actors`), unit tested — including that a customer cannot confirm their own booking,
+  and that nothing skips straight from PENDING to COMPLETED. Cancellation refund percentage is a
+  pure function of the admin-configurable `cancellation_policy` Setting (already seeded in Phase
+  1), also unit tested at each policy boundary.
+- Booking creation (`server/services/booking.ts`) recomputes every amount server-side from live
+  `VendorService`/`BanquetProfile` prices — the client only ever sends service IDs and a
+  timestamp, never a price — and rejects a request that collides with an existing booking (a
+  minimal conflict check; the fuller `generateSlots` pass powers slot suggestions, not just
+  conflict rejection). AT_HOME bookings enforce the vendor's minimum order and use its
+  `travelFeePaise`. VENUE bookings are enquiry-only (PENDING until the owner confirms), matching
+  the "banquet deals are negotiated" note in the phase brief.
+- Service-start OTP (`server/services/service-start-otp.ts`) reuses the Redis fallback from Phase
+  2 but is a separate namespace from the login-OTP flow: it's generated for an in-person
+  hand-off (customer reads the code to the professional), not sent over SMS, since no
+  notification/queue infrastructure exists yet (that's Phase 8).
+- Reviews (`server/services/review.ts`): one per booking, only after `COMPLETED`, recomputes the
+  owner's `ratingAvg`/`ratingCount` from real approved reviews in the same transaction. Owner
+  reply supported; admin moderation queue is Phase 6.
+- Minimal booking UI: a booking form on the vendor profile page, an enquiry form on the banquet
+  profile page, a customer "My bookings" page (with inline review submission), and
+  owner booking lists at `/dashboard/vendor/bookings` / `/dashboard/banquet/bookings` with
+  role-appropriate status-transition buttons. **Scoped down from the full brief**: no calendar
+  grid widget (a flat status-grouped list instead) and no in-app notification delivery on
+  transitions (Notification rows aren't written yet — real multi-channel delivery is Phase 8's
+  job, and doing it half-way here would just mean redoing it there).
+
+### Manual smoke test
+
+1. As a customer, book a vendor service from its profile page; confirm the booking appears as
+   PENDING on `/account/bookings` and on the vendor's `/dashboard/vendor/bookings`.
+2. As the vendor, click "Confirm", then "Start", then "Mark completed"; confirm each transition
+   is rejected if attempted out of order (e.g. trying "Mark completed" from PENDING).
+3. As the customer, leave a review on the now-COMPLETED booking; confirm the vendor's profile
+   page rating updates and a second review attempt on the same booking is refused.
+4. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green.
