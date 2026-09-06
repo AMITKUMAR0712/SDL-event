@@ -40,7 +40,7 @@ export function QuickSearchForm({
       onSubmit={onSubmit}
       className={
         compact
-          ? "flex w-full items-center gap-1 rounded-full border bg-card p-1 shadow-sm"
+          ? "flex w-full max-w-xl items-center gap-1 rounded-full border bg-card p-1 shadow-sm"
           : "flex w-full max-w-2xl flex-col gap-2 rounded-2xl border bg-card p-2 shadow-sm sm:flex-row"
       }
     >
@@ -48,9 +48,7 @@ export function QuickSearchForm({
         <SelectTrigger
           size={compact ? "sm" : "default"}
           className={
-            compact
-              ? "w-32 border-none shadow-none sm:w-40"
-              : "w-full border-none shadow-none sm:flex-1"
+            compact ? "flex-1 border-none shadow-none" : "w-full border-none shadow-none sm:flex-1"
           }
         >
           <SelectValue placeholder="City" />
@@ -68,9 +66,7 @@ export function QuickSearchForm({
         <SelectTrigger
           size={compact ? "sm" : "default"}
           className={
-            compact
-              ? "w-32 border-none shadow-none sm:w-44"
-              : "w-full border-none shadow-none sm:flex-1"
+            compact ? "flex-1 border-none shadow-none" : "w-full border-none shadow-none sm:flex-1"
           }
         >
           <SelectValue placeholder="Service" />
