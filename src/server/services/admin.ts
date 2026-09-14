@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { revalidatePath, updateTag } from "next/cache";
 
 import { db } from "@/lib/db";
-import type { CategoryAdminInput, CityAdminInput } from "@/schemas/admin";
+import type { CategoryAdminInput, CityAdminInput, PlanAdminInput } from "@/schemas/admin";
 import { HEADER_SEARCH_OPTIONS_TAG } from "@/server/repositories/catalog";
 import { notify } from "@/server/services/notification";
 import { notifySearchEnginesOfUpdate } from "@/server/services/search-engine-ping";
@@ -177,5 +177,47 @@ export async function updateCategory(id: string, input: CategoryAdminInput, ctx:
   updateTag(HEADER_SEARCH_OPTIONS_TAG);
   revalidatePath(`/categories/${after.slug}`);
   if (before && before.slug !== after.slug) revalidatePath(`/categories/${before.slug}`);
+  return after;
+}
+
+function toFeatureCreateInput(features: PlanAdminInput["features"]) {
+  return features.map((f) => ({
+    key: f.key,
+    label: f.label,
+    valueInt: f.type === "INT" ? (f.valueInt ?? 0) : null,
+    valueBool: f.type === "BOOL" ? (f.valueBool ?? false) : null,
+    valueText: f.type === "TEXT" ? (f.valueText ?? "") : null,
+  }));
+}
+
+export async function createPlan(input: PlanAdminInput, ctx: AuditContext) {
+  const { features, ...planFields } = input;
+  const plan = await db.subscriptionPlan.create({
+    data: { ...planFields, features: { create: toFeatureCreateInput(features) } },
+    include: { features: true },
+  });
+  await logAdminAction(ctx, "plan.create", "SubscriptionPlan", plan.id, null, plan);
+  revalidatePath("/");
+  return plan;
+}
+
+/** Replaces the feature list wholesale rather than diffing — plans have a
+ * handful of features, so this is simpler and just as correct. */
+export async function updatePlan(id: string, input: PlanAdminInput, ctx: AuditContext) {
+  const before = await db.subscriptionPlan.findUnique({
+    where: { id },
+    include: { features: true },
+  });
+  const { features, ...planFields } = input;
+  const after = await db.$transaction(async (tx) => {
+    await tx.planFeature.deleteMany({ where: { planId: id } });
+    return tx.subscriptionPlan.update({
+      where: { id },
+      data: { ...planFields, features: { create: toFeatureCreateInput(features) } },
+      include: { features: true },
+    });
+  });
+  await logAdminAction(ctx, "plan.update", "SubscriptionPlan", id, before, after);
+  revalidatePath("/");
   return after;
 }

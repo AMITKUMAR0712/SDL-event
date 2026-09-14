@@ -40,3 +40,31 @@ export const categoryAdminSchema = z.object({
   longDescription: z.string().optional(),
 });
 export type CategoryAdminInput = z.infer<typeof categoryAdminSchema>;
+
+export const planFeatureAdminSchema = z.object({
+  key: z.string().min(1),
+  label: z.string().min(1),
+  type: z.enum(["INT", "BOOL", "TEXT"]),
+  valueInt: z.coerce.number().int().optional(),
+  valueBool: z.coerce.boolean().optional(),
+  valueText: z.string().optional(),
+});
+export type PlanFeatureAdminInput = z.infer<typeof planFeatureAdminSchema>;
+
+export const planAdminSchema = z.object({
+  audience: z.enum(["VENDOR", "BANQUET", "CUSTOMER"]),
+  code: z
+    .string()
+    .min(2)
+    .regex(/^[A-Z0-9_]+$/, "Uppercase letters, numbers, and underscores only"),
+  name: z.string().min(2),
+  description: z.string().optional(),
+  pricePaise: z.coerce.number().int().min(0),
+  compareAtPricePaise: z.coerce.number().int().optional(),
+  billingPeriod: z.enum(["MONTHLY", "QUARTERLY", "HALF_YEARLY", "YEARLY"]),
+  trialDays: z.coerce.number().int().min(0).default(0),
+  isActive: z.coerce.boolean().default(true),
+  sortOrder: z.coerce.number().int().default(0),
+  features: z.array(planFeatureAdminSchema).default([]),
+});
+export type PlanAdminInput = z.infer<typeof planAdminSchema>;

@@ -111,3 +111,14 @@ export function listAllCategories() {
 export function findCategoryById(id: string) {
   return db.category.findUnique({ where: { id } });
 }
+
+export function listAllPlans() {
+  return db.subscriptionPlan.findMany({
+    orderBy: [{ audience: "asc" }, { sortOrder: "asc" }],
+    include: { features: true },
+  });
+}
+
+export function findPlanById(id: string) {
+  return db.subscriptionPlan.findUnique({ where: { id }, include: { features: true } });
+}

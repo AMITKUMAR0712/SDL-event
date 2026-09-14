@@ -3,19 +3,26 @@
 import { headers } from "next/headers";
 
 import { requireRole } from "@/lib/authz";
-import { categoryAdminSchema, cityAdminSchema, couponAdminSchema } from "@/schemas/admin";
+import {
+  categoryAdminSchema,
+  cityAdminSchema,
+  couponAdminSchema,
+  planAdminSchema,
+} from "@/schemas/admin";
 import type { ActionResult } from "@/server/actions/auth";
 import {
   approveBanquetKyc,
   approveVendorKyc,
   createCategory,
   createCity,
+  createPlan,
   createPlatformCoupon,
   rejectBanquetKyc,
   rejectVendorKyc,
   setUserStatus,
   updateCategory,
   updateCity,
+  updatePlan,
   updateSettingValue,
 } from "@/server/services/admin";
 
@@ -121,5 +128,25 @@ export async function updateCategoryAction(id: string, input: unknown): Promise<
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   await updateCategory(id, parsed.data, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function createPlanAction(input: unknown): Promise<ActionResult> {
+  const ctx = await adminContext();
+  const parsed = planAdminSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  await createPlan(parsed.data, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function updatePlanAction(id: string, input: unknown): Promise<ActionResult> {
+  const ctx = await adminContext();
+  const parsed = planAdminSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  await updatePlan(id, parsed.data, ctx);
   return { ok: true, data: undefined };
 }

@@ -9,6 +9,7 @@ import {
   Tags,
   Ticket,
   Users,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,6 +18,7 @@ const LINKS = [
   { href: "/dashboard/admin", label: "Dashboard", icon: Gauge },
   { href: "/dashboard/admin/kyc", label: "KYC review", icon: ShieldCheck },
   { href: "/dashboard/admin/bookings", label: "Bookings", icon: AudioWaveform },
+  { href: "/dashboard/admin/plans", label: "Plans", icon: Wallet },
   { href: "/dashboard/admin/coupons", label: "Coupons", icon: Ticket },
   { href: "/dashboard/admin/cities", label: "Cities", icon: MapPin },
   { href: "/dashboard/admin/categories", label: "Categories", icon: Tags },

@@ -40,6 +40,12 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/** placehold.co: a real, honest placeholder-image service — clearly labeled
+ * mock data, not a fabricated stock photo — matching the brand palette. */
+function mockImageUrl(text: string): string {
+  return `https://placehold.co/400x300/D9A927/2E1435?text=${encodeURIComponent(text)}`;
+}
+
 function timeOfDay(hour: number, minute = 0): Date {
   return new Date(Date.UTC(1970, 0, 1, hour, minute, 0));
 }
@@ -207,6 +213,7 @@ async function seedTaxonomy() {
         lat: city.lat,
         lng: city.lng,
         population: city.population,
+        imageUrl: mockImageUrl(city.name),
         seoTitle: `Beauty & Banquet Services in ${city.name}`,
         seoDescription: `Discover verified beauty vendors and banquet venues in ${city.name} on GlowMakeOver.`,
         introContent: `${city.name} is one of GlowMakeOver's launch cities, with salons, makeup artists, and banquet venues across every major locality.`,
@@ -242,6 +249,7 @@ async function seedTaxonomy() {
           slug: slugify(name),
           name,
           type: CategoryType.BEAUTY,
+          imageUrl: mockImageUrl(name),
           seoTitle: `${name} Near You`,
           seoDescription: `Find and book the best ${name.toLowerCase()} professionals near you.`,
           longDescription: faker.lorem.paragraph(),
@@ -257,6 +265,7 @@ async function seedTaxonomy() {
           slug: slugify(name),
           name,
           type: CategoryType.BANQUET,
+          imageUrl: mockImageUrl(name),
           seoTitle: `${name} Near You`,
           seoDescription: `Find and book the best ${name.toLowerCase()} for your event.`,
           longDescription: faker.lorem.paragraph(),
@@ -294,10 +303,27 @@ async function seedTaxonomy() {
 
 async function seedPlans() {
   const vendorPlans = [
-    { code: "VENDOR_STARTER", name: "Starter", pricePaise: 99_900, trialDays: 90 },
-    { code: "VENDOR_GROWTH", name: "Growth", pricePaise: 199_900, trialDays: 14 },
-    { code: "VENDOR_PRO", name: "Pro", pricePaise: 349_900, trialDays: 7 },
-    { code: "VENDOR_ELITE", name: "Elite", pricePaise: 599_900, trialDays: 0 },
+    {
+      code: "VENDOR_3M",
+      name: "3 Months",
+      pricePaise: 9_900,
+      billingPeriod: BillingPeriod.QUARTERLY,
+      leadsQuota: 20,
+    },
+    {
+      code: "VENDOR_6M",
+      name: "6 Months",
+      pricePaise: 15_900,
+      billingPeriod: BillingPeriod.HALF_YEARLY,
+      leadsQuota: 50,
+    },
+    {
+      code: "VENDOR_12M",
+      name: "12 Months",
+      pricePaise: 24_900,
+      billingPeriod: BillingPeriod.YEARLY,
+      leadsQuota: 100,
+    },
   ];
   const banquetPlans = [
     { code: "BANQUET_STARTER", name: "Starter", pricePaise: 149_900, trialDays: 90 },
@@ -334,19 +360,20 @@ async function seedPlans() {
         audience: PlanAudience.VENDOR,
         code: p.code,
         name: p.name,
-        description: `${p.name} plan for beauty vendors.`,
+        description: `Up to ${p.leadsQuota}+ client leads over ${p.name.toLowerCase()}.`,
         pricePaise: p.pricePaise,
-        billingPeriod: BillingPeriod.MONTHLY,
-        trialDays: p.trialDays,
+        billingPeriod: p.billingPeriod,
+        trialDays: 0,
         sortOrder: i,
         features: {
           create: [
-            { key: "MAX_LISTINGS", label: "Active services", valueInt: (i + 1) * 10 },
-            { key: "MAX_PHOTOS", label: "Gallery photos", valueInt: (i + 1) * 5 },
-            { key: "LEADS_PER_MONTH", label: "Leads per month", valueInt: (i + 1) * 20 },
-            { key: "PRIORITY_RANK", label: "Search priority", valueInt: i },
-            { key: "VERIFIED_BADGE", label: "Verified badge", valueBool: i >= 1 },
-            { key: "ANALYTICS", label: "Analytics dashboard", valueBool: i >= 2 },
+            {
+              key: "LEADS_QUOTA",
+              label: `Up to ${p.leadsQuota}${i === vendorPlans.length - 1 ? "+" : ""} client leads`,
+              valueInt: p.leadsQuota,
+            },
+            { key: "LOCAL_LEADS", label: "Leads from customers near you", valueBool: true },
+            { key: "HOME_SERVICE", label: "Home-service leads included", valueBool: true },
           ],
         },
       },

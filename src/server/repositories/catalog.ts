@@ -74,6 +74,15 @@ export function listPlansForAudience(audience: "VENDOR" | "BANQUET") {
   });
 }
 
+/** Full plan + features, for pricing display (e.g. the home page's vendor pricing section). */
+export function listActivePlansWithFeatures(audience: "VENDOR" | "BANQUET" | "CUSTOMER") {
+  return db.subscriptionPlan.findMany({
+    where: { audience, isActive: true },
+    orderBy: { sortOrder: "asc" },
+    include: { features: true },
+  });
+}
+
 export function findPlanByCode(code: string) {
   return db.subscriptionPlan.findUnique({ where: { code } });
 }

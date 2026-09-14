@@ -1,5 +1,6 @@
 import {
   CalendarCheck,
+  Check,
   Gem,
   MapPin,
   ScanSearch,
@@ -11,33 +12,42 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { HeroCarousel } from "@/components/shared/hero-carousel";
 import { QuickSearchForm } from "@/components/shared/quick-search-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatPaiseAsINR } from "@/lib/money";
 import {
   getMarketplaceStats,
   listActiveCategories,
   listActiveCities,
+  listActivePlansWithFeatures,
 } from "@/server/repositories/catalog";
 
+const PERIOD_LABEL: Record<string, string> = {
+  MONTHLY: "per month",
+  QUARTERLY: "for 3 months",
+  HALF_YEARLY: "for 6 months",
+  YEARLY: "for 12 months",
+};
+
 export default async function HomePage() {
-  const [cities, categories, stats] = await Promise.all([
+  const [cities, categories, stats, vendorPlans] = await Promise.all([
     listActiveCities(),
     listActiveCategories(),
     getMarketplaceStats(),
+    listActivePlansWithFeatures("VENDOR"),
   ]);
 
   return (
     <main className="flex flex-1 flex-col">
       {/* Hero */}
       <section className="relative isolate">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute top-4 right-6 -z-10 h-72 w-72 rounded-full bg-primary/10 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-4 left-6 -z-10 h-72 w-72 rounded-full bg-accent/50 blur-3xl"
+        <HeroCarousel
+          images={categories
+            .filter((c) => c.imageUrl)
+            .slice(0, 6)
+            .map((c) => ({ url: c.imageUrl!, alt: c.name }))}
         />
 
         <div className="flex flex-col items-center gap-6 px-6 py-24 text-center">
@@ -199,6 +209,52 @@ export default async function HomePage() {
           </CardContent>
         </Card>
       </section>
+
+      {vendorPlans.length > 0 && (
+        <section className="bg-accent/30 py-16">
+          <div className="mx-auto w-full max-w-5xl px-6">
+            <h2 className="text-center font-heading text-2xl">Pricing for vendors</h2>
+            <p className="mt-2 text-center text-muted-foreground">
+              Pick a plan and start receiving client leads near you.
+            </p>
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {vendorPlans.map((plan) => (
+                <Card key={plan.id} className="flex flex-col">
+                  <CardContent className="flex flex-1 flex-col p-6">
+                    <p className="font-heading text-xl">{plan.name}</p>
+                    <p className="mt-2">
+                      <span className="font-heading text-3xl">
+                        {formatPaiseAsINR(plan.pricePaise)}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {" "}
+                        {PERIOD_LABEL[plan.billingPeriod] ?? ""}
+                      </span>
+                    </p>
+                    {plan.description && (
+                      <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
+                    )}
+                    <ul className="mt-4 flex-1 space-y-2">
+                      {plan.features.map((feature) => (
+                        <li key={feature.id} className="flex items-start gap-2 text-sm">
+                          <Check
+                            className="mt-0.5 size-4 shrink-0 text-primary"
+                            aria-hidden="true"
+                          />
+                          {feature.label}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href="/register" className={`${buttonVariants()} mt-6 w-full`}>
+                      Get started
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {cities.length > 0 && (
         <section className="mx-auto w-full max-w-5xl px-6 py-12">
