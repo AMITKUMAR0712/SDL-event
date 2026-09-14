@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatPaiseAsINR } from "@/lib/money";
 import { VendorOnboardingInput, vendorOnboardingSchema } from "@/schemas/onboarding";
 import { completeVendorOnboardingAction } from "@/server/actions/onboarding";
 
@@ -31,13 +32,35 @@ const STORAGE_KEY = "onboarding:vendor";
 
 const STEPS = ["Business", "Location", "Services", "Documents", "Plan"] as const;
 
+const BILLING_PERIOD_LABEL: Record<string, string> = {
+  MONTHLY: "/ month",
+  QUARTERLY: "for 3 months",
+  HALF_YEARLY: "for 6 months",
+  YEARLY: "for 12 months",
+};
+
 type Props = {
   cities: { id: string; name: string }[];
   serviceCatalog: { id: string; name: string; categoryId: string }[];
-  plans: { id: string; code: string; name: string; pricePaise: number; trialDays: number }[];
+  plans: {
+    id: string;
+    code: string;
+    name: string;
+    pricePaise: number;
+    billingPeriod: string;
+    trialDays: number;
+  }[];
+  accountName: string | null;
+  accountEmail: string | null;
 };
 
-export function VendorOnboardingWizard({ cities, serviceCatalog, plans }: Props) {
+export function VendorOnboardingWizard({
+  cities,
+  serviceCatalog,
+  plans,
+  accountName,
+  accountEmail,
+}: Props) {
   const router = useRouter();
   const { update } = useSession();
   const [step, setStep] = useState(0);
@@ -48,6 +71,8 @@ export function VendorOnboardingWizard({ cities, serviceCatalog, plans }: Props)
     defaultValues: {
       businessName: "",
       cityId: "",
+      addressLine1: "",
+      pincode: "",
       servesInStudio: true,
       servesAtHome: false,
       homeServiceRadiusKm: 0,
@@ -78,7 +103,7 @@ export function VendorOnboardingWizard({ cities, serviceCatalog, plans }: Props)
 
   const stepFields: (keyof VendorOnboardingInput)[][] = [
     ["businessName"],
-    ["cityId"],
+    ["cityId", "addressLine1", "pincode"],
     ["serviceCatalogIds"],
     [],
     ["planCode"],
@@ -127,19 +152,27 @@ export function VendorOnboardingWizard({ cities, serviceCatalog, plans }: Props)
         )}
 
         {step === 0 && (
-          <FormField
-            control={form.control}
-            name="businessName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Business name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="space-y-4">
+            {(accountName || accountEmail) && (
+              <p className="rounded-lg bg-accent/50 px-3 py-2 text-sm text-muted-foreground">
+                Setting up as {accountName ?? "your account"}
+                {accountEmail && ` (${accountEmail})`}.
+              </p>
             )}
-          />
+            <FormField
+              control={form.control}
+              name="businessName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         )}
 
         {step === 1 && (
@@ -164,6 +197,32 @@ export function VendorOnboardingWizard({ cities, serviceCatalog, plans }: Props)
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="addressLine1"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Street address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Shop no., building, street" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="pincode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pincode</FormLabel>
+                  <FormControl>
+                    <Input inputMode="numeric" maxLength={6} placeholder="e.g. 110001" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -247,8 +306,8 @@ export function VendorOnboardingWizard({ cities, serviceCatalog, plans }: Props)
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Document upload (Aadhaar/PAN/GST/shop licence) is wired up once signed media uploads
-              land later in the build. For now, just record your GST number if you have one — an
-              admin will verify it manually.
+              land later in the build. For now, just record your GST number if you have one —
+              it&rsquo;ll show up correctly on your invoices.
             </p>
             <FormField
               control={form.control}
@@ -280,7 +339,12 @@ export function VendorOnboardingWizard({ cities, serviceCatalog, plans }: Props)
                       className="flex items-center justify-between rounded-lg border border-border p-3 text-sm has-[:checked]:border-primary"
                     >
                       <span>
-                        {plan.name}
+                        <span className="font-medium">{plan.name}</span>
+                        <span className="text-muted-foreground">
+                          {" "}
+                          · {formatPaiseAsINR(plan.pricePaise)}{" "}
+                          {BILLING_PERIOD_LABEL[plan.billingPeriod] ?? ""}
+                        </span>
                         {plan.trialDays > 0 && (
                           <span className="text-muted-foreground">
                             {" "}

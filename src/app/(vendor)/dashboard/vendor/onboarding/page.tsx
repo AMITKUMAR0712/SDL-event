@@ -1,5 +1,6 @@
 import { BackButton } from "@/components/shared/back-button";
 import { VendorOnboardingWizard } from "@/components/shared/vendor-onboarding-wizard";
+import { auth } from "@/lib/auth";
 import {
   listBeautyServiceCatalog,
   listCitiesForSelect,
@@ -7,7 +8,8 @@ import {
 } from "@/server/repositories/catalog";
 
 export default async function VendorOnboardingPage() {
-  const [cities, serviceCatalog, plans] = await Promise.all([
+  const [session, cities, serviceCatalog, plans] = await Promise.all([
+    auth(),
     listCitiesForSelect(),
     listBeautyServiceCatalog(),
     listPlansForAudience("VENDOR"),
@@ -18,10 +20,16 @@ export default async function VendorOnboardingPage() {
       <BackButton className="mb-4" />
       <h1 className="font-heading text-3xl">Set up your business</h1>
       <p className="mt-2 text-muted-foreground">
-        A few steps to get your profile ready for admin review.
+        A few steps and your listing goes live — no waiting on approval.
       </p>
       <div className="mt-8">
-        <VendorOnboardingWizard cities={cities} serviceCatalog={serviceCatalog} plans={plans} />
+        <VendorOnboardingWizard
+          cities={cities}
+          serviceCatalog={serviceCatalog}
+          plans={plans}
+          accountName={session?.user.name ?? null}
+          accountEmail={session?.user.email ?? null}
+        />
       </div>
     </main>
   );

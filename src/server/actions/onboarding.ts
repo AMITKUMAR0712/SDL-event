@@ -22,7 +22,13 @@ export async function completeVendorOnboardingAction(
 
   const result = await completeVendorOnboarding(session.user.id, parsed.data);
   if (!result.ok) {
-    return { ok: false, error: "The selected plan no longer exists." };
+    return {
+      ok: false,
+      error:
+        result.reason === "CITY_NOT_FOUND"
+          ? "That city is no longer available — please pick another."
+          : "The selected plan no longer exists.",
+    };
   }
 
   return { ok: true, data: { slug: result.slug } };
@@ -40,7 +46,13 @@ export async function completeBanquetOnboardingAction(
 
   const result = await completeBanquetOnboarding(session.user.id, parsed.data);
   if (!result.ok) {
-    return { ok: false, error: "The selected plan no longer exists." };
+    return {
+      ok: false,
+      error:
+        result.reason === "CITY_NOT_FOUND"
+          ? "That city is no longer available — please pick another."
+          : "The selected plan no longer exists.",
+    };
   }
 
   return { ok: true, data: { slug: result.slug } };

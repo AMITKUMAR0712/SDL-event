@@ -70,7 +70,14 @@ export function listPlansForAudience(audience: "VENDOR" | "BANQUET") {
   return db.subscriptionPlan.findMany({
     where: { audience, isActive: true },
     orderBy: { sortOrder: "asc" },
-    select: { id: true, code: true, name: true, pricePaise: true, trialDays: true },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      pricePaise: true,
+      billingPeriod: true,
+      trialDays: true,
+    },
   });
 }
 

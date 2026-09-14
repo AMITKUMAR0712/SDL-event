@@ -24,18 +24,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatPaiseAsINR } from "@/lib/money";
 import { BanquetOnboardingInput, banquetOnboardingSchema } from "@/schemas/onboarding";
 import { completeBanquetOnboardingAction } from "@/server/actions/onboarding";
 
 const STORAGE_KEY = "onboarding:banquet";
 const STEPS = ["Venue", "Location", "Pricing", "Documents", "Plan"] as const;
 
-type Props = {
-  cities: { id: string; name: string }[];
-  plans: { id: string; code: string; name: string; pricePaise: number; trialDays: number }[];
+const BILLING_PERIOD_LABEL: Record<string, string> = {
+  MONTHLY: "/ month",
+  QUARTERLY: "for 3 months",
+  HALF_YEARLY: "for 6 months",
+  YEARLY: "for 12 months",
 };
 
-export function BanquetOnboardingWizard({ cities, plans }: Props) {
+type Props = {
+  cities: { id: string; name: string }[];
+  plans: {
+    id: string;
+    code: string;
+    name: string;
+    pricePaise: number;
+    billingPeriod: string;
+    trialDays: number;
+  }[];
+  accountName: string | null;
+  accountEmail: string | null;
+};
+
+export function BanquetOnboardingWizard({ cities, plans, accountName, accountEmail }: Props) {
   const router = useRouter();
   const { update } = useSession();
   const [step, setStep] = useState(0);
@@ -46,6 +63,8 @@ export function BanquetOnboardingWizard({ cities, plans }: Props) {
     defaultValues: {
       venueName: "",
       cityId: "",
+      addressLine1: "",
+      pincode: "",
       totalHalls: 1,
       vegPricePerPlatePaise: 0,
       nonVegPricePerPlatePaise: 0,
@@ -74,7 +93,7 @@ export function BanquetOnboardingWizard({ cities, plans }: Props) {
 
   const stepFields: (keyof BanquetOnboardingInput)[][] = [
     ["venueName", "totalHalls"],
-    ["cityId"],
+    ["cityId", "addressLine1", "pincode"],
     ["vegPricePerPlatePaise", "nonVegPricePerPlatePaise"],
     [],
     ["planCode"],
@@ -121,6 +140,12 @@ export function BanquetOnboardingWizard({ cities, plans }: Props) {
 
         {step === 0 && (
           <div className="space-y-4">
+            {(accountName || accountEmail) && (
+              <p className="rounded-lg bg-accent/50 px-3 py-2 text-sm text-muted-foreground">
+                Setting up as {accountName ?? "your account"}
+                {accountEmail && ` (${accountEmail})`}.
+              </p>
+            )}
             <FormField
               control={form.control}
               name="venueName"
@@ -160,30 +185,58 @@ export function BanquetOnboardingWizard({ cities, plans }: Props) {
         )}
 
         {step === 1 && (
-          <FormField
-            control={form.control}
-            name="cityId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="cityId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a city" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {cities.map((city) => (
+                        <SelectItem key={city.id} value={city.id}>
+                          {city.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="addressLine1"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Street address</FormLabel>
                   <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Choose a city" />
-                    </SelectTrigger>
+                    <Input placeholder="Venue address, street, area" {...field} />
                   </FormControl>
-                  <SelectContent>
-                    {cities.map((city) => (
-                      <SelectItem key={city.id} value={city.id}>
-                        {city.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="pincode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pincode</FormLabel>
+                  <FormControl>
+                    <Input inputMode="numeric" maxLength={6} placeholder="e.g. 110001" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         )}
 
         {step === 2 && (
@@ -237,8 +290,7 @@ export function BanquetOnboardingWizard({ cities, plans }: Props) {
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Document upload (GST/shop licence) is wired up once signed media uploads land later in
-              the build. An admin will follow up with you directly to verify your documents before
-              your listing goes live.
+              the build — your listing goes live as soon as you finish this setup either way.
             </p>
           </div>
         )}
@@ -257,7 +309,12 @@ export function BanquetOnboardingWizard({ cities, plans }: Props) {
                       className="flex items-center justify-between rounded-lg border border-border p-3 text-sm has-[:checked]:border-primary"
                     >
                       <span>
-                        {plan.name}
+                        <span className="font-medium">{plan.name}</span>
+                        <span className="text-muted-foreground">
+                          {" "}
+                          · {formatPaiseAsINR(plan.pricePaise)}{" "}
+                          {BILLING_PERIOD_LABEL[plan.billingPeriod] ?? ""}
+                        </span>
                         {plan.trialDays > 0 && (
                           <span className="text-muted-foreground">
                             {" "}

@@ -19,7 +19,8 @@ function trialEndDate(trialDays: number): Date {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 }
 
-export type OnboardingResult = { ok: true; slug: string } | { ok: false; reason: "PLAN_NOT_FOUND" };
+export type OnboardingResult =
+  { ok: true; slug: string } | { ok: false; reason: "PLAN_NOT_FOUND" | "CITY_NOT_FOUND" };
 
 export async function completeVendorOnboarding(
   userId: string,
@@ -30,21 +31,36 @@ export async function completeVendorOnboarding(
   const existing = await db.vendorProfile.findUnique({ where: { userId }, select: { slug: true } });
   if (existing) return { ok: true, slug: existing.slug };
 
-  const [plan, catalogEntries] = await Promise.all([
+  const [plan, catalogEntries, city] = await Promise.all([
     findPlanByCode(input.planCode),
     findServiceCatalogByIds(input.serviceCatalogIds),
+    db.city.findUnique({ where: { id: input.cityId }, select: { stateId: true } }),
   ]);
   if (!plan) return { ok: false, reason: "PLAN_NOT_FOUND" };
+  if (!city) return { ok: false, reason: "CITY_NOT_FOUND" };
 
   const slug = uniqueSlug(input.businessName, userId);
   const primaryCategoryId = catalogEntries[0]?.categoryId;
 
   await db.$transaction(async (tx) => {
+    const address = await tx.address.create({
+      data: {
+        userId,
+        line1: input.addressLine1,
+        localityId: input.localityId,
+        cityId: input.cityId,
+        stateId: city.stateId,
+        pincode: input.pincode,
+        type: "STUDIO",
+      },
+    });
+
     await tx.vendorProfile.create({
       data: {
         userId,
         businessName: input.businessName,
         slug,
+        baseAddressId: address.id,
         cityId: input.cityId,
         localityId: input.localityId,
         primaryCategoryId,
@@ -95,17 +111,34 @@ export async function completeBanquetOnboarding(
   });
   if (existing) return { ok: true, slug: existing.slug };
 
-  const plan = await findPlanByCode(input.planCode);
+  const [plan, city] = await Promise.all([
+    findPlanByCode(input.planCode),
+    db.city.findUnique({ where: { id: input.cityId }, select: { stateId: true } }),
+  ]);
   if (!plan) return { ok: false, reason: "PLAN_NOT_FOUND" };
+  if (!city) return { ok: false, reason: "CITY_NOT_FOUND" };
 
   const slug = uniqueSlug(input.venueName, userId);
 
   await db.$transaction(async (tx) => {
+    const address = await tx.address.create({
+      data: {
+        userId,
+        line1: input.addressLine1,
+        localityId: input.localityId,
+        cityId: input.cityId,
+        stateId: city.stateId,
+        pincode: input.pincode,
+        type: "OTHER",
+      },
+    });
+
     await tx.banquetProfile.create({
       data: {
         userId,
         venueName: input.venueName,
         slug,
+        addressId: address.id,
         cityId: input.cityId,
         localityId: input.localityId,
         totalHalls: input.totalHalls,
