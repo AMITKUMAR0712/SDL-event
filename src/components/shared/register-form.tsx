@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -40,6 +41,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 export function RegisterForm() {
   const router = useRouter();
+  const { update } = useSession();
   const [serverError, setServerError] = useState<string | null>(null);
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -53,6 +55,11 @@ export function RegisterForm() {
       setServerError(result.error);
       return;
     }
+    // useSession() only refetches on window focus/its poll interval by
+    // default — without this, the navbar (which reads it client-side)
+    // would keep showing "Login/Register" until the user clicked away and
+    // back, even though they're already signed in.
+    await update();
     router.push(ROLE_REDIRECT[result.data.role] ?? "/account");
     router.refresh();
   }
