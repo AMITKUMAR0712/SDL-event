@@ -8,7 +8,7 @@ export default function LoginPage() {
   return (
     <main className="grid flex-1 grid-cols-1 lg:grid-cols-2">
       <AuthBrandPanel
-        title="Welcome back to your beauty & banquet marketplace"
+        title="Welcome back to your beauty parlour & banquet marketplace"
         body="Sign in to manage bookings, track your subscription, or find your next vendor."
       />
 

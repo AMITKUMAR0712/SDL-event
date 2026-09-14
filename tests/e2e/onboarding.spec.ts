@@ -11,7 +11,7 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
   // selects are also on every page now, so a generic "first select" locator
   // would grab one of those instead.
   await page.getByRole("combobox", { name: "I am a..." }).click();
-  await page.getByRole("option", { name: "Beauty vendor / salon / artist" }).click();
+  await page.getByRole("option", { name: "Beauty Parlour / Salon Owner" }).click();
   await page.getByLabel("Full name").fill("E2E Test Vendor");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("Password123");
@@ -59,9 +59,12 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
 
   await page.goto("/dashboard/vendor");
   await expect(page.getByRole("heading", { name: businessName })).toBeVisible();
-  // No more KYC approval gate — a completed onboarding publishes immediately.
+  // No more KYC approval gate — onboarding itself never blocks on admin
+  // review. But visibility is gated on payment: this test never completes
+  // the real Razorpay checkout (see above), so the listing should still be
+  // unpublished at this point rather than live with an unpaid plan.
   await expect(page.getByText(/KYC status: APPROVED/)).toBeVisible();
-  await expect(page.getByText(/Published/)).toBeVisible();
+  await expect(page.getByText(/Not published yet/)).toBeVisible();
 });
 
 test("banquet onboarding wizard completes and shows the new profile on the dashboard", async ({
@@ -72,7 +75,7 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
 
   await page.goto("/register");
   await page.getByRole("combobox", { name: "I am a..." }).click();
-  await page.getByRole("option", { name: "Banquet / venue owner" }).click();
+  await page.getByRole("option", { name: "Banquet Owner (Weddings & Parties)" }).click();
   await page.getByLabel("Full name").fill("E2E Test Banquet Owner");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("Password123");
@@ -116,7 +119,10 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
 
   await page.goto("/dashboard/banquet");
   await expect(page.getByRole("heading", { name: venueName })).toBeVisible();
-  // No more KYC approval gate — a completed onboarding publishes immediately.
+  // No more KYC approval gate — onboarding itself never blocks on admin
+  // review. But visibility is gated on payment: this test never completes
+  // the real Razorpay checkout (see above), so the listing should still be
+  // unpublished at this point rather than live with an unpaid plan.
   await expect(page.getByText(/KYC status: APPROVED/)).toBeVisible();
-  await expect(page.getByText(/Published/)).toBeVisible();
+  await expect(page.getByText(/Not published yet/)).toBeVisible();
 });

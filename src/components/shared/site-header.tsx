@@ -53,6 +53,9 @@ export function SiteHeader({
         </div>
 
         <nav className="order-2 flex items-center gap-3 text-sm md:order-3">
+          <Link href="/contact" className="text-muted-foreground hover:text-foreground">
+            Contact Us
+          </Link>
           {
             status === "authenticated" ? (
               <>
@@ -61,7 +64,7 @@ export function SiteHeader({
                     href={dashboard.href}
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    {dashboard.label}
+                    {session.user.name || dashboard.label}
                   </Link>
                 )}
                 <form action={signOutAction}>

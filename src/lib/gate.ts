@@ -40,11 +40,14 @@ export async function freeResultQuota(gate: GateContext): Promise<number> {
   return getGuestUnlockQuota();
 }
 
-export function isProfileUnlocked(
-  gate: GateContext,
-  positionOnPage: number,
-  quota: number,
-): boolean {
-  if (gate.kind === "STAFF" || gate.kind === "SUBSCRIBED_CUSTOMER") return true;
-  return positionOnPage < quota;
+/**
+ * Every listing card renders fully unlocked for everyone, guests included —
+ * the "browse free, subscribe to see more" quota model this used to enforce
+ * was removed at the client's request. `gate`/`positionOnPage`/`quota` are
+ * kept as parameters (rather than deleting the call sites) so the quota
+ * infrastructure (freeResultQuota, UnlockEvent tracking) stays intact if
+ * this needs to come back.
+ */
+export function isProfileUnlocked(): boolean {
+  return true;
 }

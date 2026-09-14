@@ -40,19 +40,30 @@ export async function syncPublishStatusForUser(userId: string): Promise<void> {
     return;
   }
 
-  // Active/paid period — republish, but only if the profile was hidden by
-  // this same expiry mechanism, not by an admin KYC rejection.
-  if (vendor && !vendor.isPublished && vendor.kycStatus === "APPROVED") {
-    await db.vendorProfile.update({
-      where: { id: vendor.id },
-      data: { isPublished: true, publishedAt: new Date() },
+  // Active/unexpired period — republish, but only if there's an actual
+  // captured payment on this subscription (never-paid is otherwise
+  // indistinguishable from "renewed after expiring": both look like
+  // "not expired, not published") and the profile wasn't hidden for an
+  // unrelated reason like an admin KYC rejection.
+  if (!vendor?.isPublished || !banquet?.isPublished) {
+    const paid = await db.payment.findFirst({
+      where: { subscriptionId: subscription.id, status: "CAPTURED" },
+      select: { id: true },
     });
-  }
-  if (banquet && !banquet.isPublished && banquet.kycStatus === "APPROVED") {
-    await db.banquetProfile.update({
-      where: { id: banquet.id },
-      data: { isPublished: true, publishedAt: new Date() },
-    });
+    if (paid) {
+      if (vendor && !vendor.isPublished && vendor.kycStatus === "APPROVED") {
+        await db.vendorProfile.update({
+          where: { id: vendor.id },
+          data: { isPublished: true, publishedAt: new Date() },
+        });
+      }
+      if (banquet && !banquet.isPublished && banquet.kycStatus === "APPROVED") {
+        await db.banquetProfile.update({
+          where: { id: banquet.id },
+          data: { isPublished: true, publishedAt: new Date() },
+        });
+      }
+    }
   }
 }
 

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { freeResultQuota, GateContext, isProfileUnlocked } from "@/lib/gate";
+import { GateContext, isProfileUnlocked } from "@/lib/gate";
 import type { SearchParamsInput } from "@/schemas/search";
 import { findCategoryBySlug, findCityBySlug } from "@/server/repositories/catalog";
 import { searchBanquets, searchVendors } from "@/server/repositories/listings";
@@ -52,13 +52,15 @@ async function bestTeaserCoupon() {
 
 export async function runSearch(
   params: SearchParamsInput,
-  gate: GateContext,
+  // Kept in the signature for API stability across call sites (search page,
+  // city/category pages) even though nothing in this function reads it
+  // anymore — listings are unlocked for everyone now, see lib/gate.ts.
+  _gate: GateContext,
 ): Promise<SearchResult> {
-  const [city, category, weights, quota] = await Promise.all([
+  const [city, category, weights] = await Promise.all([
     params.city ? findCityBySlug(params.city) : null,
     params.category ? findCategoryBySlug(params.category) : null,
     getSetting<RankingWeights>("ranking_weights", DEFAULT_RANKING_WEIGHTS),
-    freeResultQuota(gate),
   ]);
 
   const listingParams = {
@@ -80,7 +82,7 @@ export async function runSearch(
       slug: v.slug,
       name: v.venueName,
       about: v.about,
-      image: null,
+      image: v.coverImage,
       ratingAvg: Number(v.ratingAvg),
       ratingCount: v.ratingCount,
       boostScore: v.boostScore,
@@ -116,7 +118,7 @@ export async function runSearch(
 
   cards.sort((a, b) => rankScore(b, weights) - rankScore(a, weights));
 
-  const items = cards.map((card, i) => ({
+  const items = cards.map((card) => ({
     id: card.id,
     slug: card.slug,
     name: card.name,
@@ -126,7 +128,7 @@ export async function runSearch(
     ratingCount: card.ratingCount,
     cityName: card.cityName,
     fromPricePaise: card.fromPricePaise,
-    locked: !isProfileUnlocked(gate, i, quota),
+    locked: !isProfileUnlocked(),
   }));
 
   return { items, nextCursor, teaserDiscount: await bestTeaserCoupon() };

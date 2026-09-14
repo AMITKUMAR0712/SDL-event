@@ -129,7 +129,19 @@ export async function searchBanquets(params: ListingSearchParams) {
     },
   });
 
-  return splitPage(rows, take);
+  // MediaAsset is a polymorphic table (ownerType/ownerId), not a direct
+  // Prisma relation on BanquetProfile, so its cover photo needs a separate
+  // lookup rather than an `include`.
+  const covers = rows.length
+    ? await db.mediaAsset.findMany({
+        where: { ownerType: "BANQUET", ownerId: { in: rows.map((r) => r.id) }, isCover: true },
+        select: { ownerId: true, url: true },
+      })
+    : [];
+  const coverByOwnerId = new Map(covers.map((c) => [c.ownerId, c.url]));
+  const rowsWithCover = rows.map((r) => ({ ...r, coverImage: coverByOwnerId.get(r.id) ?? null }));
+
+  return splitPage(rowsWithCover, take);
 }
 
 /** Deliberately ignores isPublished — used to find who to run the

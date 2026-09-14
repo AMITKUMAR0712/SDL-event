@@ -27,10 +27,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   title: {
     template: "%s | GlowMakeOver",
-    default: "GlowMakeOver — Beauty & Banquet Bookings Near You",
+    default: "GlowMakeOver — Beauty Parlour & Banquet Bookings Near You",
   },
   description:
-    "Find and book trusted beauty vendors and wedding banquet venues near you, anywhere in India.",
+    "Find and book trusted beauty parlours and banquets for weddings & parties near you, anywhere in India.",
   ...(env.GOOGLE_SITE_VERIFICATION
     ? { verification: { google: env.GOOGLE_SITE_VERIFICATION } }
     : {}),

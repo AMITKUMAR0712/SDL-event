@@ -91,10 +91,10 @@ export default async function HomePage() {
         <div className="flex flex-col items-center gap-6 px-6 py-24 text-center">
           <p className="flex items-center gap-2 text-sm font-medium tracking-wide text-primary uppercase">
             <Sparkles className="size-4" aria-hidden="true" />
-            Beauty & Banquets, near you
+            Beauty Parlour & Banquets, near you
           </p>
           <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-            Find and book trusted beauty vendors and wedding venues across India
+            Find and book trusted beauty parlours and banquets for weddings & parties across India
           </h1>
           <p className="max-w-xl text-lg text-muted-foreground text-balance">
             Compare verified salons, makeup artists, and banquet halls near you — real ratings,
@@ -135,7 +135,7 @@ export default async function HomePage() {
                 <dd className="font-heading text-2xl">{stats.vendors}+</dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Banquet venues</dt>
+                <dt className="text-sm text-muted-foreground">Banquets</dt>
                 <dd className="font-heading text-2xl">{stats.banquets}+</dd>
               </div>
             </dl>
@@ -236,7 +236,7 @@ export default async function HomePage() {
         <Card>
           <CardContent className="p-8">
             <Store className="size-8 text-primary" aria-hidden="true" />
-            <h2 className="mt-4 font-heading text-2xl">For vendors & venue owners</h2>
+            <h2 className="mt-4 font-heading text-2xl">For Beauty Parlours & Banquet Owners</h2>
             <p className="mt-2 text-muted-foreground">
               List your salon, studio, or venue and reach customers actively searching in your city.
               Manage bookings, availability, and payouts from one dashboard.
@@ -259,7 +259,7 @@ export default async function HomePage() {
             {vendorPlans.length > 0 && (
               <div className="mt-10">
                 <h3 className="font-heading text-lg text-muted-foreground">
-                  Beauty salons & artists
+                  Beauty Parlour & Salons
                 </h3>
                 <PlanPricingGrid plans={vendorPlans} />
               </div>
@@ -267,7 +267,9 @@ export default async function HomePage() {
 
             {banquetPlans.length > 0 && (
               <div className="mt-10">
-                <h3 className="font-heading text-lg text-muted-foreground">Banquets & venues</h3>
+                <h3 className="font-heading text-lg text-muted-foreground">
+                  Banquets for Weddings & Parties
+                </h3>
                 <PlanPricingGrid plans={banquetPlans} />
               </div>
             )}

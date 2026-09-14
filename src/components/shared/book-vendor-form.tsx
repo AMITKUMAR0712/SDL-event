@@ -82,7 +82,7 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
               />
               {s.title}
             </span>
-            <span>{formatPaiseAsINR(s.pricePaise)}</span>
+            {s.pricePaise > 0 && <span>{formatPaiseAsINR(s.pricePaise)}</span>}
           </label>
         ))}
       </div>
@@ -116,7 +116,11 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
       />
 
       <div className="flex items-center justify-between pt-2">
-        <span className="font-medium">Total: {formatPaiseAsINR(totalPaise)}</span>
+        {totalPaise > 0 ? (
+          <span className="font-medium">Total: {formatPaiseAsINR(totalPaise)}</span>
+        ) : (
+          <span />
+        )}
         <Button type="submit" disabled={pending}>
           {pending ? "Booking..." : "Request booking"}
         </Button>

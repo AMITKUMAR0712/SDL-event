@@ -70,8 +70,8 @@ export function SearchFilterBar({
         }}
       >
         <TabsList>
-          <TabsTrigger value="vendor">Beauty vendors</TabsTrigger>
-          <TabsTrigger value="banquet">Banquet halls</TabsTrigger>
+          <TabsTrigger value="vendor">Beauty Parlour</TabsTrigger>
+          <TabsTrigger value="banquet">Banquets for Weddings & Parties</TabsTrigger>
         </TabsList>
       </Tabs>
 

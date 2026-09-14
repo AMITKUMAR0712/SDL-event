@@ -39,7 +39,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
       <h1 className="font-heading text-3xl">
-        {params.type === "banquet" ? "Banquet halls" : "Beauty vendors"} near you
+        {params.type === "banquet" ? "Banquets for Weddings & Parties" : "Beauty Parlour"} near you
       </h1>
       <p className="mt-2 text-muted-foreground">{result.items.length} results</p>
 

@@ -31,7 +31,7 @@ test("vendor registration redirects to onboarding, which is guarded from other r
   // selects are also on this page now, so a generic "first select" locator
   // would grab one of those instead.
   await page.getByRole("combobox", { name: "I am a..." }).click();
-  await page.getByRole("option", { name: "Beauty vendor / salon / artist" }).click();
+  await page.getByRole("option", { name: "Beauty Parlour / Salon Owner" }).click();
   await page.getByLabel("Full name").fill("E2E Test Vendor");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("Password123");

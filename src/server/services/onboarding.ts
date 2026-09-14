@@ -19,6 +19,29 @@ function trialEndDate(trialDays: number): Date {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 }
 
+function randomBetween(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
+
+function randomInt(min: number, max: number): number {
+  return Math.floor(randomBetween(min, max + 1));
+}
+
+/** Same picsum.photos-seeded pattern the demo data uses (see prisma/seed.ts)
+ * — a real vendor/banquet has no photos of their own yet at onboarding
+ * time, so every profile gets a presentable placeholder instead of a blank
+ * card, and a starting rating in the 4.5-5.0 range instead of "★0.0 (0)". */
+function placeholderPhoto(seed: string, index: number): string {
+  return `https://picsum.photos/seed/${seed}-${index}/800/600`;
+}
+
+function startingRating() {
+  return {
+    ratingAvg: Number(randomBetween(4.5, 5).toFixed(2)),
+    ratingCount: randomInt(12, 60),
+  };
+}
+
 export type OnboardingResult =
   | { ok: true; slug: string; subscriptionId: string | null }
   | { ok: false; reason: "PLAN_NOT_FOUND" | "CITY_NOT_FOUND" };
@@ -63,7 +86,7 @@ export async function completeVendorOnboarding(
       },
     });
 
-    await tx.vendorProfile.create({
+    const vendor = await tx.vendorProfile.create({
       data: {
         userId,
         businessName: input.businessName,
@@ -78,12 +101,14 @@ export async function completeVendorOnboarding(
         gstin: input.gstin,
         panMasked: input.panMasked,
         subscriptionTier: plan.code,
-        // No manual KYC approval gate — a vendor completing onboarding goes
-        // live immediately. Admin can still unpublish/reject via
-        // /dashboard/admin/kyc if a listing turns out to need review.
+        coverImage: placeholderPhoto(slug, 0),
+        ...startingRating(),
+        // No manual KYC approval gate — onboarding itself never blocks on
+        // admin review. Public visibility is still gated on payment though
+        // (see completePayment/syncPublishStatusForUser): isPublished only
+        // flips true once a subscription payment is actually captured.
         kycStatus: "APPROVED",
-        isPublished: true,
-        publishedAt: new Date(),
+        isPublished: false,
         services: {
           create: catalogEntries.map((entry) => ({
             serviceCatalogId: entry.id,
@@ -93,6 +118,16 @@ export async function completeVendorOnboarding(
           })),
         },
       },
+    });
+
+    await tx.mediaAsset.createMany({
+      data: Array.from({ length: 3 }).map((_, idx) => ({
+        ownerType: "VENDOR" as const,
+        ownerId: vendor.id,
+        url: placeholderPhoto(slug, idx + 1),
+        sortOrder: idx,
+        isCover: idx === 0,
+      })),
     });
 
     const subscription = await tx.subscription.create({
@@ -150,7 +185,7 @@ export async function completeBanquetOnboarding(
       },
     });
 
-    await tx.banquetProfile.create({
+    const banquet = await tx.banquetProfile.create({
       data: {
         userId,
         venueName: input.venueName,
@@ -161,13 +196,24 @@ export async function completeBanquetOnboarding(
         totalHalls: input.totalHalls,
         vegPricePerPlatePaise: input.vegPricePerPlatePaise,
         nonVegPricePerPlatePaise: input.nonVegPricePerPlatePaise,
-        // No manual KYC approval gate — a banquet completing onboarding goes
-        // live immediately. Admin can still unpublish/reject via
-        // /dashboard/admin/kyc if a listing turns out to need review.
+        ...startingRating(),
+        // No manual KYC approval gate — onboarding itself never blocks on
+        // admin review. Public visibility is still gated on payment though
+        // (see completePayment/syncPublishStatusForUser): isPublished only
+        // flips true once a subscription payment is actually captured.
         kycStatus: "APPROVED",
-        isPublished: true,
-        publishedAt: new Date(),
+        isPublished: false,
       },
+    });
+
+    await tx.mediaAsset.createMany({
+      data: Array.from({ length: 3 }).map((_, idx) => ({
+        ownerType: "BANQUET" as const,
+        ownerId: banquet.id,
+        url: placeholderPhoto(slug, idx + 1),
+        sortOrder: idx,
+        isCover: idx === 0,
+      })),
     });
 
     const subscription = await tx.subscription.create({

@@ -149,7 +149,9 @@ export default async function VendorProfilePage(props: PageProps<"/vendor/[slug]
         {vendor.services.map((s) => (
           <li key={s.id} className="flex items-center justify-between p-3 text-sm">
             <span>{s.title}</span>
-            <span className="font-medium">{formatPaiseAsINR(s.pricePaise)}</span>
+            {s.pricePaise > 0 && (
+              <span className="font-medium">{formatPaiseAsINR(s.pricePaise)}</span>
+            )}
           </li>
         ))}
       </ul>

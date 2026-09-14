@@ -35,8 +35,8 @@ const ROLE_REDIRECT: Record<string, string> = {
 
 const ROLE_LABEL: Record<string, string> = {
   CUSTOMER: "Customer, booking a service",
-  VENDOR: "Beauty vendor / salon / artist",
-  BANQUET_OWNER: "Banquet / venue owner",
+  VENDOR: "Beauty Parlour / Salon Owner",
+  BANQUET_OWNER: "Banquet Owner (Weddings & Parties)",
 };
 
 export function RegisterForm() {

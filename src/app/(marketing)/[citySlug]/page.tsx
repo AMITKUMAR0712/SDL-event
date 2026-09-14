@@ -22,10 +22,10 @@ export async function generateMetadata(props: PageProps<"/[citySlug]">): Promise
   const city = await findCityBySlug(citySlug);
   if (!city) return {};
 
-  const title = pageTitle(city.seoTitle ?? `Beauty & Banquet Services in ${city.name}`);
+  const title = pageTitle(city.seoTitle ?? `Beauty Parlour & Banquets in ${city.name}`);
   const description = pageDescription(
     city.seoDescription ??
-      `Discover verified beauty vendors and banquet venues in ${city.name} on GlowMakeOver.`,
+      `Discover verified beauty parlours and banquets for weddings & parties in ${city.name} on GlowMakeOver.`,
   );
 
   return {
@@ -67,13 +67,13 @@ export default async function CityHubPage(props: PageProps<"/[citySlug]">) {
         <Link href="/">Home</Link> <span aria-hidden="true">/</span> {city.name}
       </nav>
 
-      <h1 className="mt-2 font-heading text-3xl">Beauty & Banquet Services in {city.name}</h1>
+      <h1 className="mt-2 font-heading text-3xl">Beauty Parlour & Banquets in {city.name}</h1>
 
       {city.introContent && <p className="mt-4 text-muted-foreground">{city.introContent}</p>}
 
       {vendorResults.items.length > 0 && (
         <section className="mt-8">
-          <h2 className="font-heading text-xl">Beauty vendors in {city.name}</h2>
+          <h2 className="font-heading text-xl">Beauty Parlour in {city.name}</h2>
           <ListingGrid
             items={vendorResults.items}
             type="vendor"
@@ -89,7 +89,7 @@ export default async function CityHubPage(props: PageProps<"/[citySlug]">) {
 
       {banquetResults.items.length > 0 && (
         <section className="mt-8">
-          <h2 className="font-heading text-xl">Banquet venues in {city.name}</h2>
+          <h2 className="font-heading text-xl">Banquets for Weddings & Parties in {city.name}</h2>
           <ListingGrid
             items={banquetResults.items}
             type="banquet"
@@ -123,7 +123,7 @@ export default async function CityHubPage(props: PageProps<"/[citySlug]">) {
 
       {banquetCategories.length > 0 && (
         <section className="mt-8">
-          <h2 className="font-heading text-xl">Venues in {city.name}</h2>
+          <h2 className="font-heading text-xl">Banquet services in {city.name}</h2>
           <ul className="mt-3 flex flex-wrap gap-2">
             {banquetCategories.map((category) => (
               <li key={category.slug}>
