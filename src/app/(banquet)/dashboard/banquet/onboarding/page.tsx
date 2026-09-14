@@ -1,3 +1,4 @@
+import { BackButton } from "@/components/shared/back-button";
 import { BanquetOnboardingWizard } from "@/components/shared/banquet-onboarding-wizard";
 import { listCitiesForSelect, listPlansForAudience } from "@/server/repositories/catalog";
 
@@ -9,6 +10,7 @@ export default async function BanquetOnboardingPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
+      <BackButton className="mb-4" />
       <h1 className="font-heading text-3xl">Set up your venue</h1>
       <p className="mt-2 text-muted-foreground">
         A few steps to get your listing ready for admin review.

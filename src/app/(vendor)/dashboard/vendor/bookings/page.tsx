@@ -1,3 +1,4 @@
+import { BackButton } from "@/components/shared/back-button";
 import { BookingActions } from "@/components/shared/booking-actions";
 import { auth } from "@/lib/auth";
 import { formatPaiseAsINR } from "@/lib/money";
@@ -13,6 +14,7 @@ export default async function VendorBookingsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
+      <BackButton className="mb-4" />
       <h1 className="font-heading text-3xl">Bookings</h1>
       <div className="mt-6 space-y-3">
         {bookings.length === 0 && <p className="text-muted-foreground">No bookings yet.</p>}

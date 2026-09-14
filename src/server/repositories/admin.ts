@@ -95,3 +95,19 @@ export function listAuditLog(cursor?: string, take = 50) {
 export function listAllSettings() {
   return db.setting.findMany({ orderBy: { key: "asc" } });
 }
+
+export function listAllCities() {
+  return db.city.findMany({ orderBy: { name: "asc" }, include: { state: true } });
+}
+
+export function findCityById(id: string) {
+  return db.city.findUnique({ where: { id } });
+}
+
+export function listAllCategories() {
+  return db.category.findMany({ orderBy: [{ type: "asc" }, { sortOrder: "asc" }] });
+}
+
+export function findCategoryById(id: string) {
+  return db.category.findUnique({ where: { id } });
+}

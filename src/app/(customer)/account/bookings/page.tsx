@@ -1,3 +1,4 @@
+import { BackButton } from "@/components/shared/back-button";
 import { BookingActions } from "@/components/shared/booking-actions";
 import { PayNowButton } from "@/components/shared/pay-now-button";
 import { ReviewForm } from "@/components/shared/review-form";
@@ -13,6 +14,7 @@ export default async function MyBookingsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
+      <BackButton className="mb-4" />
       <h1 className="font-heading text-3xl">My bookings</h1>
       <div className="mt-6 space-y-3">
         {bookings.length === 0 && <p className="text-muted-foreground">No bookings yet.</p>}

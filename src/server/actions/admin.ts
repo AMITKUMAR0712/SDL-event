@@ -3,15 +3,19 @@
 import { headers } from "next/headers";
 
 import { requireRole } from "@/lib/authz";
-import { couponAdminSchema } from "@/schemas/admin";
+import { categoryAdminSchema, cityAdminSchema, couponAdminSchema } from "@/schemas/admin";
 import type { ActionResult } from "@/server/actions/auth";
 import {
   approveBanquetKyc,
   approveVendorKyc,
+  createCategory,
+  createCity,
   createPlatformCoupon,
   rejectBanquetKyc,
   rejectVendorKyc,
   setUserStatus,
+  updateCategory,
+  updateCity,
   updateSettingValue,
 } from "@/server/services/admin";
 
@@ -77,5 +81,45 @@ export async function createPlatformCouponAction(input: unknown): Promise<Action
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   await createPlatformCoupon(parsed.data, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function createCityAction(input: unknown): Promise<ActionResult> {
+  const ctx = await adminContext();
+  const parsed = cityAdminSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  await createCity(parsed.data, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function updateCityAction(id: string, input: unknown): Promise<ActionResult> {
+  const ctx = await adminContext();
+  const parsed = cityAdminSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  await updateCity(id, parsed.data, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function createCategoryAction(input: unknown): Promise<ActionResult> {
+  const ctx = await adminContext();
+  const parsed = categoryAdminSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  await createCategory(parsed.data, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function updateCategoryAction(id: string, input: unknown): Promise<ActionResult> {
+  const ctx = await adminContext();
+  const parsed = categoryAdminSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  await updateCategory(id, parsed.data, ctx);
   return { ok: true, data: undefined };
 }

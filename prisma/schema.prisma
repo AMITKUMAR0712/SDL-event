@@ -345,6 +345,7 @@ model City {
   lng            Decimal  @db.Decimal(10, 7)
   population     Int?
   isActive       Boolean  @default(true)
+  imageUrl       String?
   seoTitle       String?
   seoDescription String?  @db.Text
   introContent   String?  @db.Text
@@ -389,6 +390,7 @@ model Category {
   parentId        String?
   type            CategoryType
   icon            String?
+  imageUrl        String?
   seoTitle        String?
   seoDescription  String?      @db.Text
   longDescription String?      @db.Text

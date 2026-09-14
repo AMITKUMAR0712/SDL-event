@@ -1,6 +1,9 @@
 import type { Prisma } from "@prisma/client";
+import { revalidatePath, updateTag } from "next/cache";
 
 import { db } from "@/lib/db";
+import type { CategoryAdminInput, CityAdminInput } from "@/schemas/admin";
+import { HEADER_SEARCH_OPTIONS_TAG } from "@/server/repositories/catalog";
 import { notify } from "@/server/services/notification";
 import { notifySearchEnginesOfUpdate } from "@/server/services/search-engine-ping";
 
@@ -120,4 +123,59 @@ export async function createPlatformCoupon(
   });
   await logAdminAction(ctx, "coupon.create", "Coupon", coupon.id, null, coupon);
   return coupon;
+}
+
+/**
+ * The home page's "Popular cities/categories" images and the navbar's search
+ * options are both fed by an `unstable_cache`d/ISR'd read (1h window, see
+ * catalog.ts) — without an explicit revalidate here, an admin editing a
+ * city/category wouldn't see it reflected for up to an hour. Found via
+ * testing this feature end-to-end, not by inspection.
+ */
+export async function createCity(input: CityAdminInput, ctx: AuditContext) {
+  const city = await db.city.create({ data: { ...input, imageUrl: input.imageUrl || null } });
+  await logAdminAction(ctx, "city.create", "City", city.id, null, city);
+  revalidatePath("/");
+  updateTag(HEADER_SEARCH_OPTIONS_TAG);
+  revalidatePath(`/${city.slug}`);
+  return city;
+}
+
+export async function updateCity(id: string, input: CityAdminInput, ctx: AuditContext) {
+  const before = await db.city.findUnique({ where: { id } });
+  const after = await db.city.update({
+    where: { id },
+    data: { ...input, imageUrl: input.imageUrl || null },
+  });
+  await logAdminAction(ctx, "city.update", "City", id, before, after);
+  revalidatePath("/");
+  updateTag(HEADER_SEARCH_OPTIONS_TAG);
+  revalidatePath(`/${after.slug}`);
+  if (before && before.slug !== after.slug) revalidatePath(`/${before.slug}`);
+  return after;
+}
+
+export async function createCategory(input: CategoryAdminInput, ctx: AuditContext) {
+  const category = await db.category.create({
+    data: { ...input, imageUrl: input.imageUrl || null },
+  });
+  await logAdminAction(ctx, "category.create", "Category", category.id, null, category);
+  revalidatePath("/");
+  updateTag(HEADER_SEARCH_OPTIONS_TAG);
+  revalidatePath(`/categories/${category.slug}`);
+  return category;
+}
+
+export async function updateCategory(id: string, input: CategoryAdminInput, ctx: AuditContext) {
+  const before = await db.category.findUnique({ where: { id } });
+  const after = await db.category.update({
+    where: { id },
+    data: { ...input, imageUrl: input.imageUrl || null },
+  });
+  await logAdminAction(ctx, "category.update", "Category", id, before, after);
+  revalidatePath("/");
+  updateTag(HEADER_SEARCH_OPTIONS_TAG);
+  revalidatePath(`/categories/${after.slug}`);
+  if (before && before.slug !== after.slug) revalidatePath(`/categories/${before.slug}`);
+  return after;
 }

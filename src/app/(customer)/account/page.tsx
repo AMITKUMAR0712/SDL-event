@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BackButton } from "@/components/shared/back-button";
 import { auth } from "@/lib/auth";
 
 export default async function AccountPage() {
@@ -7,6 +8,7 @@ export default async function AccountPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
+      <BackButton className="mb-4" />
       <h1 className="font-heading text-3xl">My account</h1>
       <p className="mt-2 text-muted-foreground">
         Signed in as {session?.user.email ?? session?.user.name}.

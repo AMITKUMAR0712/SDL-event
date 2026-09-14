@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BackButton } from "@/components/shared/back-button";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -15,6 +16,7 @@ export default async function VendorDashboardPage() {
   if (!vendor) {
     return (
       <main className="mx-auto max-w-2xl px-6 py-16 text-center">
+        <BackButton className="mb-4" />
         <h1 className="font-heading text-3xl">Finish setting up your business</h1>
         <p className="mt-2 text-muted-foreground">You haven&apos;t completed onboarding yet.</p>
         <Link
@@ -29,6 +31,7 @@ export default async function VendorDashboardPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
+      <BackButton className="mb-4" />
       <h1 className="font-heading text-3xl">{vendor.businessName}</h1>
       <p className="mt-2 text-muted-foreground">
         KYC status: {vendor.kycStatus} · {vendor.isPublished ? "Published" : "Not published yet"}

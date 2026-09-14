@@ -206,18 +206,32 @@ export default async function HomePage() {
             <MapPin className="size-5 text-primary" aria-hidden="true" />
             Popular cities
           </h2>
-          <ul className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {cities.slice(0, 12).map((city) => (
-              <li key={city.slug}>
-                <Link
-                  href={`/${city.slug}`}
-                  className="rounded-full border px-4 py-1.5 text-sm hover:bg-accent"
-                >
-                  {city.name}
-                </Link>
-              </li>
+              <Link
+                key={city.slug}
+                href={`/${city.slug}`}
+                className="group overflow-hidden rounded-xl border hover:border-primary"
+              >
+                <div className="relative h-20 w-full bg-accent">
+                  {city.imageUrl ? (
+                    // Admin-provided URLs aren't on next/image's allowed-host list.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={city.imageUrl}
+                      alt={city.name}
+                      className="size-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex size-full items-center justify-center">
+                      <MapPin className="size-6 text-muted-foreground" aria-hidden="true" />
+                    </div>
+                  )}
+                </div>
+                <p className="p-2 text-center text-sm font-medium">{city.name}</p>
+              </Link>
             ))}
-          </ul>
+          </div>
         </section>
       )}
 
@@ -227,18 +241,31 @@ export default async function HomePage() {
             <Sparkles className="size-5 text-primary" aria-hidden="true" />
             Popular categories
           </h2>
-          <ul className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {categories.slice(0, 12).map((category) => (
-              <li key={category.slug}>
-                <Link
-                  href={`/categories/${category.slug}`}
-                  className="rounded-full border px-4 py-1.5 text-sm hover:bg-accent"
-                >
-                  {category.name}
-                </Link>
-              </li>
+              <Link
+                key={category.slug}
+                href={`/categories/${category.slug}`}
+                className="group overflow-hidden rounded-xl border hover:border-primary"
+              >
+                <div className="relative h-20 w-full bg-accent">
+                  {category.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={category.imageUrl}
+                      alt={category.name}
+                      className="size-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex size-full items-center justify-center">
+                      <Sparkles className="size-6 text-muted-foreground" aria-hidden="true" />
+                    </div>
+                  )}
+                </div>
+                <p className="p-2 text-center text-sm font-medium">{category.name}</p>
+              </Link>
             ))}
-          </ul>
+          </div>
         </section>
       )}
     </main>

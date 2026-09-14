@@ -5,10 +5,14 @@ import { db } from "@/lib/db";
 /**
  * Cities/categories for the navbar's search box, mounted in the root layout —
  * meaning it runs on every single page request across the whole site,
- * including dynamic dashboard pages. Cached for an hour so that doesn't mean
- * two extra queries per page view forever; cities/categories change rarely
- * enough that staleness of up to an hour is a non-issue.
+ * including dynamic dashboard pages. Cached for an hour (cities/categories
+ * change rarely) so that isn't two extra queries per page view forever, but
+ * tagged so an admin adding a city/category (server/services/admin.ts) can
+ * force it fresh immediately via updateTag instead of waiting out the
+ * window — found this staleness via testing the admin city-image feature.
  */
+export const HEADER_SEARCH_OPTIONS_TAG = "header-search-options";
+
 export const getHeaderSearchOptions = unstable_cache(
   async () => {
     const [cities, categories] = await Promise.all([
@@ -25,8 +29,8 @@ export const getHeaderSearchOptions = unstable_cache(
     ]);
     return { cities, categories };
   },
-  ["header-search-options"],
-  { revalidate: 3600 },
+  [HEADER_SEARCH_OPTIONS_TAG],
+  { revalidate: 3600, tags: [HEADER_SEARCH_OPTIONS_TAG] },
 );
 
 /** Real counts for the home page's trust-stats row — never hardcoded marketing numbers. */
@@ -98,7 +102,14 @@ export function listActiveCities() {
   return db.city.findMany({
     where: { isActive: true },
     orderBy: { name: "asc" },
-    select: { slug: true, name: true, seoTitle: true, seoDescription: true, updatedAt: true },
+    select: {
+      slug: true,
+      name: true,
+      imageUrl: true,
+      seoTitle: true,
+      seoDescription: true,
+      updatedAt: true,
+    },
   });
 }
 
@@ -112,11 +123,16 @@ export function listActiveCategories() {
       slug: true,
       name: true,
       type: true,
+      imageUrl: true,
       seoTitle: true,
       seoDescription: true,
       updatedAt: true,
     },
   });
+}
+
+export function listStates() {
+  return db.state.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } });
 }
 
 /** Cities that have at least one published listing in the given category — avoids generating a thin/empty SEO page. */
