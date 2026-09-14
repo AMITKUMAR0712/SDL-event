@@ -54,6 +54,12 @@ export async function completeVendorOnboarding(
         gstin: input.gstin,
         panMasked: input.panMasked,
         subscriptionTier: plan.code,
+        // No manual KYC approval gate — a vendor completing onboarding goes
+        // live immediately. Admin can still unpublish/reject via
+        // /dashboard/admin/kyc if a listing turns out to need review.
+        kycStatus: "APPROVED",
+        isPublished: true,
+        publishedAt: new Date(),
         services: {
           create: catalogEntries.map((entry) => ({
             serviceCatalogId: entry.id,
@@ -105,6 +111,12 @@ export async function completeBanquetOnboarding(
         totalHalls: input.totalHalls,
         vegPricePerPlatePaise: input.vegPricePerPlatePaise,
         nonVegPricePerPlatePaise: input.nonVegPricePerPlatePaise,
+        // No manual KYC approval gate — a banquet completing onboarding goes
+        // live immediately. Admin can still unpublish/reject via
+        // /dashboard/admin/kyc if a listing turns out to need review.
+        kycStatus: "APPROVED",
+        isPublished: true,
+        publishedAt: new Date(),
       },
     });
 
