@@ -74,7 +74,9 @@ export function RegisterForm() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue>{(value: string | null) => ROLE_LABEL[value ?? ""]}</SelectValue>
+                    <SelectValue>
+                      {(value: string | null) => ROLE_LABEL[value ?? ""] ?? "Choose a role"}
+                    </SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>

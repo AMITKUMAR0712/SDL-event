@@ -42,6 +42,11 @@ const envSchema = z.object({
   // Email
   RESEND_API_KEY: z.string().optional().default(""),
   EMAIL_FROM: z.string().optional().default("GlowMakeOver <no-reply@makeglowover.com>"),
+  // Gmail SMTP fallback (used when RESEND_API_KEY isn't set) — an "app
+  // password" from the Gmail account's security settings, not the account
+  // password itself.
+  GMAIL_USER: z.string().optional().default(""),
+  GMAIL_APP_PASSWORD: z.string().optional().default(""),
 
   // WhatsApp Cloud API
   WHATSAPP_PHONE_NUMBER_ID: z.string().optional().default(""),

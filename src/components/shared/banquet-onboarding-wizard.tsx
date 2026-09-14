@@ -190,7 +190,9 @@ export function BanquetOnboardingWizard({ cities, plans, accountName, accountEma
                     <FormControl>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Choose a city">
-                          {(value: string | null) => cities.find((city) => city.id === value)?.name}
+                          {(value: string | null) =>
+                            cities.find((city) => city.id === value)?.name ?? "Choose a city"
+                          }
                         </SelectValue>
                       </SelectTrigger>
                     </FormControl>

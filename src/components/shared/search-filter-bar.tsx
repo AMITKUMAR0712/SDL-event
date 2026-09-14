@@ -82,7 +82,7 @@ export function SearchFilterBar({
         >
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Any city">
-              {(value: string | null) => cities.find((c) => c.slug === value)?.name}
+              {(value: string | null) => cities.find((c) => c.slug === value)?.name ?? "Any city"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -103,7 +103,9 @@ export function SearchFilterBar({
         >
           <SelectTrigger className="w-full sm:w-56">
             <SelectValue placeholder="Any category">
-              {(value: string | null) => categoryOptions.find((c) => c.slug === value)?.name}
+              {(value: string | null) =>
+                categoryOptions.find((c) => c.slug === value)?.name ?? "Any category"
+              }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>

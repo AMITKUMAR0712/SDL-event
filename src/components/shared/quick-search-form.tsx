@@ -52,7 +52,7 @@ export function QuickSearchForm({
           }
         >
           <SelectValue placeholder="City">
-            {(value: string | null) => cities.find((c) => c.slug === value)?.name}
+            {(value: string | null) => cities.find((c) => c.slug === value)?.name ?? "City"}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -72,7 +72,7 @@ export function QuickSearchForm({
           }
         >
           <SelectValue placeholder="Service">
-            {(value: string | null) => categories.find((c) => c.slug === value)?.name}
+            {(value: string | null) => categories.find((c) => c.slug === value)?.name ?? "Service"}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
