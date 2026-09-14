@@ -31,6 +31,7 @@ import {
   updatePlatformCoupon,
   updateSettingValue,
 } from "@/server/services/admin";
+import { expireOverdueSubscriptions } from "@/server/services/subscription";
 
 async function adminContext() {
   const session = await requireRole(["ADMIN"]);
@@ -198,4 +199,12 @@ export async function deleteContactMessageAction(id: string): Promise<ActionResu
   const ctx = await adminContext();
   await deleteContactMessage(id, ctx);
   return { ok: true, data: undefined };
+}
+
+/** On-demand version of the expire-subscriptions cron, for testing/demo
+ * environments where no external scheduler is wired up yet. */
+export async function runSubscriptionExpirySweepAction(): Promise<ActionResult<{ count: number }>> {
+  await adminContext();
+  const count = await expireOverdueSubscriptions();
+  return { ok: true, data: { count } };
 }

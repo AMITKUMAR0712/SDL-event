@@ -8,10 +8,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatPaiseAsINR } from "@/lib/money";
 import { breadcrumbJsonLd, pageDescription, pageTitle } from "@/lib/seo";
 import {
+  findBanquetOwnerBySlug,
   getApprovedReviewsFor,
   getBanquetBySlug,
   getMediaFor,
 } from "@/server/repositories/listings";
+import { syncPublishStatusForUser } from "@/server/services/subscription";
 
 export async function generateMetadata(props: PageProps<"/banquet/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
@@ -34,6 +36,10 @@ export async function generateMetadata(props: PageProps<"/banquet/[slug]">): Pro
 
 export default async function BanquetProfilePage(props: PageProps<"/banquet/[slug]">) {
   const { slug } = await props.params;
+
+  const owner = await findBanquetOwnerBySlug(slug);
+  if (owner) await syncPublishStatusForUser(owner.userId);
+
   const banquet = await getBanquetBySlug(slug);
   if (!banquet) notFound();
 

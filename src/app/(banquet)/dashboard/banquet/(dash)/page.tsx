@@ -4,6 +4,8 @@ import { SubscriptionPayButton } from "@/components/shared/subscription-pay-butt
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatPaiseAsINR } from "@/lib/money";
+import { isSubscriptionExpired } from "@/lib/subscription-status";
+import { syncPublishStatusForUser } from "@/server/services/subscription";
 
 const BILLING_PERIOD_LABEL: Record<string, string> = {
   MONTHLY: "/ month",
@@ -14,6 +16,7 @@ const BILLING_PERIOD_LABEL: Record<string, string> = {
 
 export default async function BanquetDashboardPage() {
   const session = await auth();
+  if (session?.user.id) await syncPublishStatusForUser(session.user.id);
   // Looked up by the stable userId, not session.user.banquetId — that field
   // is only refreshed on sign-in or an explicit session update() and would
   // otherwise show a stale "not onboarded" state right after onboarding.
@@ -44,6 +47,7 @@ export default async function BanquetDashboardPage() {
       })
     : null;
   const isPaid = (subscription?.payments.length ?? 0) > 0;
+  const isExpired = isSubscriptionExpired(subscription);
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
@@ -52,7 +56,11 @@ export default async function BanquetDashboardPage() {
           <h1 className="font-heading text-3xl">{banquet.venueName}</h1>
           <p className="mt-2 text-muted-foreground">
             KYC status: {banquet.kycStatus} ·{" "}
-            {banquet.isPublished ? "Published" : "Not published yet"}
+            {banquet.isPublished
+              ? "Published"
+              : isExpired
+                ? "Unpublished — plan expired"
+                : "Not published yet"}
           </p>
         </div>
         <Link

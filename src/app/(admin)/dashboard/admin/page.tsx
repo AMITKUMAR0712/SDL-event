@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ExpireSubscriptionsButton } from "@/components/shared/expire-subscriptions-button";
 import { auth } from "@/lib/auth";
 import { formatPaiseAsINR } from "@/lib/money";
 import { getDashboardMetrics } from "@/server/repositories/admin";
@@ -59,6 +60,18 @@ export default async function AdminDashboardPage() {
           </Link>
         ))}
       </nav>
+
+      <div className="mt-8 rounded-lg border border-border p-4">
+        <p className="text-sm font-medium">Subscription expiry</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Vendors/banquets past their plan&rsquo;s end date are unpublished automatically on their
+          next dashboard or profile page visit. Run this to sweep the rest right now (also runs
+          daily via cron once one is configured).
+        </p>
+        <div className="mt-3">
+          <ExpireSubscriptionsButton />
+        </div>
+      </div>
     </main>
   );
 }

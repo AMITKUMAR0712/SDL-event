@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { findBookingById } from "@/server/repositories/booking";
 import { transitionBooking } from "@/server/services/booking";
 import { createRazorpayOrder } from "@/server/services/razorpay";
+import { syncPublishStatusForUser } from "@/server/services/subscription";
 
 export type InitiatePaymentResult =
   | { ok: true; orderId: string; amountPaise: number; keyId: string }
@@ -109,6 +110,9 @@ export async function capturePayment(
           currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
         },
       });
+      // Re-publish immediately if this payment renewed a lapsed plan —
+      // don't make the vendor/banquet wait for their next dashboard visit.
+      await syncPublishStatusForUser(subscription.userId);
     }
   }
 }

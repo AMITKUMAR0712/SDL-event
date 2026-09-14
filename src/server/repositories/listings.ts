@@ -132,6 +132,16 @@ export async function searchBanquets(params: ListingSearchParams) {
   return splitPage(rows, take);
 }
 
+/** Deliberately ignores isPublished — used to find who to run the
+ * subscription-expiry sync for before the real (published-only) query. */
+export function findVendorOwnerBySlug(slug: string) {
+  return db.vendorProfile.findUnique({ where: { slug }, select: { userId: true } });
+}
+
+export function findBanquetOwnerBySlug(slug: string) {
+  return db.banquetProfile.findUnique({ where: { slug }, select: { userId: true } });
+}
+
 export function getVendorBySlug(slug: string) {
   return db.vendorProfile.findFirst({
     where: { slug, isPublished: true, deletedAt: null },

@@ -9,12 +9,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatPaiseAsINR } from "@/lib/money";
 import { breadcrumbJsonLd, pageDescription, pageTitle } from "@/lib/seo";
 import {
+  findVendorOwnerBySlug,
   getApprovedReviewsFor,
   getMediaFor,
   getVendorBySlug,
   incrementVendorViewCount,
   similarVendorsNearby,
 } from "@/server/repositories/listings";
+import { syncPublishStatusForUser } from "@/server/services/subscription";
 
 export async function generateMetadata(props: PageProps<"/vendor/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
@@ -42,6 +44,10 @@ export async function generateMetadata(props: PageProps<"/vendor/[slug]">): Prom
 
 export default async function VendorProfilePage(props: PageProps<"/vendor/[slug]">) {
   const { slug } = await props.params;
+
+  const owner = await findVendorOwnerBySlug(slug);
+  if (owner) await syncPublishStatusForUser(owner.userId);
+
   const vendor = await getVendorBySlug(slug);
   if (!vendor) notFound();
 
