@@ -9,6 +9,7 @@ export const couponAdminSchema = z.object({
   appliesTo: z.enum(["BOOKING", "SUBSCRIPTION", "UNLOCK"]),
   startsAt: z.coerce.date(),
   endsAt: z.coerce.date(),
+  isActive: z.coerce.boolean().default(true),
 });
 export type CouponAdminInput = z.infer<typeof couponAdminSchema>;
 

@@ -2,7 +2,12 @@ import type { Prisma } from "@prisma/client";
 import { revalidatePath, updateTag } from "next/cache";
 
 import { db } from "@/lib/db";
-import type { CategoryAdminInput, CityAdminInput, PlanAdminInput } from "@/schemas/admin";
+import type {
+  CategoryAdminInput,
+  CityAdminInput,
+  CouponAdminInput,
+  PlanAdminInput,
+} from "@/schemas/admin";
 import { HEADER_SEARCH_OPTIONS_TAG } from "@/server/repositories/catalog";
 import { notify } from "@/server/services/notification";
 import { notifySearchEnginesOfUpdate } from "@/server/services/search-engine-ping";
@@ -105,6 +110,28 @@ export async function setUserStatus(
   return after;
 }
 
+export async function updatePlatformCoupon(id: string, input: CouponAdminInput, ctx: AuditContext) {
+  const before = await db.coupon.findUnique({ where: { id } });
+  const after = await db.coupon.update({
+    where: { id },
+    data: { ...input, code: input.code.toUpperCase() },
+  });
+  await logAdminAction(ctx, "coupon.update", "Coupon", id, before, after);
+  return after;
+}
+
+/** Soft delete — coupons already track deletedAt, and past redemptions
+ * reference the row, so it's deactivated + marked rather than removed. */
+export async function deleteCoupon(id: string, ctx: AuditContext) {
+  const before = await db.coupon.findUnique({ where: { id } });
+  const after = await db.coupon.update({
+    where: { id },
+    data: { isActive: false, deletedAt: new Date() },
+  });
+  await logAdminAction(ctx, "coupon.delete", "Coupon", id, before, after);
+  return after;
+}
+
 export async function createPlatformCoupon(
   input: {
     code: string;
@@ -155,6 +182,19 @@ export async function updateCity(id: string, input: CityAdminInput, ctx: AuditCo
   return after;
 }
 
+/** Soft delete — cities are referenced by vendors/banquets/localities, so
+ * this deactivates rather than removes the row (same as unchecking "Active"
+ * in the form, just exposed as an explicit action). */
+export async function deleteCity(id: string, ctx: AuditContext) {
+  const before = await db.city.findUnique({ where: { id } });
+  const after = await db.city.update({ where: { id }, data: { isActive: false } });
+  await logAdminAction(ctx, "city.delete", "City", id, before, after);
+  revalidatePath("/");
+  updateTag(HEADER_SEARCH_OPTIONS_TAG);
+  if (after.slug) revalidatePath(`/${after.slug}`);
+  return after;
+}
+
 export async function createCategory(input: CategoryAdminInput, ctx: AuditContext) {
   const category = await db.category.create({
     data: { ...input, imageUrl: input.imageUrl || null },
@@ -177,6 +217,18 @@ export async function updateCategory(id: string, input: CategoryAdminInput, ctx:
   updateTag(HEADER_SEARCH_OPTIONS_TAG);
   revalidatePath(`/categories/${after.slug}`);
   if (before && before.slug !== after.slug) revalidatePath(`/categories/${before.slug}`);
+  return after;
+}
+
+/** Soft delete — categories are referenced by vendors/banquets/service
+ * catalog entries, so this deactivates rather than removes the row. */
+export async function deleteCategory(id: string, ctx: AuditContext) {
+  const before = await db.category.findUnique({ where: { id } });
+  const after = await db.category.update({ where: { id }, data: { isActive: false } });
+  await logAdminAction(ctx, "category.delete", "Category", id, before, after);
+  revalidatePath("/");
+  updateTag(HEADER_SEARCH_OPTIONS_TAG);
+  revalidatePath(`/categories/${after.slug}`);
   return after;
 }
 
@@ -220,4 +272,21 @@ export async function updatePlan(id: string, input: PlanAdminInput, ctx: AuditCo
   await logAdminAction(ctx, "plan.update", "SubscriptionPlan", id, before, after);
   revalidatePath("/");
   return after;
+}
+
+/** Soft delete — plans are referenced by past/active subscriptions, so this
+ * deactivates (hides from the public pricing pages) rather than removes. */
+export async function deletePlan(id: string, ctx: AuditContext) {
+  const before = await db.subscriptionPlan.findUnique({ where: { id } });
+  const after = await db.subscriptionPlan.update({ where: { id }, data: { isActive: false } });
+  await logAdminAction(ctx, "plan.delete", "SubscriptionPlan", id, before, after);
+  revalidatePath("/");
+  return after;
+}
+
+/** Contact messages aren't referenced anywhere else, so a real delete is safe. */
+export async function deleteContactMessage(id: string, ctx: AuditContext) {
+  const before = await db.contactMessage.findUnique({ where: { id } });
+  await db.contactMessage.delete({ where: { id } });
+  await logAdminAction(ctx, "contact_message.delete", "ContactMessage", id, before, null);
 }

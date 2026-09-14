@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createPlanAction, updatePlanAction } from "@/server/actions/admin";
+import { createPlanAction, deletePlanAction, updatePlanAction } from "@/server/actions/admin";
 
 type FeatureRow = {
   key: string;
@@ -108,6 +108,25 @@ export function PlanForm({ plan, onDone }: { plan?: Plan; onDone?: () => void })
       setName("");
       setPricePaise("0");
       setFeatures([]);
+    }
+    onDone?.();
+    router.refresh();
+  }
+
+  async function remove() {
+    if (!plan) return;
+    if (
+      !window.confirm(`Delete "${plan.name}"? It will be hidden from pricing pages immediately.`)
+    ) {
+      return;
+    }
+    setPending(true);
+    setError(null);
+    const result = await deletePlanAction(plan.id);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
     }
     onDone?.();
     router.refresh();
@@ -244,9 +263,16 @@ export function PlanForm({ plan, onDone }: { plan?: Plan; onDone?: () => void })
         </Button>
       </div>
 
-      <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "Saving..." : plan ? "Save changes" : "Create plan"}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" disabled={pending}>
+          {pending ? "Saving..." : plan ? "Save changes" : "Create plan"}
+        </Button>
+        {plan && (
+          <Button type="button" size="sm" variant="destructive" disabled={pending} onClick={remove}>
+            Delete
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

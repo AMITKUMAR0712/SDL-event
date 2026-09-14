@@ -1,3 +1,4 @@
+import { DeleteMessageButton } from "@/components/shared/delete-message-button";
 import { listContactMessages } from "@/server/repositories/admin";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +23,11 @@ export default async function AdminMessagesPage() {
                 {m.name} · {m.email}
                 {m.phone && ` · ${m.phone}`}
               </span>
-              <span className="text-muted-foreground">
-                {new Date(m.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+              <span className="flex items-center gap-3">
+                <span className="text-muted-foreground">
+                  {new Date(m.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+                </span>
+                <DeleteMessageButton id={m.id} />
               </span>
             </div>
             <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{m.message}</p>

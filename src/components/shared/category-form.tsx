@@ -6,7 +6,11 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createCategoryAction, updateCategoryAction } from "@/server/actions/admin";
+import {
+  createCategoryAction,
+  deleteCategoryAction,
+  updateCategoryAction,
+} from "@/server/actions/admin";
 
 type Category = {
   id: string;
@@ -70,6 +74,25 @@ export function CategoryForm({ category, onDone }: { category?: Category; onDone
     router.refresh();
   }
 
+  async function remove() {
+    if (!category) return;
+    if (
+      !window.confirm(`Delete "${category.name}"? It will be hidden from the site immediately.`)
+    ) {
+      return;
+    }
+    setPending(true);
+    setError(null);
+    const result = await deleteCategoryAction(category.id);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    onDone?.();
+    router.refresh();
+  }
+
   return (
     <form onSubmit={submit} className="space-y-3 rounded-lg border border-border p-4">
       <p className="font-medium">{category ? `Edit ${category.name}` : "New category"}</p>
@@ -125,9 +148,16 @@ export function CategoryForm({ category, onDone }: { category?: Category; onDone
         value={longDescription}
         onChange={(e) => setLongDescription(e.target.value)}
       />
-      <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "Saving..." : category ? "Save changes" : "Create category"}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" disabled={pending}>
+          {pending ? "Saving..." : category ? "Save changes" : "Create category"}
+        </Button>
+        {category && (
+          <Button type="button" size="sm" variant="destructive" disabled={pending} onClick={remove}>
+            Delete
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { BackButton } from "@/components/shared/back-button";
 import { SubscriptionPayButton } from "@/components/shared/subscription-pay-button";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -25,7 +24,6 @@ export default async function BanquetDashboardPage() {
   if (!banquet) {
     return (
       <main className="mx-auto max-w-2xl px-6 py-16 text-center">
-        <BackButton className="mb-4" />
         <h1 className="font-heading text-3xl">Finish setting up your venue</h1>
         <p className="mt-2 text-muted-foreground">You haven&apos;t completed onboarding yet.</p>
         <Link
@@ -49,7 +47,6 @@ export default async function BanquetDashboardPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
-      <BackButton className="mb-4" />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-heading text-3xl">{banquet.venueName}</h1>

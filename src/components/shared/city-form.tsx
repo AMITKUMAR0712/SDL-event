@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createCityAction, updateCityAction } from "@/server/actions/admin";
+import { createCityAction, deleteCityAction, updateCityAction } from "@/server/actions/admin";
 
 type City = {
   id: string;
@@ -81,6 +81,23 @@ export function CityForm({
     router.refresh();
   }
 
+  async function remove() {
+    if (!city) return;
+    if (!window.confirm(`Delete "${city.name}"? It will be hidden from the site immediately.`)) {
+      return;
+    }
+    setPending(true);
+    setError(null);
+    const result = await deleteCityAction(city.id);
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    onDone?.();
+    router.refresh();
+  }
+
   return (
     <form onSubmit={submit} className="space-y-3 rounded-lg border border-border p-4">
       <p className="font-medium">{city ? `Edit ${city.name}` : "New city"}</p>
@@ -147,9 +164,16 @@ export function CityForm({
         value={introContent}
         onChange={(e) => setIntroContent(e.target.value)}
       />
-      <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "Saving..." : city ? "Save changes" : "Create city"}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" disabled={pending}>
+          {pending ? "Saving..." : city ? "Save changes" : "Create city"}
+        </Button>
+        {city && (
+          <Button type="button" size="sm" variant="destructive" disabled={pending} onClick={remove}>
+            Delete
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

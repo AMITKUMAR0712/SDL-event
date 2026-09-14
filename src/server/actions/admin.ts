@@ -17,12 +17,18 @@ import {
   createCity,
   createPlan,
   createPlatformCoupon,
+  deleteCategory,
+  deleteCity,
+  deleteContactMessage,
+  deleteCoupon,
+  deletePlan,
   rejectBanquetKyc,
   rejectVendorKyc,
   setUserStatus,
   updateCategory,
   updateCity,
   updatePlan,
+  updatePlatformCoupon,
   updateSettingValue,
 } from "@/server/services/admin";
 
@@ -91,6 +97,25 @@ export async function createPlatformCouponAction(input: unknown): Promise<Action
   return { ok: true, data: undefined };
 }
 
+export async function updatePlatformCouponAction(
+  id: string,
+  input: unknown,
+): Promise<ActionResult> {
+  const ctx = await adminContext();
+  const parsed = couponAdminSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  await updatePlatformCoupon(id, parsed.data, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function deleteCouponAction(id: string): Promise<ActionResult> {
+  const ctx = await adminContext();
+  await deleteCoupon(id, ctx);
+  return { ok: true, data: undefined };
+}
+
 export async function createCityAction(input: unknown): Promise<ActionResult> {
   const ctx = await adminContext();
   const parsed = cityAdminSchema.safeParse(input);
@@ -108,6 +133,12 @@ export async function updateCityAction(id: string, input: unknown): Promise<Acti
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   await updateCity(id, parsed.data, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function deleteCityAction(id: string): Promise<ActionResult> {
+  const ctx = await adminContext();
+  await deleteCity(id, ctx);
   return { ok: true, data: undefined };
 }
 
@@ -131,6 +162,12 @@ export async function updateCategoryAction(id: string, input: unknown): Promise<
   return { ok: true, data: undefined };
 }
 
+export async function deleteCategoryAction(id: string): Promise<ActionResult> {
+  const ctx = await adminContext();
+  await deleteCategory(id, ctx);
+  return { ok: true, data: undefined };
+}
+
 export async function createPlanAction(input: unknown): Promise<ActionResult> {
   const ctx = await adminContext();
   const parsed = planAdminSchema.safeParse(input);
@@ -148,5 +185,17 @@ export async function updatePlanAction(id: string, input: unknown): Promise<Acti
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   await updatePlan(id, parsed.data, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function deletePlanAction(id: string): Promise<ActionResult> {
+  const ctx = await adminContext();
+  await deletePlan(id, ctx);
+  return { ok: true, data: undefined };
+}
+
+export async function deleteContactMessageAction(id: string): Promise<ActionResult> {
+  const ctx = await adminContext();
+  await deleteContactMessage(id, ctx);
   return { ok: true, data: undefined };
 }

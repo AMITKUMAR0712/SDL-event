@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { BackButton } from "@/components/shared/back-button";
 import { VendorProfileEditForm } from "@/components/shared/vendor-profile-edit-form";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -21,7 +20,6 @@ export default async function VendorProfileEditPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
-      <BackButton className="mb-4" />
       <h1 className="font-heading text-3xl">Edit your business profile</h1>
       <p className="mt-2 text-muted-foreground">
         Changes apply immediately — your listing stays live while you update it.
