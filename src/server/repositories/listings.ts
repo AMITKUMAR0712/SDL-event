@@ -50,7 +50,11 @@ export async function searchVendors(params: ListingSearchParams) {
           }
         : {}),
     },
-    orderBy: [{ boostScore: "desc" }, { id: "asc" }],
+    // Newest first among equally-unboosted listings — an ascending id
+    // tiebreaker here would always rank a just-published vendor/banquet
+    // last (cuids are roughly chronological), pushing it off the first
+    // page in any city with more than a page's worth of listings.
+    orderBy: [{ boostScore: "desc" }, { id: "desc" }],
     ...paginationArgs(params),
     select: {
       id: true,
@@ -101,7 +105,11 @@ export async function searchBanquets(params: ListingSearchParams) {
           }
         : {}),
     },
-    orderBy: [{ boostScore: "desc" }, { id: "asc" }],
+    // Newest first among equally-unboosted listings — an ascending id
+    // tiebreaker here would always rank a just-published vendor/banquet
+    // last (cuids are roughly chronological), pushing it off the first
+    // page in any city with more than a page's worth of listings.
+    orderBy: [{ boostScore: "desc" }, { id: "desc" }],
     ...paginationArgs(params),
     select: {
       id: true,

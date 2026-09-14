@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ListingGrid } from "@/components/shared/listing-grid";
+import { getGateContext } from "@/lib/gate";
 import { breadcrumbJsonLd, pageDescription, pageTitle } from "@/lib/seo";
 import {
   findCityBySlug,
   listActiveCities,
   listCategoriesWithListingsInCity,
 } from "@/server/repositories/catalog";
+import { runSearch } from "@/server/services/search";
 
 export async function generateStaticParams() {
   const cities = await listActiveCities();
@@ -42,13 +45,19 @@ export default async function CityHubPage(props: PageProps<"/[citySlug]">) {
   const beautyCategories = categories.filter((c) => c.type === "BEAUTY");
   const banquetCategories = categories.filter((c) => c.type === "BANQUET");
 
+  const gate = await getGateContext();
+  const [vendorResults, banquetResults] = await Promise.all([
+    runSearch({ type: "vendor", city: city.slug }, gate),
+    runSearch({ type: "banquet", city: city.slug }, gate),
+  ]);
+
   const jsonLd = breadcrumbJsonLd([
     { name: "Home", path: "/" },
     { name: city.name, path: `/${city.slug}` },
   ]);
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
+    <main className="mx-auto max-w-5xl px-6 py-12">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -61,6 +70,38 @@ export default async function CityHubPage(props: PageProps<"/[citySlug]">) {
       <h1 className="mt-2 font-heading text-3xl">Beauty & Banquet Services in {city.name}</h1>
 
       {city.introContent && <p className="mt-4 text-muted-foreground">{city.introContent}</p>}
+
+      {vendorResults.items.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-heading text-xl">Beauty vendors in {city.name}</h2>
+          <ListingGrid
+            items={vendorResults.items}
+            type="vendor"
+            teaserDiscount={vendorResults.teaserDiscount}
+            nextHref={
+              vendorResults.nextCursor
+                ? `/search?type=vendor&city=${city.slug}&cursor=${vendorResults.nextCursor}`
+                : undefined
+            }
+          />
+        </section>
+      )}
+
+      {banquetResults.items.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-heading text-xl">Banquet venues in {city.name}</h2>
+          <ListingGrid
+            items={banquetResults.items}
+            type="banquet"
+            teaserDiscount={banquetResults.teaserDiscount}
+            nextHref={
+              banquetResults.nextCursor
+                ? `/search?type=banquet&city=${city.slug}&cursor=${banquetResults.nextCursor}`
+                : undefined
+            }
+          />
+        </section>
+      )}
 
       {beautyCategories.length > 0 && (
         <section className="mt-8">
