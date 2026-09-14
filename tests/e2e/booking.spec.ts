@@ -18,9 +18,18 @@ test("customer can find a vendor via search and request a booking", async ({ bro
   await expect(customerPage.getByText("Book now")).toBeVisible();
 
   await customerPage.locator('input[type="checkbox"]').first().check();
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  await customerPage.locator('input[type="date"]').fill(tomorrow);
-  await customerPage.locator('input[type="time"]').fill("11:00");
+  // A random day+slot, not a fixed one — this test targets a shared seeded
+  // vendor, so re-running it against the same dev DB would otherwise
+  // collide with a slot an earlier run already booked. Spreading across
+  // two weeks and half-hour slots gives well over a hundred combinations.
+  const daysAhead = 1 + Math.floor(Math.random() * 13);
+  const date = new Date(Date.now() + daysAhead * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  await customerPage.locator('input[type="date"]').fill(date);
+  const hour = 9 + Math.floor(Math.random() * 8);
+  const minute = Math.random() < 0.5 ? "00" : "30";
+  await customerPage
+    .locator('input[type="time"]')
+    .fill(`${String(hour).padStart(2, "0")}:${minute}`);
   await customerPage.getByRole("button", { name: "Request booking" }).click();
   await expect(customerPage.getByText(/awaiting vendor confirmation/)).toBeVisible({
     timeout: 10_000,
