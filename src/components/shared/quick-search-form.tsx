@@ -24,8 +24,11 @@ export function QuickSearchForm({
   compact?: boolean;
 }) {
   const router = useRouter();
-  const [city, setCity] = useState<string | null>(null);
-  const [category, setCategory] = useState<string | null>(null);
+  // "" (not null/undefined) means "nothing selected" — Select must stay a
+  // controlled component for its whole lifetime, so its value prop can
+  // never be undefined on the first render and a defined string later.
+  const [city, setCity] = useState("");
+  const [category, setCategory] = useState("");
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,7 +47,7 @@ export function QuickSearchForm({
           : "flex w-full max-w-2xl flex-col gap-2 rounded-2xl border bg-card p-2 shadow-sm sm:flex-row"
       }
     >
-      <Select value={city ?? undefined} onValueChange={setCity}>
+      <Select value={city} onValueChange={(value) => setCity(value ?? "")}>
         <SelectTrigger
           size={compact ? "sm" : "default"}
           className={
@@ -64,7 +67,7 @@ export function QuickSearchForm({
         </SelectContent>
       </Select>
 
-      <Select value={category ?? undefined} onValueChange={setCategory}>
+      <Select value={category} onValueChange={(value) => setCategory(value ?? "")}>
         <SelectTrigger
           size={compact ? "sm" : "default"}
           className={

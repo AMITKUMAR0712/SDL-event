@@ -26,8 +26,11 @@ export function SearchFilterBar({
 }) {
   const router = useRouter();
   const [type, setType] = useState<"vendor" | "banquet">(initial.type);
-  const [city, setCity] = useState<string | null>(initial.city ?? null);
-  const [category, setCategory] = useState<string | null>(initial.category ?? null);
+  // "" (not null/undefined) means "no filter" — Select must stay a
+  // controlled component for its whole lifetime, so its value prop can
+  // never be undefined on the first render and a defined string later.
+  const [city, setCity] = useState(initial.city ?? "");
+  const [category, setCategory] = useState(initial.category ?? "");
   const [homeService, setHomeService] = useState(initial.homeService ?? false);
 
   const categoryOptions = categories.filter(
@@ -37,8 +40,8 @@ export function SearchFilterBar({
   function apply(
     overrides: Partial<{
       type: "vendor" | "banquet";
-      city: string | null;
-      category: string | null;
+      city: string;
+      category: string;
       homeService: boolean;
     }> = {},
   ) {
@@ -62,8 +65,8 @@ export function SearchFilterBar({
         onValueChange={(value) => {
           const next = value as "vendor" | "banquet";
           setType(next);
-          setCategory(null);
-          apply({ type: next, category: null });
+          setCategory("");
+          apply({ type: next, category: "" });
         }}
       >
         <TabsList>
@@ -74,10 +77,11 @@ export function SearchFilterBar({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Select
-          value={city ?? undefined}
+          value={city}
           onValueChange={(value) => {
-            setCity(value);
-            apply({ city: value });
+            const next = value ?? "";
+            setCity(next);
+            apply({ city: next });
           }}
         >
           <SelectTrigger className="w-full sm:w-48">
@@ -95,10 +99,11 @@ export function SearchFilterBar({
         </Select>
 
         <Select
-          value={category ?? undefined}
+          value={category}
           onValueChange={(value) => {
-            setCategory(value);
-            apply({ category: value });
+            const next = value ?? "";
+            setCategory(next);
+            apply({ category: next });
           }}
         >
           <SelectTrigger className="w-full sm:w-56">
@@ -139,9 +144,9 @@ export function SearchFilterBar({
             variant="ghost"
             size="sm"
             onClick={() => {
-              setCity(null);
-              setCategory(null);
-              apply({ city: null, category: null });
+              setCity("");
+              setCategory("");
+              apply({ city: "", category: "" });
             }}
           >
             Clear filters
