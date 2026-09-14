@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { PlanPicker, type PlanPickerPlan } from "@/components/shared/plan-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatPaiseAsINR } from "@/lib/money";
+import { chargeSubscriptionAtCheckout } from "@/lib/subscription-checkout";
 import { VendorOnboardingInput, vendorOnboardingSchema } from "@/schemas/onboarding";
 import { completeVendorOnboardingAction } from "@/server/actions/onboarding";
 
@@ -32,24 +33,10 @@ const STORAGE_KEY = "onboarding:vendor";
 
 const STEPS = ["Business", "Location", "Services", "Documents", "Plan"] as const;
 
-const BILLING_PERIOD_LABEL: Record<string, string> = {
-  MONTHLY: "/ month",
-  QUARTERLY: "for 3 months",
-  HALF_YEARLY: "for 6 months",
-  YEARLY: "for 12 months",
-};
-
 type Props = {
   cities: { id: string; name: string }[];
   serviceCatalog: { id: string; name: string; categoryId: string }[];
-  plans: {
-    id: string;
-    code: string;
-    name: string;
-    pricePaise: number;
-    billingPeriod: string;
-    trialDays: number;
-  }[];
+  plans: PlanPickerPlan[];
   accountName: string | null;
   accountEmail: string | null;
 };
@@ -127,6 +114,13 @@ export function VendorOnboardingWizard({
     }
     localStorage.removeItem(STORAGE_KEY);
     await update(); // refresh the JWT so session.user.vendorId picks up the new profile
+
+    if (result.data.subscriptionId) {
+      // Publishing never waits on this — it only affects whether the new
+      // subscription shows as paid on the dashboard afterwards.
+      await chargeSubscriptionAtCheckout(result.data.subscriptionId);
+    }
+
     router.push("/dashboard/vendor");
     router.refresh();
   }
@@ -332,35 +326,11 @@ export function VendorOnboardingWizard({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Choose a plan</FormLabel>
-                <div className="space-y-2">
-                  {plans.map((plan) => (
-                    <label
-                      key={plan.code}
-                      className="flex items-center justify-between rounded-lg border border-border p-3 text-sm has-[:checked]:border-primary"
-                    >
-                      <span>
-                        <span className="font-medium">{plan.name}</span>
-                        <span className="text-muted-foreground">
-                          {" "}
-                          · {formatPaiseAsINR(plan.pricePaise)}{" "}
-                          {BILLING_PERIOD_LABEL[plan.billingPeriod] ?? ""}
-                        </span>
-                        {plan.trialDays > 0 && (
-                          <span className="text-muted-foreground">
-                            {" "}
-                            · {plan.trialDays}-day trial
-                          </span>
-                        )}
-                      </span>
-                      <input
-                        type="radio"
-                        value={plan.code}
-                        checked={field.value === plan.code}
-                        onChange={() => field.onChange(plan.code)}
-                      />
-                    </label>
-                  ))}
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Pick how long you want to stay listed — pricing and lead limits are fixed by
+                  GlowMakeOver, never negotiable per vendor.
+                </p>
+                <PlanPicker plans={plans} value={field.value} onChange={field.onChange} />
                 <FormMessage />
               </FormItem>
             )}
@@ -376,7 +346,17 @@ export function VendorOnboardingWizard({
               Next
             </Button>
           ) : (
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            // Deliberately type="button" + a manual handleSubmit() call, not
+            // type="submit" — this button occupies the same slot as "Next"
+            // above, and swapping a button's type to "submit" in the same
+            // render pass as the click that revealed it races the browser's
+            // native submit dispatch, silently submitting the form a step
+            // early before the user ever saw the plan step.
+            <Button
+              type="button"
+              onClick={form.handleSubmit(onSubmit)}
+              disabled={form.formState.isSubmitting}
+            >
               {form.formState.isSubmitting ? "Submitting..." : "Finish setup"}
             </Button>
           )}

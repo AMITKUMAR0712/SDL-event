@@ -45,7 +45,19 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
   await expect(page.getByText("Choose a plan")).toBeVisible();
   await page.getByRole("button", { name: "Finish setup" }).click();
 
-  await expect(page).toHaveURL(/\/dashboard\/vendor$/, { timeout: 15_000 });
+  // Real Razorpay test-mode keys are configured in this environment, so
+  // clicking above creates the profile+subscription (proven by the fact
+  // that a live Checkout modal opens right after) and then opens a real
+  // payment widget. Completing — or even reliably closing — a live
+  // third-party payment UI isn't something e2e should simulate; instead,
+  // treat the modal opening as proof the app-side flow worked, and verify
+  // the result directly rather than fighting Razorpay's own overlay chrome.
+  await page
+    .frameLocator("iframe")
+    .getByRole("button", { name: "Close Checkout" })
+    .waitFor({ state: "visible", timeout: 20_000 });
+
+  await page.goto("/dashboard/vendor");
   await expect(page.getByRole("heading", { name: businessName })).toBeVisible();
   // No more KYC approval gate — a completed onboarding publishes immediately.
   await expect(page.getByText(/KYC status: APPROVED/)).toBeVisible();
@@ -90,7 +102,19 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
   await expect(page.getByText("Choose a plan")).toBeVisible();
   await page.getByRole("button", { name: "Finish setup" }).click();
 
-  await expect(page).toHaveURL(/\/dashboard\/banquet$/, { timeout: 15_000 });
+  // Real Razorpay test-mode keys are configured in this environment, so
+  // clicking above creates the profile+subscription (proven by the fact
+  // that a live Checkout modal opens right after) and then opens a real
+  // payment widget. Completing — or even reliably closing — a live
+  // third-party payment UI isn't something e2e should simulate; instead,
+  // treat the modal opening as proof the app-side flow worked, and verify
+  // the result directly rather than fighting Razorpay's own overlay chrome.
+  await page
+    .frameLocator("iframe")
+    .getByRole("button", { name: "Close Checkout" })
+    .waitFor({ state: "visible", timeout: 20_000 });
+
+  await page.goto("/dashboard/banquet");
   await expect(page.getByRole("heading", { name: venueName })).toBeVisible();
   // No more KYC approval gate — a completed onboarding publishes immediately.
   await expect(page.getByText(/KYC status: APPROVED/)).toBeVisible();

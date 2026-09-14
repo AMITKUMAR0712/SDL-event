@@ -12,7 +12,7 @@ import { completeBanquetOnboarding, completeVendorOnboarding } from "@/server/se
 
 export async function completeVendorOnboardingAction(
   input: VendorOnboardingInput,
-): Promise<ActionResult<{ slug: string }>> {
+): Promise<ActionResult<{ slug: string; subscriptionId: string | null }>> {
   const session = await requireRole(["VENDOR"]);
 
   const parsed = vendorOnboardingSchema.safeParse(input);
@@ -31,12 +31,12 @@ export async function completeVendorOnboardingAction(
     };
   }
 
-  return { ok: true, data: { slug: result.slug } };
+  return { ok: true, data: { slug: result.slug, subscriptionId: result.subscriptionId } };
 }
 
 export async function completeBanquetOnboardingAction(
   input: BanquetOnboardingInput,
-): Promise<ActionResult<{ slug: string }>> {
+): Promise<ActionResult<{ slug: string; subscriptionId: string | null }>> {
   const session = await requireRole(["BANQUET_OWNER"]);
 
   const parsed = banquetOnboardingSchema.safeParse(input);
@@ -55,5 +55,5 @@ export async function completeBanquetOnboardingAction(
     };
   }
 
-  return { ok: true, data: { slug: result.slug } };
+  return { ok: true, data: { slug: result.slug, subscriptionId: result.subscriptionId } };
 }

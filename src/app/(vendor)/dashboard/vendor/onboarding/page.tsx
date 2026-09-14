@@ -2,9 +2,9 @@ import { BackButton } from "@/components/shared/back-button";
 import { VendorOnboardingWizard } from "@/components/shared/vendor-onboarding-wizard";
 import { auth } from "@/lib/auth";
 import {
+  listActivePlansWithFeatures,
   listBeautyServiceCatalog,
   listCitiesForSelect,
-  listPlansForAudience,
 } from "@/server/repositories/catalog";
 
 export default async function VendorOnboardingPage() {
@@ -12,7 +12,7 @@ export default async function VendorOnboardingPage() {
     auth(),
     listCitiesForSelect(),
     listBeautyServiceCatalog(),
-    listPlansForAudience("VENDOR"),
+    listActivePlansWithFeatures("VENDOR"),
   ]);
 
   return (

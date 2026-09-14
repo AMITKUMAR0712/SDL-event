@@ -20,7 +20,8 @@ function trialEndDate(trialDays: number): Date {
 }
 
 export type OnboardingResult =
-  { ok: true; slug: string } | { ok: false; reason: "PLAN_NOT_FOUND" | "CITY_NOT_FOUND" };
+  | { ok: true; slug: string; subscriptionId: string | null }
+  | { ok: false; reason: "PLAN_NOT_FOUND" | "CITY_NOT_FOUND" };
 
 export async function completeVendorOnboarding(
   userId: string,
@@ -29,7 +30,14 @@ export async function completeVendorOnboarding(
   // Idempotent: a double-submit (double click, a retried request) must not
   // crash on the userId unique constraint — just report the existing profile.
   const existing = await db.vendorProfile.findUnique({ where: { userId }, select: { slug: true } });
-  if (existing) return { ok: true, slug: existing.slug };
+  if (existing) {
+    const subscription = await db.subscription.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+    return { ok: true, slug: existing.slug, subscriptionId: subscription?.id ?? null };
+  }
 
   const [plan, catalogEntries, city] = await Promise.all([
     findPlanByCode(input.planCode),
@@ -42,7 +50,7 @@ export async function completeVendorOnboarding(
   const slug = uniqueSlug(input.businessName, userId);
   const primaryCategoryId = catalogEntries[0]?.categoryId;
 
-  await db.$transaction(async (tx) => {
+  const subscriptionId = await db.$transaction(async (tx) => {
     const address = await tx.address.create({
       data: {
         userId,
@@ -87,7 +95,7 @@ export async function completeVendorOnboarding(
       },
     });
 
-    await tx.subscription.create({
+    const subscription = await tx.subscription.create({
       data: {
         userId,
         planId: plan.id,
@@ -96,9 +104,11 @@ export async function completeVendorOnboarding(
         featureSnapshot: {},
       },
     });
+
+    return subscription.id;
   });
 
-  return { ok: true, slug };
+  return { ok: true, slug, subscriptionId };
 }
 
 export async function completeBanquetOnboarding(
@@ -109,7 +119,14 @@ export async function completeBanquetOnboarding(
     where: { userId },
     select: { slug: true },
   });
-  if (existing) return { ok: true, slug: existing.slug };
+  if (existing) {
+    const subscription = await db.subscription.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+    return { ok: true, slug: existing.slug, subscriptionId: subscription?.id ?? null };
+  }
 
   const [plan, city] = await Promise.all([
     findPlanByCode(input.planCode),
@@ -120,7 +137,7 @@ export async function completeBanquetOnboarding(
 
   const slug = uniqueSlug(input.venueName, userId);
 
-  await db.$transaction(async (tx) => {
+  const subscriptionId = await db.$transaction(async (tx) => {
     const address = await tx.address.create({
       data: {
         userId,
@@ -153,7 +170,7 @@ export async function completeBanquetOnboarding(
       },
     });
 
-    await tx.subscription.create({
+    const subscription = await tx.subscription.create({
       data: {
         userId,
         planId: plan.id,
@@ -162,7 +179,9 @@ export async function completeBanquetOnboarding(
         featureSnapshot: {},
       },
     });
+
+    return subscription.id;
   });
 
-  return { ok: true, slug };
+  return { ok: true, slug, subscriptionId };
 }

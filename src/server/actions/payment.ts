@@ -107,3 +107,34 @@ export async function initiateSubscriptionPaymentAction(
     data: { orderId: result.orderId, amountPaise: result.amountPaise, keyId: result.keyId },
   };
 }
+
+/** Same optimistic-verify pattern as verifyBookingPaymentAction, for subscription orders. */
+export async function verifySubscriptionPaymentAction(
+  subscriptionId: string,
+  razorpayOrderId: string,
+  razorpayPaymentId: string,
+  razorpaySignature: string,
+): Promise<ActionResult> {
+  const session = await requireRole(["CUSTOMER", "VENDOR", "BANQUET_OWNER"]);
+
+  const subscription = await db.subscription.findUnique({ where: { id: subscriptionId } });
+  if (!subscription || subscription.userId !== session.user.id) {
+    return { ok: false, error: "Subscription not found." };
+  }
+
+  const payment = await db.payment.findFirst({
+    where: { subscriptionId, providerOrderId: razorpayOrderId },
+  });
+  if (!payment) return { ok: false, error: "No matching payment order for this subscription." };
+
+  const valid = verifyCheckoutSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+  if (!valid) return { ok: false, error: "Payment verification failed." };
+
+  await capturePayment(razorpayOrderId, razorpayPaymentId, {
+    source: "client-verify",
+    razorpayOrderId,
+    razorpayPaymentId,
+  });
+
+  return { ok: true, data: undefined };
+}

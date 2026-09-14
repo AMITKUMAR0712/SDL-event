@@ -1,0 +1,25 @@
+import { z } from "zod";
+
+export const vendorProfileEditSchema = z.object({
+  businessName: z.string().min(2, "Business name is too short"),
+  cityId: z.string().min(1, "Choose a city"),
+  addressLine1: z.string().min(4, "Enter your street address"),
+  pincode: z.string().regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
+  servesInStudio: z.boolean(),
+  servesAtHome: z.boolean(),
+  homeServiceRadiusKm: z.number().int().min(0).max(50),
+  gstin: z.string().optional(),
+});
+export type VendorProfileEditInput = z.infer<typeof vendorProfileEditSchema>;
+
+export const banquetProfileEditSchema = z.object({
+  venueName: z.string().min(2, "Venue name is too short"),
+  cityId: z.string().min(1, "Choose a city"),
+  addressLine1: z.string().min(4, "Enter your street address"),
+  pincode: z.string().regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
+  totalHalls: z.number().int().min(1).max(20),
+  vegPricePerPlatePaise: z.number().int().min(0),
+  nonVegPricePerPlatePaise: z.number().int().min(0),
+  gstin: z.string().optional(),
+});
+export type BanquetProfileEditInput = z.infer<typeof banquetProfileEditSchema>;

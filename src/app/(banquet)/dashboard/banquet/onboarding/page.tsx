@@ -1,13 +1,13 @@
 import { BackButton } from "@/components/shared/back-button";
 import { BanquetOnboardingWizard } from "@/components/shared/banquet-onboarding-wizard";
 import { auth } from "@/lib/auth";
-import { listCitiesForSelect, listPlansForAudience } from "@/server/repositories/catalog";
+import { listActivePlansWithFeatures, listCitiesForSelect } from "@/server/repositories/catalog";
 
 export default async function BanquetOnboardingPage() {
   const [session, cities, plans] = await Promise.all([
     auth(),
     listCitiesForSelect(),
-    listPlansForAudience("BANQUET"),
+    listActivePlansWithFeatures("BANQUET"),
   ]);
 
   return (
