@@ -32,6 +32,12 @@ const ROLE_REDIRECT: Record<string, string> = {
   BANQUET_OWNER: "/dashboard/banquet/onboarding",
 };
 
+const ROLE_LABEL: Record<string, string> = {
+  CUSTOMER: "Customer, booking a service",
+  VENDOR: "Beauty vendor / salon / artist",
+  BANQUET_OWNER: "Banquet / venue owner",
+};
+
 export function RegisterForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -68,13 +74,13 @@ export function RegisterForm() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue>{(value: string | null) => ROLE_LABEL[value ?? ""]}</SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="CUSTOMER">Customer, booking a service</SelectItem>
-                  <SelectItem value="VENDOR">Beauty vendor / salon / artist</SelectItem>
-                  <SelectItem value="BANQUET_OWNER">Banquet / venue owner</SelectItem>
+                  <SelectItem value="CUSTOMER">{ROLE_LABEL.CUSTOMER}</SelectItem>
+                  <SelectItem value="VENDOR">{ROLE_LABEL.VENDOR}</SelectItem>
+                  <SelectItem value="BANQUET_OWNER">{ROLE_LABEL.BANQUET_OWNER}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

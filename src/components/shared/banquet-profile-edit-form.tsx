@@ -113,7 +113,9 @@ export function BanquetProfileEditForm({ cities, initialValues }: Props) {
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose a city" />
+                    <SelectValue placeholder="Choose a city">
+                      {(value: string | null) => cities.find((city) => city.id === value)?.name}
+                    </SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>

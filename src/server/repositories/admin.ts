@@ -92,6 +92,18 @@ export function listAuditLog(cursor?: string, take = 50) {
   });
 }
 
+export function listContactMessages(cursor?: string, take = 50) {
+  return db.contactMessage.findMany({
+    orderBy: { createdAt: "desc" },
+    take: take + 1,
+    ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+  });
+}
+
+export function markContactMessageRead(id: string) {
+  return db.contactMessage.update({ where: { id }, data: { isRead: true } });
+}
+
 export function listAllSettings() {
   return db.setting.findMany({ orderBy: { key: "asc" } });
 }

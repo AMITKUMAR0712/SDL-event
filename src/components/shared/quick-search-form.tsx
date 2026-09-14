@@ -51,7 +51,9 @@ export function QuickSearchForm({
             compact ? "flex-1 border-none shadow-none" : "w-full border-none shadow-none sm:flex-1"
           }
         >
-          <SelectValue placeholder="City" />
+          <SelectValue placeholder="City">
+            {(value: string | null) => cities.find((c) => c.slug === value)?.name}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {cities.map((c) => (
@@ -69,7 +71,9 @@ export function QuickSearchForm({
             compact ? "flex-1 border-none shadow-none" : "w-full border-none shadow-none sm:flex-1"
           }
         >
-          <SelectValue placeholder="Service" />
+          <SelectValue placeholder="Service">
+            {(value: string | null) => categories.find((c) => c.slug === value)?.name}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {categories.map((c) => (

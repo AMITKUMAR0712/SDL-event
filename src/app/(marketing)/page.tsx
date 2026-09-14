@@ -31,12 +31,50 @@ const PERIOD_LABEL: Record<string, string> = {
   YEARLY: "for 12 months",
 };
 
+type PricingPlan = Awaited<ReturnType<typeof listActivePlansWithFeatures>>[number];
+
+function PlanPricingGrid({ plans }: { plans: PricingPlan[] }) {
+  return (
+    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {plans.map((plan) => (
+        <Card key={plan.id} className="flex flex-col">
+          <CardContent className="flex flex-1 flex-col p-6">
+            <p className="font-heading text-xl">{plan.name}</p>
+            <p className="mt-2">
+              <span className="font-heading text-3xl">{formatPaiseAsINR(plan.pricePaise)}</span>
+              <span className="text-sm text-muted-foreground">
+                {" "}
+                {PERIOD_LABEL[plan.billingPeriod] ?? ""}
+              </span>
+            </p>
+            {plan.description && (
+              <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
+            )}
+            <ul className="mt-4 flex-1 space-y-2">
+              {plan.features.map((feature) => (
+                <li key={feature.id} className="flex items-start gap-2 text-sm">
+                  <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                  {feature.label}
+                </li>
+              ))}
+            </ul>
+            <Link href="/register" className={`${buttonVariants()} mt-6 w-full`}>
+              Get started
+            </Link>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default async function HomePage() {
-  const [cities, categories, stats, vendorPlans] = await Promise.all([
+  const [cities, categories, stats, vendorPlans, banquetPlans] = await Promise.all([
     listActiveCities(),
     listActiveCategories(),
     getMarketplaceStats(),
     listActivePlansWithFeatures("VENDOR"),
+    listActivePlansWithFeatures("BANQUET"),
   ]);
 
   return (
@@ -210,48 +248,29 @@ export default async function HomePage() {
         </Card>
       </section>
 
-      {vendorPlans.length > 0 && (
+      {(vendorPlans.length > 0 || banquetPlans.length > 0) && (
         <section className="bg-accent/30 py-16">
           <div className="mx-auto w-full max-w-5xl px-6">
             <h2 className="text-center font-heading text-2xl">Pricing for vendors</h2>
             <p className="mt-2 text-center text-muted-foreground">
               Pick a plan and start receiving client leads near you.
             </p>
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {vendorPlans.map((plan) => (
-                <Card key={plan.id} className="flex flex-col">
-                  <CardContent className="flex flex-1 flex-col p-6">
-                    <p className="font-heading text-xl">{plan.name}</p>
-                    <p className="mt-2">
-                      <span className="font-heading text-3xl">
-                        {formatPaiseAsINR(plan.pricePaise)}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {" "}
-                        {PERIOD_LABEL[plan.billingPeriod] ?? ""}
-                      </span>
-                    </p>
-                    {plan.description && (
-                      <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
-                    )}
-                    <ul className="mt-4 flex-1 space-y-2">
-                      {plan.features.map((feature) => (
-                        <li key={feature.id} className="flex items-start gap-2 text-sm">
-                          <Check
-                            className="mt-0.5 size-4 shrink-0 text-primary"
-                            aria-hidden="true"
-                          />
-                          {feature.label}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link href="/register" className={`${buttonVariants()} mt-6 w-full`}>
-                      Get started
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+
+            {vendorPlans.length > 0 && (
+              <div className="mt-10">
+                <h3 className="font-heading text-lg text-muted-foreground">
+                  Beauty salons & artists
+                </h3>
+                <PlanPricingGrid plans={vendorPlans} />
+              </div>
+            )}
+
+            {banquetPlans.length > 0 && (
+              <div className="mt-10">
+                <h3 className="font-heading text-lg text-muted-foreground">Banquets & venues</h3>
+                <PlanPricingGrid plans={banquetPlans} />
+              </div>
+            )}
           </div>
         </section>
       )}

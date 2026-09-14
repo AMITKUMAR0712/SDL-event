@@ -20,6 +20,17 @@ export function SiteFooter() {
       <p className="mx-auto mt-4 max-w-5xl">
         © {new Date().getFullYear()} GlowMakeOver. All rights reserved.
       </p>
+      <p className="mx-auto mt-1 max-w-5xl">
+        Developed by TradeOrbit Global —{" "}
+        <a
+          href="https://www.bestdigitalmarket.in"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline"
+        >
+          www.bestdigitalmarket.in
+        </a>
+      </p>
     </footer>
   );
 }

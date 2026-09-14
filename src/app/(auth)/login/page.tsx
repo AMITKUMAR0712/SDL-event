@@ -2,9 +2,7 @@ import Link from "next/link";
 
 import { AuthBrandPanel } from "@/components/shared/auth-brand-panel";
 import { LoginForm } from "@/components/shared/login-form";
-import { OtpLoginForm } from "@/components/shared/otp-login-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LoginPage() {
   return (
@@ -21,30 +19,12 @@ export default function LoginPage() {
             <CardDescription>Sign in to GlowMakeOver</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="password">
-              <TabsList className="mb-4 w-full">
-                <TabsTrigger value="password" className="flex-1">
-                  Email
-                </TabsTrigger>
-                <TabsTrigger value="otp" className="flex-1">
-                  Phone OTP
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="password">
-                <LoginForm />
-                <p className="mt-3 text-right text-sm">
-                  <Link
-                    href="/forgot-password"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Forgot password?
-                  </Link>
-                </p>
-              </TabsContent>
-              <TabsContent value="otp">
-                <OtpLoginForm />
-              </TabsContent>
-            </Tabs>
+            <LoginForm />
+            <p className="mt-3 text-right text-sm">
+              <Link href="/forgot-password" className="text-muted-foreground hover:text-foreground">
+                Forgot password?
+              </Link>
+            </p>
             <p className="mt-6 text-center text-sm text-muted-foreground">
               New to GlowMakeOver?{" "}
               <Link href="/register" className="font-medium text-foreground hover:underline">

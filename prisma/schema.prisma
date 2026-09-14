@@ -1051,3 +1051,18 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorId])
 }
+
+/// Public "Contact Us" form submissions — emailed to the site owner on
+/// arrival and also kept here so admin has a durable record even if the
+/// email is missed or lands in spam.
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([isRead, createdAt])
+}

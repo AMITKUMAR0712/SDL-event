@@ -3,6 +3,7 @@
 import {
   AudioWaveform,
   Gauge,
+  Mail,
   MapPin,
   ShieldCheck,
   Sparkles,
@@ -23,6 +24,7 @@ const LINKS = [
   { href: "/dashboard/admin/cities", label: "Cities", icon: MapPin },
   { href: "/dashboard/admin/categories", label: "Categories", icon: Tags },
   { href: "/dashboard/admin/users", label: "Users", icon: Users },
+  { href: "/dashboard/admin/messages", label: "Messages", icon: Mail },
   { href: "/dashboard/admin/settings", label: "Settings", icon: Sparkles },
   { href: "/dashboard/admin/audit-log", label: "Audit log", icon: AudioWaveform },
 ];
