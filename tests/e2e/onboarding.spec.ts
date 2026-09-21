@@ -43,7 +43,7 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
 
   // Step 5: plan (default already selected) -> submit
   await expect(page.getByText("Choose a plan")).toBeVisible();
-  await page.getByRole("button", { name: "Finish setup" }).click();
+  await page.getByRole("button", { name: /Buy Now/ }).click();
 
   // Real Razorpay test-mode keys are configured in this environment, so
   // clicking above creates the profile+subscription (proven by the fact
@@ -103,7 +103,7 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
 
   // Step 5: plan -> submit
   await expect(page.getByText("Choose a plan")).toBeVisible();
-  await page.getByRole("button", { name: "Finish setup" }).click();
+  await page.getByRole("button", { name: /Buy Now/ }).click();
 
   // Real Razorpay test-mode keys are configured in this environment, so
   // clicking above creates the profile+subscription (proven by the fact

@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatPaiseAsINR } from "@/lib/money";
 import { chargeSubscriptionAtCheckout } from "@/lib/subscription-checkout";
 import { VendorOnboardingInput, vendorOnboardingSchema } from "@/schemas/onboarding";
 import { completeVendorOnboardingAction } from "@/server/actions/onboarding";
@@ -127,6 +128,8 @@ export function VendorOnboardingWizard({
 
   const servesAtHome = form.watch("servesAtHome");
   const selectedServices = form.watch("serviceCatalogIds");
+  const selectedPlanCode = form.watch("planCode");
+  const selectedPlan = plans.find((p) => p.code === selectedPlanCode);
 
   return (
     <Form {...form}>
@@ -361,7 +364,11 @@ export function VendorOnboardingWizard({
               onClick={form.handleSubmit(onSubmit)}
               disabled={form.formState.isSubmitting}
             >
-              {form.formState.isSubmitting ? "Submitting..." : "Finish setup"}
+              {form.formState.isSubmitting
+                ? "Opening payment..."
+                : selectedPlan
+                  ? `Buy Now — ${formatPaiseAsINR(selectedPlan.pricePaise)}`
+                  : "Buy Now"}
             </Button>
           )}
         </div>

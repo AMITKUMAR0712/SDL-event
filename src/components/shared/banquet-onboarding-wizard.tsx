@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatPaiseAsINR } from "@/lib/money";
 import { chargeSubscriptionAtCheckout } from "@/lib/subscription-checkout";
 import { BanquetOnboardingInput, banquetOnboardingSchema } from "@/schemas/onboarding";
 import { completeBanquetOnboardingAction } from "@/server/actions/onboarding";
@@ -114,6 +115,9 @@ export function BanquetOnboardingWizard({ cities, plans, accountName, accountEma
     router.push("/dashboard/banquet");
     router.refresh();
   }
+
+  const selectedPlanCode = form.watch("planCode");
+  const selectedPlan = plans.find((p) => p.code === selectedPlanCode);
 
   return (
     <Form {...form}>
@@ -331,7 +335,11 @@ export function BanquetOnboardingWizard({ cities, plans, accountName, accountEma
               onClick={form.handleSubmit(onSubmit)}
               disabled={form.formState.isSubmitting}
             >
-              {form.formState.isSubmitting ? "Submitting..." : "Finish setup"}
+              {form.formState.isSubmitting
+                ? "Opening payment..."
+                : selectedPlan
+                  ? `Buy Now — ${formatPaiseAsINR(selectedPlan.pricePaise)}`
+                  : "Buy Now"}
             </Button>
           )}
         </div>
