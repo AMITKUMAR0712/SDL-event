@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("customer can register, land on /account, and guests get redirected off it", async ({
+test("customer can register, land on the home page, and guests get redirected off /account", async ({
   page,
 }) => {
   const email = `e2e-${Date.now()}@example.com`;
@@ -11,8 +11,8 @@ test("customer can register, land on /account, and guests get redirected off it"
   await page.getByLabel("Password").fill("Password123");
   await page.getByRole("button", { name: "Create account" }).click();
 
-  await expect(page).toHaveURL(/\/account$/, { timeout: 10_000 });
-  await expect(page.getByText(email)).toBeVisible();
+  await expect(page).toHaveURL("http://localhost:3000/", { timeout: 10_000 });
+  await expect(page.getByRole("link", { name: "E2E Test Customer" })).toBeVisible();
 });
 
 test("guests are redirected away from protected routes", async ({ page, context }) => {
