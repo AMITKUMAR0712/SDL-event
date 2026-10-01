@@ -1,3 +1,4 @@
+import { categoryPhotoUrl } from "@/lib/category-images";
 import { db } from "@/lib/db";
 import type { BanquetOnboardingInput, VendorOnboardingInput } from "@/schemas/onboarding";
 import { findPlanByCode, findServiceCatalogByIds } from "@/server/repositories/catalog";
@@ -27,14 +28,10 @@ function randomInt(min: number, max: number): number {
   return Math.floor(randomBetween(min, max + 1));
 }
 
-/** Same picsum.photos-seeded pattern the demo data uses (see prisma/seed.ts)
- * — a real vendor/banquet has no photos of their own yet at onboarding
- * time, so every profile gets a presentable placeholder instead of a blank
- * card, and a starting rating in the 4.5-5.0 range instead of "★0.0 (0)". */
-function placeholderPhoto(seed: string, index: number): string {
-  return `https://picsum.photos/seed/${seed}-${index}/800/600`;
-}
-
+/** A real vendor/banquet has no photos of their own yet at onboarding time,
+ * so every profile gets a service-relevant default (see
+ * `@/lib/category-images`) instead of a blank card, and a starting rating in
+ * the 4.5-5.0 range instead of "★0.0 (0)". */
 function startingRating() {
   return {
     ratingAvg: Number(randomBetween(4.5, 5).toFixed(2)),
@@ -72,6 +69,7 @@ export async function completeVendorOnboarding(
 
   const slug = uniqueSlug(input.businessName, userId);
   const primaryCategoryId = catalogEntries[0]?.categoryId;
+  const primaryCategorySlug = catalogEntries[0]?.category.slug;
 
   const subscriptionId = await db.$transaction(async (tx) => {
     const address = await tx.address.create({
@@ -101,7 +99,7 @@ export async function completeVendorOnboarding(
         gstin: input.gstin,
         panMasked: input.panMasked,
         subscriptionTier: plan.code,
-        coverImage: placeholderPhoto(slug, 0),
+        coverImage: categoryPhotoUrl(primaryCategorySlug ?? "bridal-makeup", 0),
         ...startingRating(),
         // No manual KYC approval gate — onboarding itself never blocks on
         // admin review. Public visibility is still gated on payment though
@@ -124,7 +122,7 @@ export async function completeVendorOnboarding(
       data: Array.from({ length: 3 }).map((_, idx) => ({
         ownerType: "VENDOR" as const,
         ownerId: vendor.id,
-        url: placeholderPhoto(slug, idx + 1),
+        url: categoryPhotoUrl(primaryCategorySlug ?? "bridal-makeup", idx),
         sortOrder: idx,
         isCover: idx === 0,
       })),
@@ -210,7 +208,10 @@ export async function completeBanquetOnboarding(
       data: Array.from({ length: 3 }).map((_, idx) => ({
         ownerType: "BANQUET" as const,
         ownerId: banquet.id,
-        url: placeholderPhoto(slug, idx + 1),
+        // Banquet onboarding doesn't collect a category today, so every new
+        // venue defaults to the Banquet Halls photo set — the most common
+        // venue type and a reasonable generic default.
+        url: categoryPhotoUrl("banquet-halls", idx),
         sortOrder: idx,
         isCover: idx === 0,
       })),

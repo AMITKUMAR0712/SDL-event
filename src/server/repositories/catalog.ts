@@ -95,7 +95,10 @@ export function findPlanByCode(code: string) {
 }
 
 export function findServiceCatalogByIds(ids: string[]) {
-  return db.serviceCatalog.findMany({ where: { id: { in: ids } } });
+  return db.serviceCatalog.findMany({
+    where: { id: { in: ids } },
+    include: { category: { select: { slug: true } } },
+  });
 }
 
 export function findCityBySlug(slug: string) {

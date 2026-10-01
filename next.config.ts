@@ -39,10 +39,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      // prisma/seed.ts uses picsum.photos for placeholder vendor/banquet
-      // cover images — real uploads go through Cloudinary/S3 (below) once
-      // those are configured.
-      { protocol: "https", hostname: "picsum.photos" },
+      // Default vendor/banquet cover + gallery photos (prisma/seed.ts mock
+      // data and real onboarding alike, see @/lib/category-images) are
+      // category-matched Unsplash stock photos — real uploads go through
+      // Cloudinary/S3 (below) once those are configured.
+      { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },
       ...(process.env.AWS_CLOUDFRONT_DOMAIN
         ? [{ protocol: "https" as const, hostname: process.env.AWS_CLOUDFRONT_DOMAIN }]

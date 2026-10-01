@@ -28,6 +28,8 @@ import {
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+import { categoryPhotoUrl } from "@/lib/category-images";
+
 const db = new PrismaClient();
 
 faker.seed(42);
@@ -60,10 +62,6 @@ function pick<T>(arr: readonly T[]): T {
 
 function pickMany<T>(arr: readonly T[], count: number): T[] {
   return faker.helpers.arrayElements(arr, Math.min(count, arr.length));
-}
-
-function placeholderPhoto(seed: string, index: number): string {
-  return `https://picsum.photos/seed/${slugify(seed)}-${index}/800/600`;
 }
 
 /** Small random offset (±~radiusKm) around a center point, for demo coordinates. */
@@ -654,7 +652,7 @@ async function seedAdmins() {
 
 async function seedVendors(
   cities: { id: string; stateId: string; name: string; lat: number; lng: number }[],
-  categories: { id: string; name: string; type: CategoryType }[],
+  categories: { id: string; name: string; slug: string; type: CategoryType }[],
   serviceCatalogs: { id: string; name: string; categoryId: string }[],
   plans: { id: string; code: string; pricePaise: number }[],
 ) {
@@ -702,7 +700,7 @@ async function seedVendors(
         businessName,
         slug,
         about: faker.lorem.paragraphs(2),
-        coverImage: placeholderPhoto(slug, 0),
+        coverImage: categoryPhotoUrl(category.slug, 0),
         yearsExperience: faker.number.int({ min: 1, max: 20 }),
         teamSize: faker.number.int({ min: 1, max: 12 }),
         kycStatus: KycStatus.APPROVED,
@@ -743,7 +741,7 @@ async function seedVendors(
       data: Array.from({ length: 3 }).map((_, idx) => ({
         ownerType: "VENDOR" as const,
         ownerId: vendor.id,
-        url: placeholderPhoto(slug, idx + 1),
+        url: categoryPhotoUrl(category.slug, idx + 1),
         sortOrder: idx,
         isCover: idx === 0,
       })),
@@ -795,7 +793,7 @@ async function seedVendors(
 
 async function seedBanquets(
   cities: { id: string; stateId: string; name: string; lat: number; lng: number }[],
-  categories: { id: string; name: string; type: CategoryType }[],
+  categories: { id: string; name: string; slug: string; type: CategoryType }[],
   plans: { id: string; code: string; pricePaise: number }[],
 ) {
   const banquetCategories = categories.filter((c) => c.type === CategoryType.BANQUET);
@@ -880,7 +878,7 @@ async function seedBanquets(
       data: Array.from({ length: 3 }).map((_, idx) => ({
         ownerType: "BANQUET" as const,
         ownerId: banquet.id,
-        url: placeholderPhoto(slug, idx + 1),
+        url: categoryPhotoUrl(category.slug, idx + 1),
         sortOrder: idx,
         isCover: idx === 0,
       })),
