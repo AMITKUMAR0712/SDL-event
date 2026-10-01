@@ -21,7 +21,7 @@ import { LoginInput, loginSchema } from "@/schemas/auth";
 import { loginAction } from "@/server/actions/auth";
 
 const ROLE_REDIRECT: Record<string, string> = {
-  CUSTOMER: "/account",
+  CUSTOMER: "/",
   VENDOR: "/dashboard/vendor",
   BANQUET_OWNER: "/dashboard/banquet",
   ADMIN: "/dashboard/admin",
@@ -49,7 +49,7 @@ export function LoginForm() {
     // would keep showing "Login/Register" until the user clicked away and
     // back, even though they're already signed in.
     await update();
-    router.push(ROLE_REDIRECT[result.data.role] ?? "/account");
+    router.push(ROLE_REDIRECT[result.data.role] ?? "/");
     router.refresh();
   }
 
