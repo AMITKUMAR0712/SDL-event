@@ -46,6 +46,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Nearly every vendor/banquet/hero photo is served from here —
+            opening the connection early shaves the DNS+TLS handshake off
+            the very first image request instead of the browser only
+            discovering the hostname once it parses the first <img>. */}
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+      </head>
       <body className="min-h-full flex flex-col">
         <SessionProvider>
           <SiteHeader cities={cities} categories={categories} />

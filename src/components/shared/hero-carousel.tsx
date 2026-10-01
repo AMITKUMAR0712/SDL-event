@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 /**
@@ -23,17 +24,23 @@ export function HeroCarousel({ images }: { images: { url: string; alt: string }[
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-20 overflow-hidden">
-      {images.map((image, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={image.url}
-          src={image.url}
-          alt=""
-          className={`absolute inset-0 size-full object-cover transition-opacity duration-1000 ${
-            i === index ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
+      <div
+        className="flex size-full transition-transform duration-700 ease-in-out"
+        style={{ transform: `translateX(-${index * 100}%)` }}
+      >
+        {images.map((image, i) => (
+          <div key={image.url} className="relative size-full shrink-0">
+            <Image
+              src={image.url}
+              alt=""
+              fill
+              sizes="100vw"
+              priority={i === 0}
+              className="object-cover"
+            />
+          </div>
+        ))}
+      </div>
       <div className="absolute inset-0 bg-background/60" />
 
       {images.length > 1 && (

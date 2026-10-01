@@ -12,7 +12,7 @@ export default function LoginPage() {
         body="Sign in to manage bookings, track your subscription, or find your next vendor."
       />
 
-      <div className="flex items-center justify-center px-6 py-16">
+      <div className="flex items-start justify-center overflow-y-auto px-6 py-10 sm:items-center sm:py-16">
         <Card className="w-full max-w-sm border-none shadow-lg">
           <CardHeader>
             <CardTitle className="font-heading text-2xl">Welcome back</CardTitle>

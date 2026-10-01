@@ -119,6 +119,7 @@ export default async function VendorProfilePage(props: PageProps<"/vendor/[slug]
             src={vendor.coverImage}
             alt={vendor.businessName}
             fill
+            sizes="(min-width: 768px) 768px, 100vw"
             className="object-cover"
             priority
           />
@@ -137,7 +138,13 @@ export default async function VendorProfilePage(props: PageProps<"/vendor/[slug]
         <div className="mt-6 grid grid-cols-3 gap-2">
           {media.map((m) => (
             <div key={m.id} className="relative aspect-square overflow-hidden rounded-lg">
-              <Image src={m.url} alt={m.alt ?? vendor.businessName} fill className="object-cover" />
+              <Image
+                src={m.url}
+                alt={m.alt ?? vendor.businessName}
+                fill
+                sizes="(min-width: 768px) 256px, 33vw"
+                className="object-cover"
+              />
             </div>
           ))}
         </div>

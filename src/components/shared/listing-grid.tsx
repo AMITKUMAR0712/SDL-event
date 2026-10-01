@@ -23,7 +23,13 @@ export function ListingGrid({
             <Link href={`/${type}/${item.slug}`}>
               {item.image && (
                 <div className="relative h-40 w-full overflow-hidden rounded-t-lg">
-                  <Image src={item.image} alt={item.name} fill className="object-cover" />
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover"
+                  />
                 </div>
               )}
               <CardContent className="p-4">

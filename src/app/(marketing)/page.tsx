@@ -88,15 +88,15 @@ export default async function HomePage() {
             .map((c) => ({ url: categoryPhotoUrl(c.slug, 0), alt: c.name }))}
         />
 
-        <div className="flex min-h-[100svh] flex-col items-center justify-center gap-6 px-6 py-24 text-center md:min-h-0">
+        <div className="flex flex-col items-center gap-4 px-6 py-10 text-center sm:gap-6 sm:py-24">
           <p className="flex items-center gap-2 text-sm font-medium tracking-wide text-primary uppercase">
             <Sparkles className="size-4" aria-hidden="true" />
             Beauty Parlour & Banquets, near you
           </p>
-          <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+          <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
             Find and book trusted beauty parlours and banquets for weddings & parties across India
           </h1>
-          <p className="max-w-xl text-lg text-muted-foreground text-balance">
+          <p className="max-w-xl text-base text-muted-foreground text-balance sm:text-lg">
             Compare verified salons, makeup artists, and banquet halls near you — real ratings,
             instant booking.
           </p>
@@ -249,7 +249,7 @@ export default async function HomePage() {
       </section>
 
       {(vendorPlans.length > 0 || banquetPlans.length > 0) && (
-        <section className="bg-accent/30 py-16">
+        <section id="pricing" className="scroll-mt-20 bg-accent/30 py-16">
           <div className="mx-auto w-full max-w-5xl px-6">
             <h2 className="text-center font-heading text-2xl">Pricing for vendors</h2>
             <p className="mt-2 text-center text-muted-foreground">

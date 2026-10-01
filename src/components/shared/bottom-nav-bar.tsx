@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutGrid, MapPin, Phone, UserPlus } from "lucide-react";
+import { LayoutGrid, MapPin, Phone, Tag, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,6 +9,7 @@ const ITEMS = [
   { href: "/contact", label: "Contact Us", icon: Phone },
   { href: "/#cities", label: "All City", icon: MapPin },
   { href: "/search", label: "All Services", icon: LayoutGrid },
+  { href: "/#pricing", label: "Plans", icon: Tag },
 ] as const;
 
 /**
@@ -23,21 +24,21 @@ export function BottomNavBar() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-background/95 backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border bg-background/95 backdrop-blur md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {ITEMS.map((item) => {
-        const active = item.href !== "/#cities" && pathname === item.href;
+        const active = !item.href.startsWith("/#") && pathname === item.href;
         const Icon = item.icon;
         return (
           <Link
             key={item.href}
             href={item.href}
-            className={`flex flex-col items-center justify-center gap-0.5 py-2 text-xs ${
+            className={`flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] ${
               active ? "text-primary" : "text-muted-foreground"
             }`}
           >
-            <Icon className="size-5" aria-hidden="true" />
+            <Icon className="size-4" aria-hidden="true" />
             {item.label}
           </Link>
         );

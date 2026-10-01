@@ -108,7 +108,13 @@ export default async function BanquetProfilePage(props: PageProps<"/banquet/[slu
         <div className="mt-6 grid grid-cols-3 gap-2">
           {media.map((m) => (
             <div key={m.id} className="relative aspect-square overflow-hidden rounded-lg">
-              <Image src={m.url} alt={m.alt ?? banquet.venueName} fill className="object-cover" />
+              <Image
+                src={m.url}
+                alt={m.alt ?? banquet.venueName}
+                fill
+                sizes="(min-width: 768px) 256px, 33vw"
+                className="object-cover"
+              />
             </div>
           ))}
         </div>
