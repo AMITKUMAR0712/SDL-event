@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { ContactRevealButton } from "@/components/shared/contact-reveal-button";
 import { EnquireBanquetForm } from "@/components/shared/enquire-banquet-form";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatPaiseAsINR } from "@/lib/money";
 import { breadcrumbJsonLd, pageDescription, pageTitle } from "@/lib/seo";
 import {
   findBanquetOwnerBySlug,
@@ -118,28 +117,11 @@ export default async function BanquetProfilePage(props: PageProps<"/banquet/[slu
       <h2 className="mt-8 font-heading text-xl">Halls</h2>
       <ul className="mt-2 divide-y divide-border rounded-lg border border-border">
         {banquet.halls.map((h) => (
-          <li key={h.id} className="flex items-center justify-between p-3 text-sm">
-            <span>
-              {h.name} · up to {h.seatingCapacity ?? h.floatingCapacity} guests
-            </span>
-            {h.rentPaise !== null && (
-              <span className="font-medium">{formatPaiseAsINR(h.rentPaise)}</span>
-            )}
+          <li key={h.id} className="p-3 text-sm">
+            {h.name} · up to {h.seatingCapacity ?? h.floatingCapacity} guests
           </li>
         ))}
       </ul>
-
-      <h2 className="mt-6 font-heading text-xl">Plate pricing</h2>
-      <p className="mt-1 text-sm">
-        Veg:{" "}
-        {banquet.vegPricePerPlatePaise
-          ? formatPaiseAsINR(banquet.vegPricePerPlatePaise)
-          : "On request"}{" "}
-        · Non-veg:{" "}
-        {banquet.nonVegPricePerPlatePaise
-          ? formatPaiseAsINR(banquet.nonVegPricePerPlatePaise)
-          : "On request"}
-      </p>
 
       <div className="mt-6">
         <EnquireBanquetForm banquetId={banquet.id} />

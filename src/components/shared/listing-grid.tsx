@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatPaiseAsINR } from "@/lib/money";
 import type { SearchResult } from "@/server/services/search";
 
 export function ListingGrid({
@@ -33,13 +32,6 @@ export function ListingGrid({
                 <p className="text-sm">
                   ★ {item.ratingAvg.toFixed(1)} ({item.ratingCount})
                 </p>
-                {/* Vendors don't set real prices until they price each service
-                    individually — 0/unset means "not priced yet", not "free". */}
-                {item.fromPricePaise !== null && item.fromPricePaise > 0 && (
-                  <p className="mt-1 text-sm font-medium">
-                    From {formatPaiseAsINR(item.fromPricePaise)}
-                  </p>
-                )}
               </CardContent>
             </Link>
           </Card>

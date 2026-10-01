@@ -6,7 +6,6 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatPaiseAsINR } from "@/lib/money";
 import { createBeautyBookingAction } from "@/server/actions/booking";
 
 type Service = { id: string; title: string; pricePaise: number; mode: string };
@@ -56,10 +55,6 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
     router.refresh();
   }
 
-  const totalPaise = services
-    .filter((s) => selected.includes(s.id))
-    .reduce((sum, s) => sum + s.pricePaise, 0);
-
   return (
     <form onSubmit={onSubmit} className="space-y-3 rounded-lg border border-border p-4">
       <p className="font-medium">Book now</p>
@@ -88,7 +83,6 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
               />
               {s.title}
             </span>
-            {s.pricePaise > 0 && <span>{formatPaiseAsINR(s.pricePaise)}</span>}
           </label>
         ))}
       </div>
@@ -130,12 +124,7 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
         onChange={(e) => setCouponCode(e.target.value)}
       />
 
-      <div className="flex items-center justify-between pt-2">
-        {totalPaise > 0 ? (
-          <span className="font-medium">Total: {formatPaiseAsINR(totalPaise)}</span>
-        ) : (
-          <span />
-        )}
+      <div className="flex items-center justify-end pt-2">
         <Button type="submit" disabled={pending}>
           {pending ? "Booking..." : "Request booking"}
         </Button>

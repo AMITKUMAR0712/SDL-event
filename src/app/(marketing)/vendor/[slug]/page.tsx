@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 import { BookVendorForm } from "@/components/shared/book-vendor-form";
 import { ContactRevealButton } from "@/components/shared/contact-reveal-button";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatPaiseAsINR } from "@/lib/money";
 import { breadcrumbJsonLd, pageDescription, pageTitle } from "@/lib/seo";
 import {
   findVendorOwnerBySlug,
@@ -147,11 +146,8 @@ export default async function VendorProfilePage(props: PageProps<"/vendor/[slug]
       <h2 className="mt-8 font-heading text-xl">Services</h2>
       <ul className="mt-2 divide-y divide-border rounded-lg border border-border">
         {vendor.services.map((s) => (
-          <li key={s.id} className="flex items-center justify-between p-3 text-sm">
-            <span>{s.title}</span>
-            {s.pricePaise > 0 && (
-              <span className="font-medium">{formatPaiseAsINR(s.pricePaise)}</span>
-            )}
+          <li key={s.id} className="p-3 text-sm">
+            {s.title}
           </li>
         ))}
       </ul>
