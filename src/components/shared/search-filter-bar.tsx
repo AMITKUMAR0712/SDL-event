@@ -69,9 +69,12 @@ export function SearchFilterBar({
           apply({ type: next, category: "" });
         }}
       >
-        <TabsList>
+        <TabsList className="w-full">
           <TabsTrigger value="vendor">Beauty Parlour</TabsTrigger>
-          <TabsTrigger value="banquet">Banquets for Weddings & Parties</TabsTrigger>
+          <TabsTrigger value="banquet">
+            <span className="sm:hidden">Banquets</span>
+            <span className="hidden sm:inline">Banquets for Weddings & Parties</span>
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
