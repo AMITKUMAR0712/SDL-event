@@ -16,6 +16,7 @@ export default async function AdminBookingsPage() {
               <p className="font-medium">{b.bookingNo}</p>
               <p className="text-muted-foreground">
                 {b.customer.name ?? b.customer.email} · {b.type}
+                {b.contactPhone && ` · ${b.contactPhone}`}
               </p>
             </div>
             <div className="text-right">

@@ -652,6 +652,7 @@ model Booking {
   scheduledAt     DateTime
   durationMin     Int
   addressId       String?
+  contactPhone    String?
   status          BookingStatus    @default(PENDING)
   subtotalPaise   Int
   discountPaise   Int              @default(0)

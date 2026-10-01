@@ -20,7 +20,7 @@ export default async function VendorBookingsPage() {
           <div key={b.id} className="rounded-lg border border-border p-4">
             <div className="flex items-center justify-between">
               <p className="font-medium">
-                {b.bookingNo} · {b.customer.name ?? b.customer.phone}
+                {b.bookingNo} · {b.customer.name ?? "Customer"}
               </p>
               <span className="text-sm text-muted-foreground">{b.status}</span>
             </div>
@@ -28,6 +28,16 @@ export default async function VendorBookingsPage() {
               {new Date(b.scheduledAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} ·{" "}
               {formatPaiseAsINR(b.totalPaise)}
             </p>
+            {(b.contactPhone ?? b.customer.phone) && (
+              <p className="mt-1 text-sm">
+                <a
+                  href={`tel:${b.contactPhone ?? b.customer.phone}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {b.contactPhone ?? b.customer.phone}
+                </a>
+              </p>
+            )}
             <div className="mt-3">
               <BookingActions bookingId={b.id} status={b.status} actorRole="OWNER" />
             </div>

@@ -11,7 +11,7 @@ test("customer can find a vendor via search and request a booking", async ({ bro
   await customerPage.getByLabel("Email").fill(customerEmail);
   await customerPage.getByLabel("Password").fill("Password123");
   await customerPage.getByRole("button", { name: "Create account" }).click();
-  await expect(customerPage).toHaveURL(/\/account$/, { timeout: 15_000 });
+  await expect(customerPage).toHaveURL("http://localhost:3000/", { timeout: 15_000 });
 
   await customerPage.goto("/search?type=vendor");
   await customerPage.locator("a[href^='/vendor/']").first().click();
@@ -30,6 +30,7 @@ test("customer can find a vendor via search and request a booking", async ({ bro
   await customerPage
     .locator('input[type="time"]')
     .fill(`${String(hour).padStart(2, "0")}:${minute}`);
+  await customerPage.getByPlaceholder("Your 10-digit mobile number").fill("9876543210");
   await customerPage.getByRole("button", { name: "Request booking" }).click();
   await expect(customerPage.getByText(/awaiting vendor confirmation/)).toBeVisible({
     timeout: 10_000,

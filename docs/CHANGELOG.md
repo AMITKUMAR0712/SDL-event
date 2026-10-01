@@ -543,3 +543,26 @@ introContent` (20 rows) and the three `SubscriptionPlan.name` values ("MakeGlowO
 - Real contact details added to `/contact`: phone, email, and registered office address, replacing
   the placeholder "(to be added on incorporation)" text and the three invented @makeglowover.com
   addresses with the one real inbox provided.
+
+## Post-launch — Customer registration redirect parity, booking contact phone
+
+- Customer registration (`RegisterForm`) now redirects to the home page after sign-up, matching
+  the login form's existing behaviour, instead of `/account`. `/account` itself is unchanged and
+  still reachable from the navbar.
+- Added `Booking.contactPhone` (nullable `String`, migration
+  `20261001131617_add_booking_contact_phone`): both the beauty-booking form (`BookVendorForm`) and
+  the venue-enquiry form (`EnquireBanquetForm`) now collect the customer's 10-digit mobile number
+  at booking time, validated client- and server-side (`bookingContactPhoneSchema` in
+  `src/schemas/booking.ts`, normalised to the same `+91XXXXXXXXXX` shape used elsewhere) and
+  persisted on the booking itself rather than relying on `User.phone`, which is frequently null for
+  customers who registered with email/password. Surfaced as a tap-to-call link on the vendor,
+  banquet-owner, and admin bookings pages so the owner can actually reach the customer.
+
+### Manual smoke test
+
+1. Register a new customer account — confirm it lands on `/` with the navbar showing their name,
+   not `/account`.
+2. As that customer, book a vendor (or send a banquet enquiry) — confirm the form rejects a missing
+   or invalid phone number and accepts a valid 10-digit one.
+3. As the vendor (or banquet owner) who received that booking, open Bookings — confirm the
+   customer's phone number appears as a clickable `tel:` link.

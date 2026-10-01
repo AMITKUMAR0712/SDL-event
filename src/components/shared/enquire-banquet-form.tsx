@@ -13,6 +13,7 @@ export function EnquireBanquetForm({ banquetId }: { banquetId: string }) {
   const [date, setDate] = useState("");
   const [guestCount, setGuestCount] = useState(100);
   const [plateType, setPlateType] = useState<"VEG" | "NON_VEG">("VEG");
+  const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -25,12 +26,17 @@ export function EnquireBanquetForm({ banquetId }: { banquetId: string }) {
       setError("Choose a date.");
       return;
     }
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      setError("Enter a valid 10-digit mobile number so the venue can reach you.");
+      return;
+    }
     setPending(true);
     const result = await createVenueEnquiryAction({
       banquetId,
       scheduledAt: new Date(`${date}T12:00:00`),
       guestCount,
       plateType,
+      contactPhone: phone,
     });
     setPending(false);
     if (!result.ok) {
@@ -55,6 +61,14 @@ export function EnquireBanquetForm({ banquetId }: { banquetId: string }) {
         </Alert>
       )}
       <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      <Input
+        type="tel"
+        inputMode="numeric"
+        placeholder="Your 10-digit mobile number"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+        maxLength={10}
+      />
       <Input
         type="number"
         min={1}

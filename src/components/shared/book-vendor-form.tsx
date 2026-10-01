@@ -18,6 +18,7 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
   const [time, setTime] = useState("");
   const [type, setType] = useState<"IN_STUDIO" | "AT_HOME">("IN_STUDIO");
   const [couponCode, setCouponCode] = useState("");
+  const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -32,6 +33,10 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
       setError("Choose at least one service, a date, and a time.");
       return;
     }
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      setError("Enter a valid 10-digit mobile number so the vendor can reach you.");
+      return;
+    }
     setPending(true);
     const scheduledAt = new Date(`${date}T${time}:00`);
     const result = await createBeautyBookingAction({
@@ -40,6 +45,7 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
       type,
       scheduledAt,
       couponCode: couponCode || undefined,
+      contactPhone: phone,
     });
     setPending(false);
     if (!result.ok) {
@@ -108,6 +114,15 @@ export function BookVendorForm({ vendorId, services }: { vendorId: string; servi
         <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
       </div>
+
+      <Input
+        type="tel"
+        inputMode="numeric"
+        placeholder="Your 10-digit mobile number"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+        maxLength={10}
+      />
 
       <Input
         placeholder="Coupon code (optional)"

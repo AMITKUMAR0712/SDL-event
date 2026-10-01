@@ -64,6 +64,7 @@ export type CreateBeautyBookingInput = {
   scheduledAt: Date;
   addressId?: string;
   couponCode?: string;
+  contactPhone: string;
 };
 
 export type CreateBookingResult =
@@ -133,6 +134,7 @@ export async function createBeautyBooking(
     type: input.type,
     scheduledAt: input.scheduledAt,
     durationMin,
+    contactPhone: input.contactPhone,
     ...(input.addressId ? { address: { connect: { id: input.addressId } } } : {}),
     status: "PENDING",
     subtotalPaise,
@@ -174,6 +176,7 @@ export type CreateVenueEnquiryInput = {
   scheduledAt: Date;
   guestCount: number;
   plateType: "VEG" | "NON_VEG";
+  contactPhone: string;
 };
 
 export async function createVenueEnquiry(
@@ -197,6 +200,7 @@ export async function createVenueEnquiry(
     type: "VENUE",
     scheduledAt: input.scheduledAt,
     durationMin: 240,
+    contactPhone: input.contactPhone,
     status: "PENDING",
     subtotalPaise,
     taxPaise,
