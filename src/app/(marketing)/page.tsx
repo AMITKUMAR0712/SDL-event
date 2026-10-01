@@ -88,7 +88,7 @@ export default async function HomePage() {
             .map((c) => ({ url: categoryPhotoUrl(c.slug, 0), alt: c.name }))}
         />
 
-        <div className="flex flex-col items-center gap-6 px-6 py-24 text-center">
+        <div className="flex min-h-[100svh] flex-col items-center justify-center gap-6 px-6 py-24 text-center md:min-h-0">
           <p className="flex items-center gap-2 text-sm font-medium tracking-wide text-primary uppercase">
             <Sparkles className="size-4" aria-hidden="true" />
             Beauty Parlour & Banquets, near you

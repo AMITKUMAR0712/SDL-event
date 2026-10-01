@@ -52,10 +52,34 @@ function useReducedMotion(): boolean {
   );
 }
 
+function subscribeToCoarsePointer(callback: () => void) {
+  const query = window.matchMedia("(pointer: coarse)");
+  query.addEventListener("change", callback);
+  return () => query.removeEventListener("change", callback);
+}
+
+/**
+ * True on touch-primary devices (phones/tablets) — anywhere the main input
+ * is a finger rather than a mouse. Lenis's own continuous rAF loop and
+ * document-wide touch handling fight with real touch-driven interactions on
+ * these devices (dropdowns needing several frames to open can lose the tap
+ * entirely under any main-thread contention, which a real mid-range phone
+ * has far more of than a dev machine); native touch scrolling is already
+ * smooth, so there's nothing Lenis is adding here worth that risk.
+ */
+function useCoarsePointer(): boolean {
+  return useSyncExternalStore(
+    subscribeToCoarsePointer,
+    () => window.matchMedia("(pointer: coarse)").matches,
+    () => false,
+  );
+}
+
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   const prefersReducedMotion = useReducedMotion();
+  const isCoarsePointer = useCoarsePointer();
 
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || isCoarsePointer) {
     return <>{children}</>;
   }
 

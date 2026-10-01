@@ -22,7 +22,7 @@ export function HeroCarousel({ images }: { images: { url: string; alt: string }[
   if (images.length === 0) return null;
 
   return (
-    <div aria-hidden="true" className="absolute inset-0 -z-20 overflow-hidden">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-20 overflow-hidden">
       {images.map((image, i) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -37,7 +37,7 @@ export function HeroCarousel({ images }: { images: { url: string; alt: string }[
       <div className="absolute inset-0 bg-background/60" />
 
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+        <div className="pointer-events-auto absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
           {images.map((image, i) => (
             <button
               key={image.url}
