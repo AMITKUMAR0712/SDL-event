@@ -16,6 +16,7 @@ import { HeroCarousel } from "@/components/shared/hero-carousel";
 import { QuickSearchForm } from "@/components/shared/quick-search-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { categoryPhotoUrl } from "@/lib/category-images";
 import { formatPaiseAsINR } from "@/lib/money";
 import {
   getMarketplaceStats,
@@ -83,9 +84,8 @@ export default async function HomePage() {
       <section className="relative isolate">
         <HeroCarousel
           images={categories
-            .filter((c) => c.imageUrl)
             .slice(0, 6)
-            .map((c) => ({ url: c.imageUrl!, alt: c.name }))}
+            .map((c) => ({ url: categoryPhotoUrl(c.slug, 0), alt: c.name }))}
         />
 
         <div className="flex flex-col items-center gap-6 px-6 py-24 text-center">
@@ -98,7 +98,7 @@ export default async function HomePage() {
           </h1>
           <p className="max-w-xl text-lg text-muted-foreground text-balance">
             Compare verified salons, makeup artists, and banquet halls near you — real ratings,
-            transparent pricing, instant booking.
+            instant booking.
           </p>
           <QuickSearchForm
             cities={cities.map((c) => ({ slug: c.slug, name: c.name }))}
@@ -110,7 +110,7 @@ export default async function HomePage() {
               href="/search"
               className={buttonVariants({ variant: "secondary", className: "font-semibold" })}
             >
-              Or browse everything
+              All Services
             </Link>
             <Link
               href="/register"

@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
  * Auto-advancing background image carousel for the hero section, with dot
  * navigation. Hand-built rather than pulling in a carousel library — the only
  * behavior needed (auto-advance + click-a-dot) doesn't justify a new
- * dependency per CLAUDE.md §3. Images come from Category.imageUrl, so an
- * admin editing a category's image (via /dashboard/admin/categories) changes
- * what shows here automatically.
+ * dependency per CLAUDE.md §3. The caller passes one real photo per
+ * category (see @/lib/category-images) rather than Category.imageUrl, which
+ * is a small placeholder graphic unsuited to a full-bleed hero background.
  */
 export function HeroCarousel({ images }: { images: { url: string; alt: string }[] }) {
   const [index, setIndex] = useState(0);
@@ -34,7 +34,7 @@ export function HeroCarousel({ images }: { images: { url: string; alt: string }[
           }`}
         />
       ))}
-      <div className="absolute inset-0 bg-background/95" />
+      <div className="absolute inset-0 bg-background/60" />
 
       {images.length > 1 && (
         <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
