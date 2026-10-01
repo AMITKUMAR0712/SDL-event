@@ -278,7 +278,7 @@ export default async function HomePage() {
       )}
 
       {cities.length > 0 && (
-        <section className="mx-auto w-full max-w-5xl px-6 py-12">
+        <section id="cities" className="mx-auto w-full max-w-5xl scroll-mt-20 px-6 py-12">
           <h2 className="flex items-center gap-2 font-heading text-2xl">
             <MapPin className="size-5 text-primary" aria-hidden="true" />
             Popular cities
