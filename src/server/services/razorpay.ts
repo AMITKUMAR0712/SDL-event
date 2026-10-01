@@ -18,7 +18,12 @@ export function getRazorpayClient(): Razorpay {
   return client;
 }
 
+const MIN_AMOUNT_PAISE = 100;
+
 export async function createRazorpayOrder(amountPaise: number, receipt: string) {
+  if (amountPaise < MIN_AMOUNT_PAISE) {
+    throw new Error(`Amount must be at least ${MIN_AMOUNT_PAISE} paise (₹1).`);
+  }
   const razorpay = getRazorpayClient();
   return razorpay.orders.create({ amount: amountPaise, currency: "INR", receipt });
 }

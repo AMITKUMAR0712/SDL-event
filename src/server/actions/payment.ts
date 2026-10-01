@@ -9,11 +9,28 @@ import { findBookingById } from "@/server/repositories/booking";
 import {
   capturePayment,
   initiateBookingPayment,
+  InitiatePaymentResult,
   initiateSubscriptionPayment,
 } from "@/server/services/payment";
 import { verifyCheckoutSignature } from "@/server/services/razorpay";
 
 export type CheckoutOrder = { orderId: string; amountPaise: number; keyId: string };
+
+function paymentInitiateErrorMessage(
+  reason: Exclude<InitiatePaymentResult, { ok: true }>["reason"],
+  entityLabel: "Booking" | "Subscription",
+): string {
+  switch (reason) {
+    case "ALREADY_PAID":
+      return `This ${entityLabel.toLowerCase()} is already paid.`;
+    case "INVALID_AMOUNT":
+      return "The amount is below the minimum allowed for payment.";
+    case "PROVIDER_ERROR":
+      return "Payment couldn't be started right now. Please try again shortly.";
+    default:
+      return `${entityLabel} not found.`;
+  }
+}
 
 export async function initiateBookingPaymentAction(
   bookingId: string,
@@ -33,11 +50,7 @@ export async function initiateBookingPaymentAction(
 
   const result = await initiateBookingPayment(bookingId, env.RAZORPAY_KEY_ID);
   if (!result.ok) {
-    return {
-      ok: false,
-      error:
-        result.reason === "ALREADY_PAID" ? "This booking is already paid." : "Booking not found.",
-    };
+    return { ok: false, error: paymentInitiateErrorMessage(result.reason, "Booking") };
   }
   return {
     ok: true,
@@ -101,7 +114,9 @@ export async function initiateSubscriptionPaymentAction(
   }
 
   const result = await initiateSubscriptionPayment(subscriptionId, env.RAZORPAY_KEY_ID);
-  if (!result.ok) return { ok: false, error: "Subscription not found." };
+  if (!result.ok) {
+    return { ok: false, error: paymentInitiateErrorMessage(result.reason, "Subscription") };
+  }
   return {
     ok: true,
     data: { orderId: result.orderId, amountPaise: result.amountPaise, keyId: result.keyId },

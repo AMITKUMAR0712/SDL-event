@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { findBookingById } from "@/server/repositories/booking";
 import { transitionBooking } from "@/server/services/booking";
 import { createRazorpayOrder } from "@/server/services/razorpay";
@@ -8,7 +9,30 @@ import { syncPublishStatusForUser } from "@/server/services/subscription";
 
 export type InitiatePaymentResult =
   | { ok: true; orderId: string; amountPaise: number; keyId: string }
-  | { ok: false; reason: "BOOKING_NOT_FOUND" | "ALREADY_PAID" };
+  | {
+      ok: false;
+      reason: "BOOKING_NOT_FOUND" | "ALREADY_PAID" | "INVALID_AMOUNT" | "PROVIDER_ERROR";
+    };
+
+/** Amount-too-low is a distinct, expected failure (surfaced to the caller
+ * as a clean reason code); anything else from the Razorpay API/SDK is an
+ * unexpected provider error, logged and reported generically rather than
+ * leaking SDK internals to the client. */
+async function tryCreateOrder(
+  amountPaise: number,
+  receipt: string,
+): Promise<
+  { ok: true; orderId: string } | { ok: false; reason: "INVALID_AMOUNT" | "PROVIDER_ERROR" }
+> {
+  if (amountPaise < 100) return { ok: false, reason: "INVALID_AMOUNT" };
+  try {
+    const order = await createRazorpayOrder(amountPaise, receipt);
+    return { ok: true, orderId: order.id };
+  } catch (error) {
+    logger.error("[razorpay] order creation failed", { error, amountPaise, receipt });
+    return { ok: false, reason: "PROVIDER_ERROR" };
+  }
+}
 
 /**
  * NB: this is a one-time-payment-per-booking flow, not Razorpay's recurring
@@ -31,18 +55,19 @@ export async function initiateBookingPayment(
   });
   if (existingCaptured) return { ok: false, reason: "ALREADY_PAID" };
 
-  const order = await createRazorpayOrder(booking.totalPaise, booking.bookingNo);
+  const order = await tryCreateOrder(booking.totalPaise, booking.bookingNo);
+  if (!order.ok) return order;
 
   await db.payment.create({
     data: {
       bookingId,
-      providerOrderId: order.id,
+      providerOrderId: order.orderId,
       amountPaise: booking.totalPaise,
       idempotencyKey: crypto.randomUUID(),
     },
   });
 
-  return { ok: true, orderId: order.id, amountPaise: booking.totalPaise, keyId };
+  return { ok: true, orderId: order.orderId, amountPaise: booking.totalPaise, keyId };
 }
 
 export async function initiateSubscriptionPayment(
@@ -52,18 +77,19 @@ export async function initiateSubscriptionPayment(
   const subscription = await db.subscription.findUnique({ where: { id: subscriptionId } });
   if (!subscription) return { ok: false, reason: "BOOKING_NOT_FOUND" };
 
-  const order = await createRazorpayOrder(subscription.priceSnapshotPaise, subscriptionId);
+  const order = await tryCreateOrder(subscription.priceSnapshotPaise, subscriptionId);
+  if (!order.ok) return order;
 
   await db.payment.create({
     data: {
       subscriptionId,
-      providerOrderId: order.id,
+      providerOrderId: order.orderId,
       amountPaise: subscription.priceSnapshotPaise,
       idempotencyKey: crypto.randomUUID(),
     },
   });
 
-  return { ok: true, orderId: order.id, amountPaise: subscription.priceSnapshotPaise, keyId };
+  return { ok: true, orderId: order.orderId, amountPaise: subscription.priceSnapshotPaise, keyId };
 }
 
 /**
