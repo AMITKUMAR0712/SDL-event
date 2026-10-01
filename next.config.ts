@@ -44,6 +44,10 @@ const nextConfig: NextConfig = {
       // category-matched Unsplash stock photos — real uploads go through
       // Cloudinary/S3 (below) once those are configured.
       { protocol: "https", hostname: "images.unsplash.com" },
+      // TODO: remove once `pnpm prisma migrate reset` has been run against
+      // every environment — only still-unseeded rows from the old
+      // picsum.photos-based mock data need this.
+      { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "res.cloudinary.com" },
       ...(process.env.AWS_CLOUDFRONT_DOMAIN
         ? [{ protocol: "https" as const, hostname: process.env.AWS_CLOUDFRONT_DOMAIN }]
