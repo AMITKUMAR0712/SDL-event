@@ -1,4 +1,8 @@
-import { faker } from "@faker-js/faker";
+// en_IN gives Indian person names out of the box (person/location data is
+// localised); company names still come out Western-templated, so business
+// names are built manually from Indian surnames + curated suffixes below
+// instead of `faker.company.name()`.
+import { fakerEN_IN as faker } from "@faker-js/faker";
 import {
   AddressType,
   BillingPeriod,
@@ -82,16 +86,42 @@ function nextIndianPhone(): string {
 // ---------------------------------------------------------------------------
 
 const STATES = [
-  "Delhi",
-  "Uttar Pradesh",
-  "Haryana",
-  "Maharashtra",
-  "Karnataka",
-  "Telangana",
-  "Tamil Nadu",
-  "West Bengal",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
   "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
   "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry",
 ] as const;
 
 const CITIES: {
@@ -101,26 +131,122 @@ const CITIES: {
   lng: number;
   population: number;
 }[] = [
-  { name: "New Delhi", state: "Delhi", lat: 28.6139, lng: 77.209, population: 32900000 },
-  { name: "Noida", state: "Uttar Pradesh", lat: 28.5355, lng: 77.391, population: 700000 },
-  { name: "Greater Noida", state: "Uttar Pradesh", lat: 28.4744, lng: 77.504, population: 300000 },
-  { name: "Ghaziabad", state: "Uttar Pradesh", lat: 28.6692, lng: 77.4538, population: 2400000 },
-  { name: "Lucknow", state: "Uttar Pradesh", lat: 26.8467, lng: 80.9462, population: 3600000 },
+  // Andhra Pradesh
+  {
+    name: "Visakhapatnam",
+    state: "Andhra Pradesh",
+    lat: 17.6868,
+    lng: 83.2185,
+    population: 2035000,
+  },
+  { name: "Vijayawada", state: "Andhra Pradesh", lat: 16.5062, lng: 80.648, population: 1048000 },
+  // Arunachal Pradesh
+  { name: "Itanagar", state: "Arunachal Pradesh", lat: 27.0844, lng: 93.6053, population: 59000 },
+  // Assam
+  { name: "Guwahati", state: "Assam", lat: 26.1445, lng: 91.7362, population: 968000 },
+  // Bihar
+  { name: "Patna", state: "Bihar", lat: 25.5941, lng: 85.1376, population: 2046000 },
+  { name: "Gaya", state: "Bihar", lat: 24.7955, lng: 84.9994, population: 470000 },
+  // Chhattisgarh
+  { name: "Raipur", state: "Chhattisgarh", lat: 21.2514, lng: 81.6296, population: 1123000 },
+  // Goa
+  { name: "Panaji", state: "Goa", lat: 15.4909, lng: 73.8278, population: 115000 },
+  { name: "Margao", state: "Goa", lat: 15.27, lng: 73.95, population: 90000 },
+  // Gujarat
+  { name: "Ahmedabad", state: "Gujarat", lat: 23.0225, lng: 72.5714, population: 8400000 },
+  { name: "Surat", state: "Gujarat", lat: 21.1702, lng: 72.8311, population: 6900000 },
+  { name: "Vadodara", state: "Gujarat", lat: 22.3072, lng: 73.1812, population: 2066000 },
+  { name: "Rajkot", state: "Gujarat", lat: 22.3039, lng: 70.8022, population: 1390000 },
+  // Haryana
   { name: "Gurugram", state: "Haryana", lat: 28.4595, lng: 77.0266, population: 1150000 },
   { name: "Faridabad", state: "Haryana", lat: 28.4089, lng: 77.3178, population: 1800000 },
+  { name: "Panipat", state: "Haryana", lat: 29.3909, lng: 76.9635, population: 450000 },
+  // Himachal Pradesh
+  { name: "Shimla", state: "Himachal Pradesh", lat: 31.1048, lng: 77.1734, population: 169000 },
+  // Jharkhand
+  { name: "Ranchi", state: "Jharkhand", lat: 23.3441, lng: 85.3096, population: 1456000 },
+  { name: "Jamshedpur", state: "Jharkhand", lat: 22.8046, lng: 86.2029, population: 1340000 },
+  // Karnataka
+  { name: "Bengaluru", state: "Karnataka", lat: 12.9716, lng: 77.5946, population: 13200000 },
+  { name: "Mysuru", state: "Karnataka", lat: 12.2958, lng: 76.6394, population: 1000000 },
+  { name: "Mangaluru", state: "Karnataka", lat: 12.9141, lng: 74.856, population: 623000 },
+  // Kerala
+  { name: "Kochi", state: "Kerala", lat: 9.9312, lng: 76.2673, population: 2119000 },
+  { name: "Thiruvananthapuram", state: "Kerala", lat: 8.5241, lng: 76.9366, population: 957000 },
+  // Madhya Pradesh
+  { name: "Indore", state: "Madhya Pradesh", lat: 22.7196, lng: 75.8577, population: 3276000 },
+  { name: "Bhopal", state: "Madhya Pradesh", lat: 23.2599, lng: 77.4126, population: 2371000 },
+  // Maharashtra
   { name: "Mumbai", state: "Maharashtra", lat: 19.076, lng: 72.8777, population: 20400000 },
   { name: "Pune", state: "Maharashtra", lat: 18.5204, lng: 73.8567, population: 7400000 },
   { name: "Thane", state: "Maharashtra", lat: 19.2183, lng: 72.9781, population: 1900000 },
   { name: "Navi Mumbai", state: "Maharashtra", lat: 19.033, lng: 73.0297, population: 1200000 },
-  { name: "Bengaluru", state: "Karnataka", lat: 12.9716, lng: 77.5946, population: 13200000 },
-  { name: "Mysuru", state: "Karnataka", lat: 12.2958, lng: 76.6394, population: 1000000 },
-  { name: "Hyderabad", state: "Telangana", lat: 17.385, lng: 78.4867, population: 10500000 },
+  { name: "Nagpur", state: "Maharashtra", lat: 21.1458, lng: 79.0882, population: 2900000 },
+  // Manipur
+  { name: "Imphal", state: "Manipur", lat: 24.817, lng: 93.9368, population: 268000 },
+  // Meghalaya
+  { name: "Shillong", state: "Meghalaya", lat: 25.5788, lng: 91.8933, population: 354000 },
+  // Mizoram
+  { name: "Aizawl", state: "Mizoram", lat: 23.7271, lng: 92.7176, population: 294000 },
+  // Nagaland
+  { name: "Kohima", state: "Nagaland", lat: 25.6751, lng: 94.1086, population: 115000 },
+  // Odisha
+  { name: "Bhubaneswar", state: "Odisha", lat: 20.2961, lng: 85.8245, population: 885000 },
+  { name: "Cuttack", state: "Odisha", lat: 20.4625, lng: 85.883, population: 652000 },
+  // Punjab
+  { name: "Ludhiana", state: "Punjab", lat: 30.901, lng: 75.8573, population: 1646000 },
+  { name: "Amritsar", state: "Punjab", lat: 31.634, lng: 74.8723, population: 1183000 },
+  // Rajasthan
+  { name: "Jaipur", state: "Rajasthan", lat: 26.9124, lng: 75.7873, population: 3900000 },
+  { name: "Jodhpur", state: "Rajasthan", lat: 26.2389, lng: 73.0243, population: 1138000 },
+  { name: "Udaipur", state: "Rajasthan", lat: 24.5854, lng: 73.7125, population: 475000 },
+  // Sikkim
+  { name: "Gangtok", state: "Sikkim", lat: 27.3389, lng: 88.6065, population: 100000 },
+  // Tamil Nadu
   { name: "Chennai", state: "Tamil Nadu", lat: 13.0827, lng: 80.2707, population: 11500000 },
   { name: "Coimbatore", state: "Tamil Nadu", lat: 11.0168, lng: 76.9558, population: 2200000 },
+  { name: "Madurai", state: "Tamil Nadu", lat: 9.9252, lng: 78.1198, population: 1561000 },
+  // Telangana
+  { name: "Hyderabad", state: "Telangana", lat: 17.385, lng: 78.4867, population: 10500000 },
+  { name: "Warangal", state: "Telangana", lat: 17.9689, lng: 79.5941, population: 812000 },
+  // Tripura
+  { name: "Agartala", state: "Tripura", lat: 23.8315, lng: 91.2868, population: 400000 },
+  // Uttar Pradesh
+  { name: "Noida", state: "Uttar Pradesh", lat: 28.5355, lng: 77.391, population: 700000 },
+  { name: "Greater Noida", state: "Uttar Pradesh", lat: 28.4744, lng: 77.504, population: 300000 },
+  { name: "Ghaziabad", state: "Uttar Pradesh", lat: 28.6692, lng: 77.4538, population: 2400000 },
+  { name: "Lucknow", state: "Uttar Pradesh", lat: 26.8467, lng: 80.9462, population: 3600000 },
+  { name: "Kanpur", state: "Uttar Pradesh", lat: 26.4499, lng: 80.3319, population: 2920000 },
+  { name: "Varanasi", state: "Uttar Pradesh", lat: 25.3176, lng: 82.9739, population: 1435000 },
+  { name: "Agra", state: "Uttar Pradesh", lat: 27.1767, lng: 78.0081, population: 1746000 },
+  // Uttarakhand
+  { name: "Dehradun", state: "Uttarakhand", lat: 30.3165, lng: 78.0322, population: 578000 },
+  // West Bengal
   { name: "Kolkata", state: "West Bengal", lat: 22.5726, lng: 88.3639, population: 14900000 },
-  { name: "Ahmedabad", state: "Gujarat", lat: 23.0225, lng: 72.5714, population: 8400000 },
-  { name: "Surat", state: "Gujarat", lat: 21.1702, lng: 72.8311, population: 6900000 },
-  { name: "Jaipur", state: "Rajasthan", lat: 26.9124, lng: 75.7873, population: 3900000 },
+  { name: "Howrah", state: "West Bengal", lat: 22.5958, lng: 88.2636, population: 1077000 },
+  { name: "Siliguri", state: "West Bengal", lat: 26.7271, lng: 88.3953, population: 513000 },
+  // Union territories
+  {
+    name: "Port Blair",
+    state: "Andaman and Nicobar Islands",
+    lat: 11.6234,
+    lng: 92.7265,
+    population: 108000,
+  },
+  { name: "Chandigarh", state: "Chandigarh", lat: 30.7333, lng: 76.7794, population: 1055000 },
+  {
+    name: "Silvassa",
+    state: "Dadra and Nagar Haveli and Daman and Diu",
+    lat: 20.2766,
+    lng: 73.0083,
+    population: 92000,
+  },
+  { name: "New Delhi", state: "Delhi", lat: 28.6139, lng: 77.209, population: 32900000 },
+  { name: "Srinagar", state: "Jammu and Kashmir", lat: 34.0837, lng: 74.7973, population: 1273000 },
+  { name: "Jammu", state: "Jammu and Kashmir", lat: 32.7266, lng: 74.857, population: 651000 },
+  { name: "Leh", state: "Ladakh", lat: 34.1526, lng: 77.5771, population: 31000 },
+  { name: "Kavaratti", state: "Lakshadweep", lat: 10.5669, lng: 72.642, population: 11000 },
+  { name: "Puducherry", state: "Puducherry", lat: 11.9416, lng: 79.8083, population: 655000 },
 ];
 
 const LOCALITY_NAME_PATTERNS = [
@@ -133,6 +259,69 @@ const LOCALITY_NAME_PATTERNS = [
   "Model Town",
   "{name} Enclave",
 ];
+
+// Common Indian area-name roots, used in place of `faker.location.county()`
+// (which only returns Western place names, even under the en_IN locale).
+const INDIAN_AREA_NAME_ROOTS = [
+  "Gandhi",
+  "Nehru",
+  "Shivaji",
+  "Rajiv",
+  "Indira",
+  "Subhash",
+  "Ashok",
+  "Krishna",
+  "Lakshmi",
+  "Saraswati",
+  "Vivekanand",
+  "Patel",
+  "Tagore",
+  "Shastri",
+] as const;
+
+// Business names are built from an Indian surname + a curated suffix instead
+// of `faker.company.name()`, which produces Western-templated names (e.g.
+// "Dhawan Ltd") even under the en_IN locale.
+const BUSINESS_NAME_PREFIXES = [
+  "Shree",
+  "Royal",
+  "Golden",
+  "New",
+  "Sai",
+  "Divine",
+  "Elegant",
+  "Glamour",
+  "Classic",
+  "Shubh",
+] as const;
+
+const BEAUTY_BUSINESS_SUFFIXES = [
+  "Beauty Parlour",
+  "Beauty Studio",
+  "Salon",
+  "Beauty Lounge",
+  "Makeovers",
+  "Bridal Studio",
+  "Unisex Salon",
+] as const;
+
+const BANQUET_BUSINESS_SUFFIXES = [
+  "Banquet Hall",
+  "Marriage Garden",
+  "Palace",
+  "Lawns & Gardens",
+  "Wedding Resort",
+  "Convention Center",
+  "Farmhouse",
+] as const;
+
+function indianBusinessName(suffixes: readonly string[]): string {
+  const surname = faker.person.lastName();
+  const suffix = pick(suffixes);
+  return faker.datatype.boolean()
+    ? `${pick(BUSINESS_NAME_PREFIXES)} ${suffix}`
+    : `${surname} ${suffix}`;
+}
 
 const BEAUTY_CATEGORIES = [
   "Bridal Makeup",
@@ -226,7 +415,7 @@ async function seedTaxonomy() {
       const pattern = pick(LOCALITY_NAME_PATTERNS);
       const name = pattern
         .replace("{n}", String(faker.number.int({ min: 1, max: 90 })))
-        .replace("{name}", faker.location.county().split(" ")[0] ?? "Green");
+        .replace("{name}", pick(INDIAN_AREA_NAME_ROOTS));
       const { lat, lng } = jitterLatLng(city.lat, city.lng, 8);
       await db.locality.create({
         data: {
@@ -473,12 +662,12 @@ async function seedVendors(
   const vendorPlans = plans.filter((p) => p.code.startsWith("VENDOR_"));
   const vendors = [];
 
-  const VENDOR_COUNT = 60;
+  const VENDOR_COUNT = cities.length * 3;
   for (let i = 0; i < VENDOR_COUNT; i += 1) {
     const city = cities[i % cities.length];
     const category = pick(beautyCategories);
     const catalogEntries = serviceCatalogs.filter((s) => s.categoryId === category.id);
-    const businessName = `${faker.company.name()} ${pick(["Studio", "Salon", "Beauty Lounge", "Makeovers"])}`;
+    const businessName = indianBusinessName(BEAUTY_BUSINESS_SUFFIXES);
     const slug = slugify(`${businessName}-${city.name}-${i}`);
     const { lat, lng } = jitterLatLng(city.lat, city.lng, 12);
     const servesAtHome = faker.datatype.boolean();
@@ -613,11 +802,11 @@ async function seedBanquets(
   const banquetPlans = plans.filter((p) => p.code.startsWith("BANQUET_"));
   const banquets = [];
 
-  const BANQUET_COUNT = 25;
+  const BANQUET_COUNT = cities.length;
   for (let i = 0; i < BANQUET_COUNT; i += 1) {
     const city = cities[i % cities.length];
     const category = pick(banquetCategories);
-    const venueName = `${faker.company.name()} ${pick(["Banquets", "Palace", "Gardens", "Convention Center"])}`;
+    const venueName = indianBusinessName(BANQUET_BUSINESS_SUFFIXES);
     const slug = slugify(`${venueName}-${city.name}-${i}`);
     const { lat, lng } = jitterLatLng(city.lat, city.lng, 15);
 
