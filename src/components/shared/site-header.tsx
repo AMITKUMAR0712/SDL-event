@@ -118,7 +118,7 @@ export function SiteHeader() {
           <span className="font-heading text-xl font-semibold tracking-tight">SajDhajLo</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 text-sm md:flex">
+        <nav className="hidden items-center gap-3 text-sm md:flex">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className={navLinkClass(pathname === link.href)}>
               {link.label}

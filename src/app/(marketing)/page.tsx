@@ -220,28 +220,31 @@ export default async function HomePage() {
 
       {/* For customers / For vendors */}
       <section className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-6 px-6 pb-16 md:grid-cols-2">
-        <Card>
-          <CardContent className="p-8">
+        <Card className="h-full">
+          <CardContent className="flex h-full flex-col p-8">
             <Scissors className="size-8 text-primary" aria-hidden="true" />
             <h2 className="mt-4 font-heading text-2xl">For customers</h2>
             <p className="mt-2 text-muted-foreground">
               Discover bridal makeup artists, salons, and banquet halls near you. Compare prices,
               read real reviews, and book — all in one place.
             </p>
-            <Link href="/search" className={`${buttonVariants()} mt-6`}>
+            <Link href="/search" className={`${buttonVariants()} mt-auto self-start`}>
               Start exploring
             </Link>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-8">
+        <Card className="h-full">
+          <CardContent className="flex h-full flex-col p-8">
             <Store className="size-8 text-primary" aria-hidden="true" />
             <h2 className="mt-4 font-heading text-2xl">For Beauty Parlours & Banquet Owners</h2>
             <p className="mt-2 text-muted-foreground">
               List your salon, studio, or venue and reach customers actively searching in your city.
               Manage bookings, availability, and payouts from one dashboard.
             </p>
-            <Link href="/register" className={`${buttonVariants({ variant: "outline" })} mt-6`}>
+            <Link
+              href="/register"
+              className={`${buttonVariants({ variant: "outline" })} mt-auto self-start`}
+            >
               List your business
             </Link>
           </CardContent>
