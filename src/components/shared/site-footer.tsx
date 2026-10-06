@@ -18,7 +18,7 @@ export function SiteFooter() {
         </Link>
       </nav>
       <p className="mx-auto mt-4 max-w-5xl">
-        © {new Date().getFullYear()} GlowMakeOver. All rights reserved.
+        © {new Date().getFullYear()} SajDhajLo. All rights reserved.
       </p>
       <p className="mx-auto mt-1 max-w-5xl">
         Developed by TradeOrbit Global —{" "}

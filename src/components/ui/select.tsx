@@ -80,12 +80,6 @@ function SelectContent({
         <SelectPrimitive.Popup
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
-          // Lenis (mounted globally, see SmoothScrollProvider) intercepts touch
-          // gestures on the whole document by default. Without this, opening a
-          // dropdown on a real mobile device is unreliable — Lenis can swallow
-          // the tap/scroll before the popup (rendered in a portal) handles it.
-          // Not reproducible with Playwright's synthetic taps, only real touch.
-          data-lenis-prevent
           className={cn(
             "relative isolate z-50 max-h-[min(var(--available-height),20rem)] w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className,

@@ -1,6 +1,6 @@
 # Launch Checklist
 
-Everything below must be true before GlowMakeOver takes real payments from
+Everything below must be true before SajDhajLo takes real payments from
 real customers. Items are grouped by who typically owns them — check off as
 completed, don't skip silently.
 
@@ -15,7 +15,7 @@ completed, don't skip silently.
 - [ ] GST registration obtained if the platform itself will invoice
       commission (as opposed to only facilitating vendor-issued invoices).
 - [ ] Grievance officer named for DPDP Act compliance (currently a generic
-      `privacy@makeglowover.com` placeholder on `/contact`).
+      `privacy@sajdhajlo.com` placeholder on `/contact`).
 
 ## Payments (Razorpay)
 

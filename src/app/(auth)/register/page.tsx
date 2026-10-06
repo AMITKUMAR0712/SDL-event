@@ -9,14 +9,14 @@ export default function RegisterPage() {
     <main className="grid flex-1 grid-cols-1 lg:grid-cols-2">
       <AuthBrandPanel
         title="Join thousands finding their perfect vendor"
-        body="Whether you're planning a wedding or growing your salon business, GlowMakeOver connects you with the right people."
+        body="Whether you're planning a wedding or growing your salon business, SajDhajLo connects you with the right people."
       />
 
       <div className="flex items-start justify-center overflow-y-auto px-6 py-10 sm:items-center sm:py-16">
         <Card className="w-full max-w-sm border-none shadow-lg">
           <CardHeader>
             <CardTitle className="font-heading text-2xl">Create your account</CardTitle>
-            <CardDescription>Join GlowMakeOver in under a minute</CardDescription>
+            <CardDescription>Join SajDhajLo in under a minute</CardDescription>
           </CardHeader>
           <CardContent>
             <RegisterForm />

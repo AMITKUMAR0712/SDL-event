@@ -25,7 +25,7 @@ export async function generateMetadata(props: PageProps<"/[citySlug]">): Promise
   const title = pageTitle(city.seoTitle ?? `Beauty Parlour & Banquets in ${city.name}`);
   const description = pageDescription(
     city.seoDescription ??
-      `Discover verified beauty parlours and banquets for weddings & parties in ${city.name} on GlowMakeOver.`,
+      `Discover verified beauty parlours and banquets for weddings & parties in ${city.name} on SajDhajLo.`,
   );
 
   return {

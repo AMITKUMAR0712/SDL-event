@@ -402,8 +402,8 @@ async function seedTaxonomy() {
         population: city.population,
         imageUrl: mockImageUrl(city.name),
         seoTitle: `Beauty & Banquet Services in ${city.name}`,
-        seoDescription: `Discover verified beauty vendors and banquet venues in ${city.name} on GlowMakeOver.`,
-        introContent: `${city.name} is one of GlowMakeOver's launch cities, with salons, makeup artists, and banquet venues across every major locality.`,
+        seoDescription: `Discover verified beauty vendors and banquet venues in ${city.name} on SajDhajLo.`,
+        introContent: `${city.name} is one of SajDhajLo's launch cities, with salons, makeup artists, and banquet venues across every major locality.`,
       },
     });
     cityRecords.push({ ...created, lat: city.lat, lng: city.lng });
@@ -521,19 +521,19 @@ async function seedPlans() {
   const customerPlans = [
     {
       code: "PLUS_MONTHLY",
-      name: "GlowMakeOver Plus (Monthly)",
+      name: "SajDhajLo Plus (Monthly)",
       pricePaise: 9_900,
       period: BillingPeriod.MONTHLY,
     },
     {
       code: "PLUS_QUARTERLY",
-      name: "GlowMakeOver Plus (Quarterly)",
+      name: "SajDhajLo Plus (Quarterly)",
       pricePaise: 24_900,
       period: BillingPeriod.QUARTERLY,
     },
     {
       code: "PLUS_YEARLY",
-      name: "GlowMakeOver Plus (Yearly)",
+      name: "SajDhajLo Plus (Yearly)",
       pricePaise: 89_900,
       period: BillingPeriod.YEARLY,
     },
@@ -627,8 +627,8 @@ async function seedAdmins() {
 
   const admin = await db.user.create({
     data: {
-      name: "GlowMakeOver Admin",
-      email: "admin@makeglowover.com",
+      name: "SajDhajLo Admin",
+      email: "admin@sajdhajlo.com",
       phone: nextIndianPhone(),
       passwordHash,
       role: Role.ADMIN,
@@ -639,7 +639,7 @@ async function seedAdmins() {
   await db.user.create({
     data: {
       name: "Support Agent",
-      email: "support@makeglowover.com",
+      email: "support@sajdhajlo.com",
       phone: nextIndianPhone(),
       passwordHash,
       role: Role.SUPPORT,
@@ -1192,7 +1192,7 @@ async function main() {
     plans: plans.length,
   });
   console.log(
-    `Admin login: admin@makeglowover.com / ${SEED_STAFF_PASSWORD} (support@makeglowover.com uses the same password)`,
+    `Admin login: admin@sajdhajlo.com / ${SEED_STAFF_PASSWORD} (support@sajdhajlo.com uses the same password)`,
   );
 }
 

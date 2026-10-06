@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Refund & Cancellation Policy",
-  description: "When a booking or subscription on GlowMakeOver qualifies for a refund.",
+  description: "When a booking or subscription on SajDhajLo qualifies for a refund.",
 };
 
 export default function RefundPolicyPage() {
@@ -15,7 +15,7 @@ export default function RefundPolicyPage() {
       <h2>Bookings</h2>
       <p>
         Refunds for a cancelled booking depend on how far in advance you cancel, relative to the
-        scheduled time (this platform default can be adjusted by GlowMakeOver from time to time; the
+        scheduled time (this platform default can be adjusted by SajDhajLo from time to time; the
         version in effect at the time of your booking applies):
       </p>
       <ul>

@@ -1,7 +1,8 @@
 # Changelog
 
-All notable changes to GlowMakeOver (named MakeGlowOver before the rebrand — see "Post-launch —
-Rebrand to GlowMakeOver" below) are recorded here, one entry per phase.
+All notable changes to SajDhajLo (named GlowMakeOver, and MakeGlowOver before that — see
+"Post-launch — Rebrand to GlowMakeOver" and "Post-launch — Rebrand to SajDhajLo" below) are
+recorded here, one entry per phase.
 
 ## Phase 0 — Scaffold and tooling
 
@@ -566,3 +567,54 @@ introContent` (20 rows) and the three `SubscriptionPlan.name` values ("MakeGlowO
    or invalid phone number and accepts a valid 10-digit one.
 3. As the vendor (or banquet owner) who received that booking, open Bookings — confirm the
    customer's phone number appears as a clickable `tel:` link.
+
+## Post-launch — Rebrand to SajDhajLo, Lenis removed
+
+- Every user-facing "GlowMakeOver" mention (site header/footer wordmark, page titles and meta
+  descriptions, JSON-LD `Organization` name, the Razorpay checkout modal's merchant name, the
+  WhatsApp pre-filled message, legal pages, onboarding/auth copy, email subject lines) renamed to
+  "SajDhajLo", matching the new domain `sajdhajlo.com`. Unlike the previous rebrand, this pass also
+  moved the lowercase `makeglowover` strings — the local MySQL database name, `CLAUDE.md`'s own
+  title, `README.md`, the seeded admin/support login emails, and the CI workflow's test database
+  name — to `sajdhajlo`, since this rebrand is meant to be complete rather than a literal-string-only
+  pass. `docs/CHANGELOG.md` itself is intentionally NOT rewritten below this entry, same rationale as
+  last time: every earlier phase entry accurately records what the product was called when it
+  shipped.
+- **Database renamed**: `DATABASE_URL` (`.env`, `.env.example`, CI) now points at `sajdhajlo` /
+  `sajdhajlo_test` instead of `makeglowover` / `makeglowover_test`. The old local dev database was
+  left untouched (not dropped) — a fresh `sajdhajlo` database was created via `prisma migrate deploy`
+  and reseeded from scratch rather than renaming the existing one in place, since this is disposable
+  mock data. **Seed admin/support logins changed** to `admin@sajdhajlo.com` / `support@sajdhajlo.com`
+  (same password, `AdminPass123`).
+- **Contact details updated**: the published contact email (`/contact`, vendor/banquet dashboard
+  contact pages, `ContactMessage` notification routing in `src/server/services/contact.ts`) is now
+  `info@sajdhajlo.com`. The phone number shown for calls is unchanged (`+91 99921 96879`); the
+  WhatsApp number — both the floating WhatsApp button and the vendor/banquet dashboard WhatsApp
+  links — changed to a separate WhatsApp Business number, `+91 93500 31246`. Note: `info@sajdhajlo.com`
+  is a display/routing address only — the actual outbound-email SMTP account
+  (`GMAIL_USER`/`GMAIL_APP_PASSWORD` in `.env`) was deliberately left pointing at the existing,
+  working Gmail credentials rather than changed to an unconfigured address, which would have broken
+  every transactional email (password resets, booking notifications, the contact form's own
+  "new message" alert) outright. `EMAIL_FROM`'s _display name_ changed to "SajDhajLo" but keeps the
+  same underlying Gmail address. Until `info@sajdhajlo.com` is actually configured as a real,
+  monitored mailbox, contact-form notification emails will fail to deliver (gracefully — the
+  submission is still saved and visible in `/dashboard/admin/messages`, only the email alert is
+  lost) and any customer who emails that address directly won't reach anyone yet.
+- **Lenis removed entirely**, not just disabled on touch (as a previous phase had done) — the
+  `lenis` package is uninstalled, `SmoothScrollProvider` and `useSmoothScroll` are deleted, the
+  `data-lenis-prevent` workaround in `src/components/ui/select.tsx` is gone since there's no Lenis
+  left to prevent, and `CLAUDE.md`'s tech-stack section no longer lists it. The root layout keeps
+  Next.js's own `data-scroll-behavior="smooth"` attribute, which drives native CSS smooth-scrolling
+  for anchor links (e.g. the bottom nav's `/#cities` and `/#pricing` links) without any JS library.
+
+### Manual smoke test
+
+1. Visit `/` — confirm the header wordmark, hero copy, and tab title all say "SajDhajLo", and the
+   bottom nav's anchor links still smooth-scroll natively.
+2. Visit `/contact` and a vendor/banquet dashboard's Contact page — confirm the email shown is
+   `info@sajdhajlo.com` and the WhatsApp link/number is `+91 93500 31246`, while the phone/"Call us"
+   number stays `+91 99921 96879`.
+3. `pnpm prisma studio` (or the admin dashboard) — confirm the dev database is `sajdhajlo`, not
+   `makeglowover`, and sign in as `admin@sajdhajlo.com` / `AdminPass123`.
+4. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green (63 tests). Full Playwright
+   e2e suite (8 tests) green on a clean server.

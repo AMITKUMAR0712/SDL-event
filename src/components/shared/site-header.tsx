@@ -45,7 +45,7 @@ export function SiteHeader({
           href="/"
           className="order-1 shrink-0 font-heading text-xl font-semibold tracking-tight"
         >
-          GlowMakeOver
+          SajDhajLo
         </Link>
 
         <div className="order-3 w-full md:order-2 md:w-auto md:flex-1 md:px-4">

@@ -335,7 +335,7 @@ export function VendorOnboardingWizard({
                 <FormLabel>Choose a plan</FormLabel>
                 <p className="text-sm text-muted-foreground">
                   Pick how long you want to stay listed — pricing and lead limits are fixed by
-                  GlowMakeOver, never negotiable per vendor.
+                  SajDhajLo, never negotiable per vendor.
                 </p>
                 <PlanPicker plans={plans} value={field.value} onChange={field.onChange} />
                 <FormMessage />

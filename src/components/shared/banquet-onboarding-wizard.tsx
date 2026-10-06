@@ -306,7 +306,7 @@ export function BanquetOnboardingWizard({ cities, plans, accountName, accountEma
                 <FormLabel>Choose a plan</FormLabel>
                 <p className="text-sm text-muted-foreground">
                   Pick how long you want to stay listed — pricing and lead limits are fixed by
-                  GlowMakeOver, never negotiable per venue.
+                  SajDhajLo, never negotiable per venue.
                 </p>
                 <PlanPicker plans={plans} value={field.value} onChange={field.onChange} />
                 <FormMessage />

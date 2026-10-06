@@ -143,7 +143,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Why GlowMakeOver */}
+      {/* Why SajDhajLo */}
       <section className="mx-auto w-full max-w-5xl px-6 py-16">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[

@@ -1,5 +1,7 @@
-const WHATSAPP_NUMBER = "919992196879";
-const MESSAGE = "Hi! I'd like to know more about GlowMakeOver.";
+// WhatsApp Business number — intentionally different from the regular
+// contact phone number shown elsewhere on the site.
+const WHATSAPP_NUMBER = "919350031246";
+const MESSAGE = "Hi! I'd like to know more about SajDhajLo.";
 
 export function WhatsAppFloatButton() {
   return (

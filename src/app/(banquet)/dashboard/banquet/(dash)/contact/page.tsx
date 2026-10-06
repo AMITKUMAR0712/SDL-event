@@ -12,7 +12,7 @@ export default function BanquetContactPage() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <a
-          href="https://wa.me/919992196879?text=Hi!%20I%20need%20help%20with%20my%20GlowMakeOver%20venue%20account."
+          href="https://wa.me/919350031246?text=Hi!%20I%20need%20help%20with%20my%20SajDhajLo%20venue%20account."
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-3 rounded-xl border border-border p-4 hover:bg-accent"
@@ -20,7 +20,7 @@ export default function BanquetContactPage() {
           <MessageCircle className="size-5 text-primary" aria-hidden="true" />
           <div>
             <p className="font-medium">WhatsApp</p>
-            <p className="text-sm text-muted-foreground">+91 99921 96879</p>
+            <p className="text-sm text-muted-foreground">+91 93500 31246</p>
           </div>
         </a>
         <a
@@ -34,7 +34,7 @@ export default function BanquetContactPage() {
           </div>
         </a>
         <a
-          href="mailto:glowmakeoverit@gmail.com"
+          href="mailto:info@sajdhajlo.com"
           className="flex items-center gap-3 rounded-xl border border-border p-4 hover:bg-accent sm:col-span-2"
         >
           <svg
@@ -51,7 +51,7 @@ export default function BanquetContactPage() {
           </svg>
           <div>
             <p className="font-medium">Email</p>
-            <p className="text-sm text-muted-foreground">glowmakeoverit@gmail.com</p>
+            <p className="text-sm text-muted-foreground">info@sajdhajlo.com</p>
           </div>
         </a>
       </div>

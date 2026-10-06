@@ -4,7 +4,7 @@ import { ContactForm } from "@/components/shared/contact-form";
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: "How to reach GlowMakeOver support, our grievance officer, and business inquiries.",
+  description: "How to reach SajDhajLo support, our grievance officer, and business inquiries.",
 };
 
 export default function ContactPage() {
@@ -26,8 +26,8 @@ export default function ContactPage() {
           <section className="mt-8">
             <h2 className="font-heading text-xl">Email</h2>
             <p className="mt-2 text-muted-foreground">
-              <a href="mailto:glowmakeoverit@gmail.com" className="hover:underline">
-                glowmakeoverit@gmail.com
+              <a href="mailto:info@sajdhajlo.com" className="hover:underline">
+                info@sajdhajlo.com
               </a>
             </p>
           </section>
@@ -51,7 +51,7 @@ export default function ContactPage() {
           <section className="mt-8 rounded-xl border border-border bg-accent/40 p-4">
             <h2 className="font-heading text-lg">Need a website, app, or custom software?</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              GlowMakeOver is built by <strong>TradeOrbit Global Pvt Ltd</strong>. If your business
+              SajDhajLo is built by <strong>TradeOrbit Global Pvt Ltd</strong>. If your business
               needs a website, mobile app, or custom software, you can reach out to the same team
               using the details above.
             </p>

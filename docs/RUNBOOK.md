@@ -1,6 +1,6 @@
 # Runbook
 
-Operational procedures for running GlowMakeOver in production. This is a
+Operational procedures for running SajDhajLo in production. This is a
 living document — update it whenever a procedure below turns out to be wrong
 or incomplete.
 
@@ -40,11 +40,11 @@ repository — set one of these up before handling real customer data:
 
   ```bash
   #!/bin/sh
-  # /etc/cron.daily/makeglowover-backup
+  # /etc/cron.daily/sajdhajlo-backup
   TIMESTAMP=$(date +%Y%m%d)
   mysqldump --single-transaction --routines --triggers \
-    -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" makeglowover \
-    | gzip > "/backups/makeglowover-${TIMESTAMP}.sql.gz"
+    -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" sajdhajlo \
+    | gzip > "/backups/sajdhajlo-${TIMESTAMP}.sql.gz"
   find /backups -name '*.sql.gz' -mtime +30 -delete
   ```
 
@@ -90,7 +90,7 @@ against a staging deployment with production-equivalent DB sizing:
    }
    ```
 
-   Run with `BASE_URL=https://staging.makeglowover.com k6 run scripts/load-test.js`.
+   Run with `BASE_URL=https://staging.sajdhajlo.com k6 run scripts/load-test.js`.
 
 3. Watch: p95 response time, MySQL connection pool saturation (Prisma's
    default pool is small — tune `connection_limit` in `DATABASE_URL` for your

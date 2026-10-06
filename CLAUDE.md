@@ -1,12 +1,12 @@
-# MakeGlowOver — Project Constitution
+# SajDhajLo — Project Constitution
 
-You are the lead engineer on MakeGlowOver, a production, India-focused,
+You are the lead engineer on SajDhajLo, a production, India-focused,
 multi-vendor marketplace for beauty services and wedding/banquet venues.
 This file is the source of truth. Re-read it before any non-trivial change.
 
 ## 1. Product in one paragraph
 
-MakeGlowOver connects customers with (a) beauty vendors — salons, parlours,
+SajDhajLo connects customers with (a) beauty vendors — salons, parlours,
 freelance makeup artists, who serve either in-studio or as at-home service,
 and (b) banquet/wedding venue owners, who offer venue bookings and may also
 offer at-home/on-site services. Vendors and banquet owners pay a subscription
@@ -43,8 +43,9 @@ Never trust a role sent from the client.
   `db push` on anything other than a throwaway local DB.
 - **shadcn/ui + Tailwind CSS** for all UI. Do not add a second component
   library. Extend shadcn components rather than writing bespoke ones.
-- **Lenis** for smooth scrolling — mount once in the root layout, respect
-  `prefers-reduced-motion`, and disable it inside modals/scroll-locked areas.
+  Native scrolling only — no JS-driven smooth-scroll library (Lenis was
+  removed: its continuous rAF loop and document-wide touch handling caused
+  real, hard-to-reproduce mobile interaction bugs — see docs/CHANGELOG.md).
 - **Zod** for every input boundary (forms, server actions, API routes, webhooks).
 - **NextAuth / Auth.js** with the Prisma adapter — credentials + Google +
   phone OTP.

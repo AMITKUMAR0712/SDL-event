@@ -6,7 +6,6 @@ import { Fraunces, Inter } from "next/font/google";
 import { SessionProvider } from "@/components/shared/session-provider";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
-import { SmoothScrollProvider } from "@/components/shared/smooth-scroll-provider";
 import { WhatsAppFloatButton } from "@/components/shared/whatsapp-float-button";
 import { env } from "@/lib/env";
 import { getHeaderSearchOptions } from "@/server/repositories/catalog";
@@ -26,8 +25,8 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   title: {
-    template: "%s | GlowMakeOver",
-    default: "GlowMakeOver — Beauty Parlour & Banquet Bookings Near You",
+    template: "%s | SajDhajLo",
+    default: "SajDhajLo — Beauty Parlour & Banquet Bookings Near You",
   },
   description:
     "Find and book trusted beauty parlours and banquets for weddings & parties near you, anywhere in India.",
@@ -57,7 +56,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <SessionProvider>
           <SiteHeader cities={cities} categories={categories} />
-          <SmoothScrollProvider>{children}</SmoothScrollProvider>
+          {children}
         </SessionProvider>
         <SiteFooter />
         <WhatsAppFloatButton />

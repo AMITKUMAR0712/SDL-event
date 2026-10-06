@@ -36,7 +36,7 @@ export function PayNowButton({ bookingId }: { bookingId: string }) {
       amount: order.data.amountPaise,
       currency: "INR",
       order_id: order.data.orderId,
-      name: "GlowMakeOver",
+      name: "SajDhajLo",
       description: "Booking payment",
       handler: async (response) => {
         const verified = await verifyBookingPaymentAction(

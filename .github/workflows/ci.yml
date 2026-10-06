@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  DATABASE_URL: "mysql://root:root@127.0.0.1:3306/makeglowover_test"
+  DATABASE_URL: "mysql://root:root@127.0.0.1:3306/sajdhajlo_test"
   NEXT_PUBLIC_APP_URL: "http://localhost:3000"
   AUTH_SECRET: "ci-only-secret-not-used-in-prod"
 
@@ -20,7 +20,7 @@ jobs:
         image: mysql:8
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: makeglowover_test
+          MYSQL_DATABASE: sajdhajlo_test
         ports:
           - 3306:3306
         options: >-

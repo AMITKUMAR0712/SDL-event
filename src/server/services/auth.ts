@@ -181,7 +181,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
   const resetUrl = `${env.NEXT_PUBLIC_APP_URL}/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
   await sendEmail({
     to: email,
-    subject: "Reset your GlowMakeOver password",
+    subject: "Reset your SajDhajLo password",
     html: `<p>Click the link below to reset your password. This link expires in ${PASSWORD_RESET_TTL_MINUTES} minutes.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
   });
 

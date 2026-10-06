@@ -25,7 +25,7 @@ export async function generateMetadata(props: PageProps<"/vendor/[slug]">): Prom
   const title = pageTitle(`${vendor.businessName} — ${vendor.city.name}`);
   const description = pageDescription(
     vendor.about ??
-      `Book ${vendor.businessName} in ${vendor.city.name} on GlowMakeOver — ratings, pricing, and instant booking.`,
+      `Book ${vendor.businessName} in ${vendor.city.name} on SajDhajLo — ratings, pricing, and instant booking.`,
   );
 
   return {

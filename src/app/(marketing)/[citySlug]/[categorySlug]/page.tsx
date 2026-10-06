@@ -36,7 +36,7 @@ export async function generateMetadata(
 
   const title = pageTitle(`${category.name} in ${city.name} — Compare & Book`);
   const description = pageDescription(
-    `Compare verified ${category.name.toLowerCase()} in ${city.name} on GlowMakeOver. ` +
+    `Compare verified ${category.name.toLowerCase()} in ${city.name} on SajDhajLo. ` +
       `Real ratings, transparent pricing, and instant booking.`,
   );
 

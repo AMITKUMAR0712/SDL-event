@@ -41,7 +41,7 @@ const envSchema = z.object({
 
   // Email
   RESEND_API_KEY: z.string().optional().default(""),
-  EMAIL_FROM: z.string().optional().default("GlowMakeOver <no-reply@makeglowover.com>"),
+  EMAIL_FROM: z.string().optional().default("SajDhajLo <no-reply@sajdhajlo.com>"),
   // Gmail SMTP fallback (used when RESEND_API_KEY isn't set) — an "app
   // password" from the Gmail account's security settings, not the account
   // password itself.

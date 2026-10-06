@@ -1,4 +1,4 @@
-# MakeGlowOver
+# SajDhajLo
 
 India-focused, multi-vendor marketplace for beauty services and wedding/banquet venues.
 

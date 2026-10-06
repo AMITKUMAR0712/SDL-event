@@ -22,7 +22,7 @@ export async function generateMetadata(props: PageProps<"/banquet/[slug]">): Pro
   const title = pageTitle(`${banquet.venueName} — ${banquet.city.name}`);
   const description = pageDescription(
     banquet.about ??
-      `Book ${banquet.venueName} in ${banquet.city.name} on GlowMakeOver — halls, pricing, and availability.`,
+      `Book ${banquet.venueName} in ${banquet.city.name} on SajDhajLo — halls, pricing, and availability.`,
   );
 
   return {

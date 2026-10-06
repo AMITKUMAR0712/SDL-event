@@ -1,4 +1,4 @@
-// MakeGlowOver — Prisma schema (Phase 1: full data model).
+// SajDhajLo — Prisma schema (Phase 1: full data model).
 //
 // Conventions used throughout this file:
 // - Money is always Int paise (see CLAUDE.md §4.2) — never Float, never Decimal.
