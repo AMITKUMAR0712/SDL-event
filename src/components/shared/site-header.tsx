@@ -102,10 +102,10 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-3">
+      <div className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-3 md:grid md:grid-cols-[1fr_auto_1fr]">
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-80"
+          className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-80 md:justify-self-start"
         >
           <Image
             src="/SajDhajLO_icon_C8AA78.png"
@@ -118,7 +118,12 @@ export function SiteHeader() {
           <span className="font-heading text-xl font-semibold tracking-tight">SajDhajLo</span>
         </Link>
 
-        <nav className="hidden items-center gap-3 text-sm md:flex">
+        {/* grid-cols-[1fr_auto_1fr] on the parent — this column is exactly as
+            wide as its content, with the equal 1fr side columns doing the
+            centering, so the group stays centered no matter how wide the
+            logo or auth links are (unlike text-align/margin tricks, which
+            only center relative to leftover space). */}
+        <nav className="hidden items-center justify-center gap-3 text-sm md:flex">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className={navLinkClass(pathname === link.href)}>
               {link.label}
@@ -126,7 +131,9 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <nav className="ml-auto hidden items-center gap-3 text-sm md:flex">{authLinks}</nav>
+        <nav className="hidden items-center justify-end gap-3 text-sm md:flex md:justify-self-end">
+          {authLinks}
+        </nav>
 
         <button
           type="button"

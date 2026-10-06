@@ -219,7 +219,7 @@ export default async function HomePage() {
       </section>
 
       {/* For customers / For vendors */}
-      <section className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-6 px-6 pb-16 md:grid-cols-2">
+      <section className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-6 px-6 py-16 md:grid-cols-2">
         <Card className="h-full">
           <CardContent className="flex h-full flex-col p-8">
             <Scissors className="size-8 text-primary" aria-hidden="true" />
