@@ -1,8 +1,10 @@
 "use client";
 
+import { cn } from "cn";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 
@@ -24,8 +26,17 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact Us" },
 ] as const;
 
-const NAV_LINK_CLASS =
-  "relative py-1 text-muted-foreground transition-colors hover:text-foreground after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:scale-x-0 after:bg-primary after:transition-transform after:duration-200 hover:after:scale-x-100";
+// Every link gets identical padding/radius/weight so the group reads as one
+// consistent row of buttons regardless of label length, rather than plain
+// text links of varying width.
+const NAV_LINK_BASE =
+  "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95";
+const NAV_LINK_INACTIVE = "text-muted-foreground hover:bg-accent hover:text-foreground";
+const NAV_LINK_ACTIVE = "bg-primary text-primary-foreground shadow-sm";
+
+function navLinkClass(active: boolean, className?: string) {
+  return cn(NAV_LINK_BASE, active ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE, className);
+}
 
 /**
  * Client-side on purpose: reading the session via `auth()` in a Server
@@ -38,6 +49,7 @@ const NAV_LINK_CLASS =
  */
 export function SiteHeader() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const dashboard = session?.user ? DASHBOARD_LINK[session.user.role] : undefined;
 
@@ -106,9 +118,9 @@ export function SiteHeader() {
           <span className="font-heading text-xl font-semibold tracking-tight">SajDhajLo</span>
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm md:flex">
+        <nav className="hidden items-center gap-1 text-sm md:flex">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className={NAV_LINK_CLASS}>
+            <Link key={link.href} href={link.href} className={navLinkClass(pathname === link.href)}>
               {link.label}
             </Link>
           ))}
@@ -137,7 +149,7 @@ export function SiteHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-lg px-2 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className={navLinkClass(pathname === link.href, "w-full justify-start")}
               onClick={() => setMenuOpen(false)}
             >
               {link.label}
