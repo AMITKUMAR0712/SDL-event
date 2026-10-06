@@ -1,3 +1,4 @@
+import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -126,7 +127,13 @@ export default async function VendorProfilePage(props: PageProps<"/vendor/[slug]
         </div>
       )}
 
-      <h1 className="mt-6 font-heading text-3xl">{vendor.businessName}</h1>
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <h1 className="font-heading text-3xl">{vendor.businessName}</h1>
+        <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+          <ShieldCheck className="size-3.5" aria-hidden="true" />
+          Verified
+        </span>
+      </div>
       <p className="text-muted-foreground">
         {vendor.locality?.name ? `${vendor.locality.name}, ` : ""}
         {vendor.city.name} · ★ {Number(vendor.ratingAvg).toFixed(1)} ({vendor.ratingCount} reviews)

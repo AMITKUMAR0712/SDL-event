@@ -16,12 +16,9 @@ import {
 export function QuickSearchForm({
   cities,
   categories,
-  compact = false,
 }: {
   cities: { slug: string; name: string }[];
   categories: { slug: string; name: string }[];
-  /** Smaller footprint for embedding in the navbar, vs. the full hero size. */
-  compact?: boolean;
 }) {
   const router = useRouter();
   // "" (not null/undefined) means "nothing selected" — Select must stay a
@@ -41,19 +38,10 @@ export function QuickSearchForm({
   return (
     <form
       onSubmit={onSubmit}
-      className={
-        compact
-          ? "flex w-full max-w-xl items-center gap-1 rounded-full border bg-card p-1 shadow-sm"
-          : "flex w-full max-w-2xl flex-col gap-2 rounded-2xl border bg-card p-2 shadow-sm sm:flex-row"
-      }
+      className="flex w-full max-w-2xl flex-col gap-2 rounded-2xl border bg-card p-2 shadow-sm sm:flex-row"
     >
       <Select value={city} onValueChange={(value) => setCity(value ?? "")}>
-        <SelectTrigger
-          size={compact ? "sm" : "default"}
-          className={
-            compact ? "flex-1 border-none shadow-none" : "w-full border-none shadow-none sm:flex-1"
-          }
-        >
+        <SelectTrigger className="w-full border-none shadow-none sm:flex-1">
           <SelectValue placeholder="City">
             {(value: string | null) => cities.find((c) => c.slug === value)?.name ?? "City"}
           </SelectValue>
@@ -68,12 +56,7 @@ export function QuickSearchForm({
       </Select>
 
       <Select value={category} onValueChange={(value) => setCategory(value ?? "")}>
-        <SelectTrigger
-          size={compact ? "sm" : "default"}
-          className={
-            compact ? "flex-1 border-none shadow-none" : "w-full border-none shadow-none sm:flex-1"
-          }
-        >
+        <SelectTrigger className="w-full border-none shadow-none sm:flex-1">
           <SelectValue placeholder="Service">
             {(value: string | null) => categories.find((c) => c.slug === value)?.name ?? "Service"}
           </SelectValue>
@@ -87,13 +70,9 @@ export function QuickSearchForm({
         </SelectContent>
       </Select>
 
-      <Button
-        type="submit"
-        size={compact ? "icon-sm" : "lg"}
-        className={compact ? "shrink-0 rounded-full" : "gap-2"}
-      >
+      <Button type="submit" size="lg" className="gap-2">
         <Search className="size-4" aria-hidden="true" />
-        {!compact && "Search"}
+        Search
       </Button>
     </form>
   );

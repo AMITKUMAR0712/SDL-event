@@ -8,7 +8,6 @@ import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
 import { WhatsAppFloatButton } from "@/components/shared/whatsapp-float-button";
 import { env } from "@/lib/env";
-import { getHeaderSearchOptions } from "@/server/repositories/catalog";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -35,9 +34,7 @@ export const metadata: Metadata = {
     : {}),
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { cities, categories } = await getHeaderSearchOptions();
-
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
@@ -55,7 +52,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <SessionProvider>
-          <SiteHeader cities={cities} categories={categories} />
+          <SiteHeader />
           {children}
         </SessionProvider>
         <SiteFooter />

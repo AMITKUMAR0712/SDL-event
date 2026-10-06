@@ -1,3 +1,4 @@
+import { ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -33,7 +34,16 @@ export function ListingGrid({
                 </div>
               )}
               <CardContent className="p-4">
-                <p className="font-medium">{item.name}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">{item.name}</p>
+                  {/* Every listing here is published, which only happens once KYC is
+                      approved and a subscription payment has actually captured — so
+                      this badge is simply stating a fact, not a marketing flourish. */}
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    <ShieldCheck className="size-3.5" aria-hidden="true" />
+                    Verified
+                  </span>
+                </div>
                 <p className="text-sm text-muted-foreground">{item.cityName}</p>
                 <p className="text-sm">
                   ★ {item.ratingAvg.toFixed(1)} ({item.ratingCount})
