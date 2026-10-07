@@ -9,7 +9,7 @@ test("customer can find a vendor via search and request a booking", async ({ bro
   await customerPage.goto("/register");
   await customerPage.getByLabel("Full name").fill("E2E Booking Customer");
   await customerPage.getByLabel("Email").fill(customerEmail);
-  await customerPage.getByLabel("Password").fill("Password123");
+  await customerPage.getByLabel("Password", { exact: true }).fill("Password123");
   await customerPage.getByRole("button", { name: "Create account" }).click();
   await expect(customerPage).toHaveURL("http://localhost:3000/", { timeout: 15_000 });
 

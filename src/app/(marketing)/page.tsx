@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { AnimatedCounter } from "@/components/shared/animated-counter";
 import { HeroCarousel } from "@/components/shared/hero-carousel";
 import { QuickSearchForm } from "@/components/shared/quick-search-form";
 import { buttonVariants } from "@/components/ui/button";
@@ -24,6 +25,11 @@ import {
   listActiveCities,
   listActivePlansWithFeatures,
 } from "@/server/repositories/catalog";
+
+// Short instead of the usual hour-long ISR window: the hero's Cities/Verified
+// vendors/Banquets counts should reflect a vendor or banquet going live
+// within moments, not sit stale for up to an hour.
+export const revalidate = 30;
 
 const PERIOD_LABEL: Record<string, string> = {
   MONTHLY: "per month",
@@ -128,15 +134,21 @@ export default async function HomePage() {
             <dl className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
               <div>
                 <dt className="text-sm text-muted-foreground">Cities</dt>
-                <dd className="font-heading text-2xl">{stats.cities}+</dd>
+                <dd className="font-heading text-2xl">
+                  <AnimatedCounter target={stats.cities} />+
+                </dd>
               </div>
               <div>
                 <dt className="text-sm text-muted-foreground">Verified vendors</dt>
-                <dd className="font-heading text-2xl">{stats.vendors}+</dd>
+                <dd className="font-heading text-2xl">
+                  <AnimatedCounter target={stats.vendors} />+
+                </dd>
               </div>
               <div>
                 <dt className="text-sm text-muted-foreground">Banquets</dt>
-                <dd className="font-heading text-2xl">{stats.banquets}+</dd>
+                <dd className="font-heading text-2xl">
+                  <AnimatedCounter target={stats.banquets} />+
+                </dd>
               </div>
             </dl>
           )}

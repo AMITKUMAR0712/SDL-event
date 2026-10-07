@@ -14,7 +14,7 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
   await page.getByRole("option", { name: "Beauty Parlour / Salon Owner" }).click();
   await page.getByLabel("Full name").fill("E2E Test Vendor");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill("Password123");
+  await page.getByLabel("Password", { exact: true }).fill("Password123");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/dashboard\/vendor\/onboarding$/, { timeout: 15_000 });
 
@@ -78,7 +78,7 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
   await page.getByRole("option", { name: "Banquet Owner (Weddings & Parties)" }).click();
   await page.getByLabel("Full name").fill("E2E Test Banquet Owner");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill("Password123");
+  await page.getByLabel("Password", { exact: true }).fill("Password123");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/dashboard\/banquet\/onboarding$/, { timeout: 15_000 });
 
