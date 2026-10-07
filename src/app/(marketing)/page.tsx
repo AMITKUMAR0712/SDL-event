@@ -14,6 +14,7 @@ import Link from "next/link";
 
 import { AnimatedCounter } from "@/components/shared/animated-counter";
 import { HeroCarousel } from "@/components/shared/hero-carousel";
+import { PopularCitiesGrid } from "@/components/shared/popular-cities-grid";
 import { QuickSearchForm } from "@/components/shared/quick-search-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +31,32 @@ import {
 // vendors/Banquets counts should reflect a vendor or banquet going live
 // within moments, not sit stale for up to an hour.
 export const revalidate = 30;
+
+// NCR + other major metros surface first in "Popular cities" instead of
+// whatever sorts first alphabetically (Agartala, Agra, ...) — these are the
+// cities most visitors are actually searching for.
+const PRIORITY_CITY_SLUGS = [
+  "new-delhi",
+  "noida",
+  "greater-noida",
+  "ghaziabad",
+  "gurugram",
+  "faridabad",
+  "mumbai",
+  "bengaluru",
+  "hyderabad",
+  "chennai",
+  "kolkata",
+  "pune",
+] as const;
+
+function sortCitiesByPriority<T extends { slug: string }>(cities: T[]): T[] {
+  const rank = (slug: string) => {
+    const i = PRIORITY_CITY_SLUGS.indexOf(slug as (typeof PRIORITY_CITY_SLUGS)[number]);
+    return i === -1 ? PRIORITY_CITY_SLUGS.length : i;
+  };
+  return [...cities].sort((a, b) => rank(a.slug) - rank(b.slug));
+}
 
 const PERIOD_LABEL: Record<string, string> = {
   MONTHLY: "per month",
@@ -298,32 +325,7 @@ export default async function HomePage() {
             <MapPin className="size-5 text-primary" aria-hidden="true" />
             Popular cities
           </h2>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {cities.slice(0, 12).map((city) => (
-              <Link
-                key={city.slug}
-                href={`/${city.slug}`}
-                className="group overflow-hidden rounded-xl border hover:border-primary"
-              >
-                <div className="relative h-20 w-full bg-accent">
-                  {city.imageUrl ? (
-                    // Admin-provided URLs aren't on next/image's allowed-host list.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={city.imageUrl}
-                      alt={city.name}
-                      className="size-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex size-full items-center justify-center">
-                      <MapPin className="size-6 text-muted-foreground" aria-hidden="true" />
-                    </div>
-                  )}
-                </div>
-                <p className="p-2 text-center text-sm font-medium">{city.name}</p>
-              </Link>
-            ))}
-          </div>
+          <PopularCitiesGrid cities={sortCitiesByPriority(cities)} />
         </section>
       )}
 
