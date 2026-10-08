@@ -41,7 +41,14 @@ export async function uploadToCloudinary(
   }
 
   if (!response.ok) {
-    return { ok: false, error: `Upload failed (${response.status}). Please try again.` };
+    let message = `status ${response.status}`;
+    try {
+      const body: { error?: { message?: string } } = await response.json();
+      if (body.error?.message) message = body.error.message;
+    } catch {
+      // response body wasn't JSON — fall back to the bare status
+    }
+    return { ok: false, error: `Upload failed: ${message}` };
   }
 
   const data: { public_id: string } = await response.json();
