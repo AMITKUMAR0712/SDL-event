@@ -48,6 +48,10 @@ next-env.d.ts
 # prisma
 /prisma/dev.db
 
+# local-disk uploads (see src/server/actions/upload.ts — not real object
+# storage, just a dev/demo stand-in; never belongs in git)
+/public/uploads/
+
 # Claude Code runtime state (not project source)
 /.claude/
 

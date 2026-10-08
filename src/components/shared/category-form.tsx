@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ImageUploadField } from "@/components/shared/image-upload-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,11 +129,7 @@ export function CategoryForm({ category, onDone }: { category?: Category; onDone
           Active
         </label>
       </div>
-      <Input
-        placeholder="Image URL (shown on the home page)"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-      />
+      <ImageUploadField value={imageUrl} onChange={setImageUrl} label="Category image" />
       <Input
         placeholder="SEO title"
         value={seoTitle}

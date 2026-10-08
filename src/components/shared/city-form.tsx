@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ImageUploadField } from "@/components/shared/image-upload-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -144,11 +145,7 @@ export function CityForm({
           onChange={(e) => setLng(e.target.value)}
         />
       </div>
-      <Input
-        placeholder="Image URL (shown on the home page)"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-      />
+      <ImageUploadField value={imageUrl} onChange={setImageUrl} label="City image" />
       <Input
         placeholder="SEO title"
         value={seoTitle}
