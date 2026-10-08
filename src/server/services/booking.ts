@@ -10,6 +10,7 @@ import {
   updateBookingStatus,
 } from "@/server/repositories/booking";
 import { getSetting } from "@/server/repositories/settings";
+import { createGuestCustomerWithPhone, findUserByPhone } from "@/server/repositories/user";
 import {
   allowedNextStatuses,
   BookingActor,
@@ -24,6 +25,34 @@ import { generateSlots } from "@/server/services/slots";
 import { creditBookingEarning } from "@/server/services/wallet";
 
 const GST_PERCENT_DEFAULT = 18;
+
+/**
+ * Guest checkout: a signed-in customer books as themselves; a guest is
+ * matched to a CUSTOMER account by the phone number they typed into the
+ * booking form (created on the spot if it doesn't exist yet), same identity
+ * the phone-OTP login flow would land them on. No OTP step here, so this
+ * never marks the phone verified — see createGuestCustomerWithPhone.
+ */
+export async function resolveBookingCustomerId(
+  sessionUser: { id: string; role: string } | undefined,
+  contactPhone: string,
+): Promise<string> {
+  if (sessionUser?.role === "CUSTOMER") return sessionUser.id;
+
+  const existing = await findUserByPhone(contactPhone);
+  if (existing) return existing.id;
+
+  try {
+    const created = await createGuestCustomerWithPhone(contactPhone);
+    return created.id;
+  } catch {
+    // Unique-constraint race: another request created the same phone
+    // between our lookup and our insert — fall back to it.
+    const raceWinner = await findUserByPhone(contactPhone);
+    if (raceWinner) return raceWinner.id;
+    throw new Error("Could not resolve a customer for this booking.");
+  }
+}
 
 export async function getAvailableSlots(
   ownerType: "VENDOR" | "BANQUET",

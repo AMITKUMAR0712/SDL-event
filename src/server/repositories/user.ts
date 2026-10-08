@@ -18,6 +18,13 @@ export function createCustomerWithPhone(phone: string, name?: string) {
   });
 }
 
+/** Guest checkout: the phone number typed into a booking form hasn't been
+ * through an OTP step, so — unlike createCustomerWithPhone, used after a
+ * real OTP verification — this must NOT set phoneVerifiedAt. */
+export function createGuestCustomerWithPhone(phone: string) {
+  return db.user.create({ data: { phone, role: "CUSTOMER" } });
+}
+
 export function createUserWithPassword(input: {
   name: string;
   email: string;

@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/lib/auth";
 import { requireOwnership, requireRole } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
@@ -13,6 +14,7 @@ import { findBookingById } from "@/server/repositories/booking";
 import {
   createBeautyBooking,
   createVenueEnquiry,
+  resolveBookingCustomerId,
   transitionBooking,
 } from "@/server/services/booking";
 import type { BookingStatus } from "@/server/services/booking-status";
@@ -23,30 +25,27 @@ import {
 } from "@/server/services/service-start-otp";
 
 // These two are reachable from public, guest-visible pages (vendor/banquet
-// profiles), unlike every other action in this file which only renders
-// behind an already-role-gated dashboard/account page — so a plain
-// UnauthorizedError from requireRole is a real, expected case here and
-// needs to become a friendly message rather than an unhandled 500.
+// profiles) and deliberately allow guest checkout — a signed-in CUSTOMER
+// books as themselves, anyone else (including a VENDOR/BANQUET_OWNER
+// browsing while logged into their own account) is matched to a CUSTOMER
+// record by the phone number the booking form itself already collects. See
+// resolveBookingCustomerId.
 export async function createBeautyBookingAction(
   input: unknown,
 ): Promise<ActionResult<{ bookingId: string; bookingNo: string }>> {
-  let session;
-  try {
-    session = await requireRole(["CUSTOMER"]);
-  } catch {
-    return { ok: false, error: "Sign in as a customer to book." };
-  }
-
-  const limit = await rateLimit(`booking-create:${session.user.id}`, 10, 60 * 60);
-  if (!limit.allowed) {
-    return { ok: false, error: "Too many booking attempts. Try again later." };
-  }
-
   const parsed = createBeautyBookingSchema.safeParse(input);
   if (!parsed.success)
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
-  const result = await createBeautyBooking({ ...parsed.data, customerId: session.user.id });
+  const session = await auth();
+  const customerId = await resolveBookingCustomerId(session?.user, parsed.data.contactPhone);
+
+  const limit = await rateLimit(`booking-create:${customerId}`, 10, 60 * 60);
+  if (!limit.allowed) {
+    return { ok: false, error: "Too many booking attempts. Try again later." };
+  }
+
+  const result = await createBeautyBooking({ ...parsed.data, customerId });
   if (!result.ok) {
     const messages: Record<string, string> = {
       VENDOR_NOT_FOUND: "This vendor is no longer available.",
@@ -64,23 +63,19 @@ export async function createBeautyBookingAction(
 export async function createVenueEnquiryAction(
   input: unknown,
 ): Promise<ActionResult<{ bookingId: string; bookingNo: string }>> {
-  let session;
-  try {
-    session = await requireRole(["CUSTOMER"]);
-  } catch {
-    return { ok: false, error: "Sign in as a customer to send an enquiry." };
-  }
-
-  const limit = await rateLimit(`booking-create:${session.user.id}`, 10, 60 * 60);
-  if (!limit.allowed) {
-    return { ok: false, error: "Too many booking attempts. Try again later." };
-  }
-
   const parsed = createVenueEnquirySchema.safeParse(input);
   if (!parsed.success)
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
-  const result = await createVenueEnquiry({ ...parsed.data, customerId: session.user.id });
+  const session = await auth();
+  const customerId = await resolveBookingCustomerId(session?.user, parsed.data.contactPhone);
+
+  const limit = await rateLimit(`booking-create:${customerId}`, 10, 60 * 60);
+  if (!limit.allowed) {
+    return { ok: false, error: "Too many booking attempts. Try again later." };
+  }
+
+  const result = await createVenueEnquiry({ ...parsed.data, customerId });
   if (!result.ok) return { ok: false, error: "This venue is no longer available." };
   return { ok: true, data: { bookingId: result.bookingId, bookingNo: result.bookingNo } };
 }
