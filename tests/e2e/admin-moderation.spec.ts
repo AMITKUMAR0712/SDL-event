@@ -68,5 +68,5 @@ test("admin can bulk-delete users and cancel a booking", async ({ page, browser 
   await expect(bookingRow.getByText("PENDING")).toBeVisible();
   await bookingRow.getByRole("button", { name: "Cancel" }).click();
   await expect(bookingRow.getByText("CANCELLED")).toBeVisible({ timeout: 10_000 });
-  await expect(bookingRow.getByRole("button", { name: "Cancel" })).toHaveCount(0);
+  await expect(bookingRow.getByRole("button", { name: "Cancel" })).toBeDisabled();
 });
