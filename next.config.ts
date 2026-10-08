@@ -18,6 +18,11 @@ const csp = [
   `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https: blob:",
+  // Explicit, not left to the default-src fallback — scoped to our own
+  // origin plus Cloudinary (the configured media store), not arbitrary
+  // https: hosts, so an admin pasting a random third-party URL into a
+  // video field still gets blocked rather than silently trusted.
+  "media-src 'self' https://res.cloudinary.com",
   "font-src 'self' data:",
   `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
   "frame-src 'self' https://api.razorpay.com",
