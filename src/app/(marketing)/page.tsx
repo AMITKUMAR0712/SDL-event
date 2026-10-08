@@ -122,12 +122,12 @@ export default async function HomePage() {
             .map((c) => ({ url: categoryPhotoUrl(c.slug, 0), alt: c.name }))}
         />
 
-        <div className="flex flex-col items-center gap-4 px-6 py-10 text-center sm:gap-6 sm:py-24">
+        <div className="flex flex-col items-center gap-2 px-6 py-4 text-center sm:gap-4 sm:py-10">
           <p className="flex items-center gap-2 text-sm font-medium tracking-wide text-primary uppercase">
             <Sparkles className="size-4" aria-hidden="true" />
             Beauty Parlour & Banquets, near you
           </p>
-          <h1 className="max-w-2xl font-hero text-3xl leading-tight font-bold tracking-tight text-balance sm:text-5xl md:text-6xl">
+          <h1 className="max-w-2xl font-hero text-2xl leading-tight font-bold tracking-tight text-balance sm:text-5xl md:text-6xl">
             Find and book trusted beauty parlours and banquets for weddings & parties across India
           </h1>
           <p className="max-w-xl text-base text-muted-foreground text-balance sm:text-lg">
@@ -159,7 +159,7 @@ export default async function HomePage() {
           </div>
 
           {(stats.cities > 0 || stats.vendors > 0 || stats.banquets > 0) && (
-            <dl className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+            <dl className="flex flex-wrap items-center justify-center gap-x-10 gap-y-2 sm:mt-6">
               <div>
                 <dt className="text-sm text-muted-foreground">Cities</dt>
                 <dd className="font-heading text-2xl">
