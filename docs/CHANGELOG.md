@@ -618,3 +618,36 @@ introContent` (20 rows) and the three `SubscriptionPlan.name` values ("MakeGlowO
    `makeglowover`, and sign in as `admin@sajdhajlo.com` / `AdminPass123`.
 4. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green (63 tests). Full Playwright
    e2e suite (8 tests) green on a clean server.
+
+## Guest checkout + admin local image upload with compression
+
+- **Guest checkout**: booking a vendor or sending a venue enquiry no longer requires signing in.
+  A guest is matched to a `CUSTOMER` account by the phone number typed into the booking form
+  (`resolveBookingCustomerId` in `src/server/services/booking.ts`), created on the spot via the
+  new `createGuestCustomerWithPhone` repository function if that phone hasn't been seen before —
+  the same identity the phone-OTP login flow would land them on. Unlike the OTP flow, a
+  guest-created account's phone is **not** marked verified (no OTP step happened). A signed-in
+  customer still books as themselves, unaffected. Covered by a new integration test,
+  `tests/integration/guest-booking.test.ts`.
+- **Admin local image upload**: the city and category admin forms now have an "Upload from
+  device" button (`src/components/shared/image-upload-field.tsx`) alongside the existing
+  image-URL field, going through a new `uploadImageAction` (`src/server/actions/upload.ts`).
+  Every upload is auto-compressed as hard as reasonably possible — resized to a 1600px long edge,
+  re-encoded as WebP at quality 60, EXIF stripped — via the newly added `sharp` dependency.
+  Storage is local disk (`/public/uploads`, gitignored) for now; flagged in code as needing to
+  move to Cloudinary/S3 before production, since local files don't survive a serverless
+  redeploy.
+
+### Manual smoke test
+
+1. Without signing in, open a vendor or banquet profile page and submit a booking/enquiry with a
+   phone number that has never been used before — confirm it succeeds and a `CUSTOMER` user with
+   that phone, unverified, now exists. Submit again with the same phone — confirm it reuses the
+   same account rather than creating a duplicate.
+2. As admin, open Cities or Categories, click "Upload from device" on a city/category form, and
+   pick an image file — confirm a preview thumbnail appears, the field fills with a
+   `/uploads/<uuid>.webp` path, and the saved file in `public/uploads` is small (WebP, ≤1600px).
+3. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green (67 tests). Playwright e2e
+   (8 tests): 6 pass; the 2 onboarding tests fail only on the pre-existing, unrelated live
+   Razorpay checkout step (`.env`'s Razorpay keys are not valid for live order creation in this
+   environment) — not a regression from this phase.
