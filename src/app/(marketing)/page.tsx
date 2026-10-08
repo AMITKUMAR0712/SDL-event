@@ -127,7 +127,7 @@ export default async function HomePage() {
             <Sparkles className="size-4" aria-hidden="true" />
             Beauty Parlour & Banquets, near you
           </p>
-          <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
+          <h1 className="max-w-2xl font-hero text-2xl leading-tight tracking-tight text-balance sm:text-4xl md:text-5xl">
             Find and book trusted beauty parlours and banquets for weddings & parties across India
           </h1>
           <p className="max-w-xl text-base text-muted-foreground text-balance sm:text-lg">
