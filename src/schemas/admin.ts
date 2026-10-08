@@ -15,6 +15,11 @@ export type CouponAdminInput = z.infer<typeof couponAdminSchema>;
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+// Accepts a full URL (Cloudinary/S3, once wired up) or a site-relative path
+// like /uploads/<id>.webp (the local-disk upload stand-in — see
+// src/server/actions/upload.ts), since z.url() alone rejects relative paths.
+const imageUrlSchema = z.union([z.url(), z.string().regex(/^\/\S+$/), z.literal("")]).optional();
+
 export const cityAdminSchema = z.object({
   name: z.string().min(2),
   slug: z.string().regex(slugPattern, "Lowercase letters, numbers, and hyphens only"),
@@ -22,7 +27,7 @@ export const cityAdminSchema = z.object({
   lat: z.coerce.number(),
   lng: z.coerce.number(),
   isActive: z.coerce.boolean().default(true),
-  imageUrl: z.union([z.url(), z.literal("")]).optional(),
+  imageUrl: imageUrlSchema,
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   introContent: z.string().optional(),
@@ -35,7 +40,7 @@ export const categoryAdminSchema = z.object({
   type: z.enum(["BEAUTY", "BANQUET"]),
   isActive: z.coerce.boolean().default(true),
   sortOrder: z.coerce.number().int().default(0),
-  imageUrl: z.union([z.url(), z.literal("")]).optional(),
+  imageUrl: imageUrlSchema,
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   longDescription: z.string().optional(),

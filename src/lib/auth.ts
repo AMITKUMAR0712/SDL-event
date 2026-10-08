@@ -85,6 +85,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    // Credentials providers already reject a deleted/disabled account inside
+    // authorize() (see authenticateWithPassword/verifyPhoneOtpLogin) — this
+    // is the backstop for Google, which bypasses authorize() entirely.
+    async signIn({ user }) {
+      if (!user.id) return true;
+      const record = await db.user.findUnique({
+        where: { id: user.id },
+        select: { deletedAt: true, status: true },
+      });
+      if (!record) return true; // brand-new account being created by the adapter
+      return !record.deletedAt && record.status === "ACTIVE";
+    },
     async jwt({ token, user, trigger }) {
       if (user) {
         token.role = user.role;

@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PlayCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -9,6 +10,13 @@ import { useForm } from "react-hook-form";
 import { PlanPicker, type PlanPickerPlan } from "@/components/shared/plan-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -40,6 +48,7 @@ type Props = {
   plans: PlanPickerPlan[];
   accountName: string | null;
   accountEmail: string | null;
+  guideVideoUrl: string | null;
 };
 
 export function VendorOnboardingWizard({
@@ -48,6 +57,7 @@ export function VendorOnboardingWizard({
   plans,
   accountName,
   accountEmail,
+  guideVideoUrl,
 }: Props) {
   const router = useRouter();
   const { update } = useSession();
@@ -155,6 +165,24 @@ export function VendorOnboardingWizard({
                 Setting up as {accountName ?? "your account"}
                 {accountEmail && ` (${accountEmail})`}.
               </p>
+            )}
+            {guideVideoUrl && (
+              <Dialog>
+                <DialogTrigger
+                  render={
+                    <Button type="button" variant="outline" size="sm">
+                      <PlayCircle className="size-4" aria-hidden="true" />
+                      How to register your business — watch video
+                    </Button>
+                  }
+                />
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>How to register your business</DialogTitle>
+                  </DialogHeader>
+                  <video src={guideVideoUrl} controls className="w-full rounded-lg" />
+                </DialogContent>
+              </Dialog>
             )}
             <FormField
               control={form.control}

@@ -6,13 +6,18 @@ import {
   listBeautyServiceCatalog,
   listCitiesForSelect,
 } from "@/server/repositories/catalog";
+import { getSetting } from "@/server/repositories/settings";
 
 export default async function VendorOnboardingPage() {
-  const [session, cities, serviceCatalog, plans] = await Promise.all([
+  const [session, cities, serviceCatalog, plans, guideVideo] = await Promise.all([
     auth(),
     listCitiesForSelect(),
     listBeautyServiceCatalog(),
     listActivePlansWithFeatures("VENDOR"),
+    getSetting<{ url: string; isActive: boolean }>("vendor_guide_video", {
+      url: "",
+      isActive: false,
+    }),
   ]);
 
   return (
@@ -29,6 +34,7 @@ export default async function VendorOnboardingPage() {
           plans={plans}
           accountName={session?.user.name ?? null}
           accountEmail={session?.user.email ?? null}
+          guideVideoUrl={guideVideo.isActive && guideVideo.url ? guideVideo.url : null}
         />
       </div>
     </main>

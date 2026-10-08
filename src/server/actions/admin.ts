@@ -13,6 +13,7 @@ import type { ActionResult } from "@/server/actions/auth";
 import {
   approveBanquetKyc,
   approveVendorKyc,
+  cancelBookingAsAdmin,
   createCategory,
   createCity,
   createPlan,
@@ -22,6 +23,7 @@ import {
   deleteContactMessage,
   deleteCoupon,
   deletePlan,
+  deleteUser,
   rejectBanquetKyc,
   rejectVendorKyc,
   setUserStatus,
@@ -86,6 +88,33 @@ export async function setUserStatusAction(
   const ctx = await adminContext();
   await setUserStatus(userId, status, ctx);
   return { ok: true, data: undefined };
+}
+
+const DELETE_USER_ERRORS: Record<string, string> = {
+  SELF: "You can't delete your own account.",
+  ADMIN_PROTECTED: "Admin accounts can't be deleted from this list.",
+  NOT_FOUND: "User not found.",
+};
+
+export async function deleteUserAction(userId: string): Promise<ActionResult> {
+  const ctx = await adminContext();
+  const result = await deleteUser(userId, ctx);
+  if (!result.ok) return { ok: false, error: DELETE_USER_ERRORS[result.reason] };
+  return { ok: true, data: undefined };
+}
+
+export async function deleteUsersAction(
+  userIds: string[],
+): Promise<ActionResult<{ deleted: number; skipped: number }>> {
+  const ctx = await adminContext();
+  let deleted = 0;
+  let skipped = 0;
+  for (const userId of userIds) {
+    const result = await deleteUser(userId, ctx);
+    if (result.ok) deleted++;
+    else skipped++;
+  }
+  return { ok: true, data: { deleted, skipped } };
 }
 
 export async function createPlatformCouponAction(input: unknown): Promise<ActionResult> {
@@ -207,4 +236,30 @@ export async function runSubscriptionExpirySweepAction(): Promise<ActionResult<{
   await adminContext();
   const count = await expireOverdueSubscriptions();
   return { ok: true, data: { count } };
+}
+
+const CANCEL_BOOKING_ERRORS: Record<string, string> = {
+  NOT_FOUND: "Booking not found.",
+  INVALID_TRANSITION: "That booking can't be cancelled from its current status.",
+};
+
+export async function cancelBookingAction(bookingId: string): Promise<ActionResult> {
+  const ctx = await adminContext();
+  const result = await cancelBookingAsAdmin(bookingId, ctx);
+  if (!result.ok) return { ok: false, error: CANCEL_BOOKING_ERRORS[result.reason] };
+  return { ok: true, data: undefined };
+}
+
+export async function cancelBookingsAction(
+  bookingIds: string[],
+): Promise<ActionResult<{ cancelled: number; skipped: number }>> {
+  const ctx = await adminContext();
+  let cancelled = 0;
+  let skipped = 0;
+  for (const bookingId of bookingIds) {
+    const result = await cancelBookingAsAdmin(bookingId, ctx);
+    if (result.ok) cancelled++;
+    else skipped++;
+  }
+  return { ok: true, data: { cancelled, skipped } };
 }

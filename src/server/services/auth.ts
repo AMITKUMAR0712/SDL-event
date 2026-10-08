@@ -65,7 +65,8 @@ type AuthContext = { ip?: string; userAgent?: string };
 export type PasswordAuthResult =
   | { ok: true; user: { id: string; name: string | null; email: string | null; role: string } }
   | { ok: false; reason: "INVALID_CREDENTIALS" }
-  | { ok: false; reason: "LOCKED"; lockedUntil: Date };
+  | { ok: false; reason: "LOCKED"; lockedUntil: Date }
+  | { ok: false; reason: "DISABLED" };
 
 export async function authenticateWithPassword(
   email: string,
@@ -76,6 +77,13 @@ export async function authenticateWithPassword(
 
   if (!user || !user.passwordHash) {
     return { ok: false, reason: "INVALID_CREDENTIALS" };
+  }
+
+  // Deleted (admin "delete user") or suspended/banned accounts must not be
+  // able to sign back in — deletedAt/status alone doing nothing at login
+  // would make those admin actions purely cosmetic.
+  if (user.deletedAt || user.status !== "ACTIVE") {
+    return { ok: false, reason: "DISABLED" };
   }
 
   if (user.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
@@ -134,7 +142,8 @@ export async function requestPhoneOtpLogin(phone: string): Promise<PhoneOtpReque
 
 export type PhoneOtpVerifyResult =
   | { ok: true; user: { id: string; name: string | null; phone: string | null; role: string } }
-  | { ok: false; reason: Exclude<Awaited<ReturnType<typeof verifyOtp>>, { ok: true }>["reason"] };
+  | { ok: false; reason: Exclude<Awaited<ReturnType<typeof verifyOtp>>, { ok: true }>["reason"] }
+  | { ok: false; reason: "DISABLED" };
 
 /** Verifies the OTP and finds-or-creates a CUSTOMER account for the phone number. */
 export async function verifyPhoneOtpLogin(
@@ -154,6 +163,11 @@ export async function verifyPhoneOtpLogin(
   }
 
   const existing = await findUserByPhone(phone);
+  // Deleted (admin "delete user") or suspended/banned accounts must not be
+  // able to sign back in via OTP either.
+  if (existing && (existing.deletedAt || existing.status !== "ACTIVE")) {
+    return { ok: false, reason: "DISABLED" };
+  }
   const user = existing ?? (await createCustomerWithPhone(phone, name));
 
   await logSecurityEvent({

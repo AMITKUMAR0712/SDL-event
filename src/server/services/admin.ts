@@ -9,6 +9,7 @@ import type {
   PlanAdminInput,
 } from "@/schemas/admin";
 import { HEADER_SEARCH_OPTIONS_TAG } from "@/server/repositories/catalog";
+import { transitionBooking } from "@/server/services/booking";
 import { notify } from "@/server/services/notification";
 import { notifySearchEnginesOfUpdate } from "@/server/services/search-engine-ping";
 
@@ -88,6 +89,14 @@ export async function rejectBanquetKyc(banquetId: string, ctx: AuditContext) {
   return after;
 }
 
+// Setting keys whose value is read by a statically-cached page, so a save
+// needs to bust that page's cache immediately rather than wait out its ISR
+// revalidate window.
+const SETTING_KEY_REVALIDATE_PATHS: Record<string, string[]> = {
+  popup_video: ["/"],
+  vendor_guide_video: ["/dashboard/vendor/onboarding"],
+};
+
 export async function updateSettingValue(key: string, value: unknown, ctx: AuditContext) {
   const before = await db.setting.findUnique({ where: { key } });
   const after = await db.setting.upsert({
@@ -96,6 +105,7 @@ export async function updateSettingValue(key: string, value: unknown, ctx: Audit
     update: { value: value as Prisma.InputJsonValue },
   });
   await logAdminAction(ctx, "setting.update", "Setting", key, before, after);
+  for (const path of SETTING_KEY_REVALIDATE_PATHS[key] ?? []) revalidatePath(path);
   return after;
 }
 
@@ -108,6 +118,29 @@ export async function setUserStatus(
   const after = await db.user.update({ where: { id: userId }, data: { status } });
   await logAdminAction(ctx, "user.status_change", "User", userId, before, after);
   return after;
+}
+
+export type DeleteUserResult =
+  { ok: true } | { ok: false; reason: "NOT_FOUND" | "SELF" | "ADMIN_PROTECTED" };
+
+/** Soft delete — the row stays (other tables reference it: bookings,
+ * reviews, audit log actor, etc.) but it's hidden from admin lists and,
+ * per the deletedAt/status check added to the login flow, can no longer
+ * sign in. Never lets an admin delete their own account or another admin
+ * through this bulk tool, to avoid an accidental lockout. */
+export async function deleteUser(userId: string, ctx: AuditContext): Promise<DeleteUserResult> {
+  if (userId === ctx.actorId) return { ok: false, reason: "SELF" };
+
+  const before = await db.user.findUnique({ where: { id: userId } });
+  if (!before || before.deletedAt) return { ok: false, reason: "NOT_FOUND" };
+  if (before.role === "ADMIN") return { ok: false, reason: "ADMIN_PROTECTED" };
+
+  const after = await db.user.update({
+    where: { id: userId },
+    data: { deletedAt: new Date(), status: "BANNED" },
+  });
+  await logAdminAction(ctx, "user.delete", "User", userId, before, after);
+  return { ok: true };
 }
 
 export async function updatePlatformCoupon(id: string, input: CouponAdminInput, ctx: AuditContext) {
@@ -130,6 +163,30 @@ export async function deleteCoupon(id: string, ctx: AuditContext) {
   });
   await logAdminAction(ctx, "coupon.delete", "Coupon", id, before, after);
   return after;
+}
+
+export type CancelBookingResult =
+  { ok: true } | { ok: false; reason: "NOT_FOUND" | "INVALID_TRANSITION" };
+
+/** Bookings are event-sourced and are never deleted (see the schema's
+ * top-of-file conventions comment) — a booking carries GST invoice history,
+ * so removing the row would be a record-keeping problem, not just a UI one.
+ * The admin-facing "delete" is really a forced cancellation, which already
+ * runs the normal refund-policy calculation; this just adds the audit log
+ * entry that admin mutations require. */
+export async function cancelBookingAsAdmin(
+  bookingId: string,
+  ctx: AuditContext,
+): Promise<CancelBookingResult> {
+  const before = await db.booking.findUnique({ where: { id: bookingId } });
+  if (!before) return { ok: false, reason: "NOT_FOUND" };
+
+  const result = await transitionBooking(bookingId, "CANCELLED", "ADMIN");
+  if (!result.ok) return result;
+
+  const after = await db.booking.findUnique({ where: { id: bookingId } });
+  await logAdminAction(ctx, "booking.cancel", "Booking", bookingId, before, after);
+  return { ok: true };
 }
 
 export async function createPlatformCoupon(
