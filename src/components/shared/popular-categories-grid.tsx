@@ -27,6 +27,8 @@ export function PopularCategoriesGrid({ categories }: { categories: Category[] }
                 <img
                   src={category.imageUrl}
                   alt={category.name}
+                  loading="lazy"
+                  decoding="async"
                   className="size-full object-cover transition-transform group-hover:scale-105"
                 />
               ) : (
