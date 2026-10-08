@@ -1,7 +1,7 @@
 import "./globals.css";
 
 import type { Metadata } from "next";
-import { Archivo_Black, Fraunces, Inter } from "next/font/google";
+import { Fraunces, Inter, Montserrat } from "next/font/google";
 import Script from "next/script";
 
 import { SessionProvider } from "@/components/shared/session-provider";
@@ -22,12 +22,10 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
-// Bold, geometric display face for the homepage hero headline only —
-// commercial-safe Google Fonts stand-in for the "Sessions" font (which is
-// personal-use-only licensed, not usable on a commercial site).
-const archivoBlack = Archivo_Black({
+// Bold display face for the homepage hero headline only.
+const montserrat = Montserrat({
   variable: "--font-hero",
-  weight: "400",
+  weight: ["700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -50,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${inter.variable} ${fraunces.variable} ${archivoBlack.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${montserrat.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
