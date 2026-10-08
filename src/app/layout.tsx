@@ -1,7 +1,7 @@
 import "./globals.css";
 
 import type { Metadata } from "next";
-import { Fraunces, Inter, Montserrat } from "next/font/google";
+import { EB_Garamond, Fraunces, Inter } from "next/font/google";
 import Script from "next/script";
 
 import { SessionProvider } from "@/components/shared/session-provider";
@@ -22,10 +22,10 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
-// Bold display face for the homepage hero headline only.
-const montserrat = Montserrat({
+// Display face for the homepage hero headline only.
+const garamond = EB_Garamond({
   variable: "--font-hero",
-  weight: ["700", "800"],
+  weight: ["500", "700"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -48,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${inter.variable} ${fraunces.variable} ${montserrat.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${garamond.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
