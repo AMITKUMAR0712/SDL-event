@@ -15,7 +15,10 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV !== "production";
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com${isDev ? " 'unsafe-eval'" : ""}`,
+  // www.googletagmanager.com: GTM + GA4 (src/app/layout.tsx) — without this
+  // those scripts are silently blocked rather than failing loudly, which is
+  // exactly what was happening before this line existed.
+  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https: blob:",
   // Explicit, not left to the default-src fallback — scoped to our own
@@ -24,8 +27,11 @@ const csp = [
   // video field still gets blocked rather than silently trusted.
   "media-src 'self' https://res.cloudinary.com",
   "font-src 'self' data:",
-  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
-  "frame-src 'self' https://api.razorpay.com",
+  // api.cloudinary.com: the admin-only direct browser-to-Cloudinary upload
+  // (src/lib/cloudinary-client-upload.ts) — keeps large video uploads off
+  // our own server instead of proxying the whole file through it.
+  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://api.cloudinary.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
+  "frame-src 'self' https://api.razorpay.com https://www.googletagmanager.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

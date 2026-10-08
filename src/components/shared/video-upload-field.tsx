@@ -4,7 +4,9 @@ import { Loader2, VideoIcon } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { Input } from "@/components/ui/input";
-import { uploadVideoAction } from "@/server/actions/upload";
+import { uploadToCloudinary } from "@/lib/cloudinary-client-upload";
+
+const VIDEO_MIME_TYPES = new Set(["video/mp4", "video/webm", "video/ogg", "video/quicktime"]);
 
 export function VideoUploadField({
   value,
@@ -20,17 +22,19 @@ export function VideoUploadField({
   const [error, setError] = useState<string | null>(null);
 
   async function handleFile(file: File) {
+    if (!VIDEO_MIME_TYPES.has(file.type)) {
+      setError("File must be an MP4, WebM, Ogg, or MOV video.");
+      return;
+    }
     setError(null);
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    const result = await uploadVideoAction(formData);
+    const result = await uploadToCloudinary(file, "video");
     setUploading(false);
     if (!result.ok) {
       setError(result.error);
       return;
     }
-    onChange(result.data.url);
+    onChange(result.url);
   }
 
   return (
