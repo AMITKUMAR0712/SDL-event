@@ -27,10 +27,7 @@ const csp = [
   // video field still gets blocked rather than silently trusted.
   "media-src 'self' https://res.cloudinary.com",
   "font-src 'self' data:",
-  // api.cloudinary.com: the admin-only direct browser-to-Cloudinary upload
-  // (src/lib/cloudinary-client-upload.ts) — keeps large video uploads off
-  // our own server instead of proxying the whole file through it.
-  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://api.cloudinary.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
+  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
   "frame-src 'self' https://api.razorpay.com https://www.googletagmanager.com",
   "object-src 'none'",
   "base-uri 'self'",

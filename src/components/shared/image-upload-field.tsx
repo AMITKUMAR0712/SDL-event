@@ -4,7 +4,7 @@ import { ImagePlus, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { Input } from "@/components/ui/input";
-import { uploadToCloudinary } from "@/lib/cloudinary-client-upload";
+import { uploadImageAction } from "@/server/actions/upload";
 
 export function ImageUploadField({
   value,
@@ -20,19 +20,17 @@ export function ImageUploadField({
   const [error, setError] = useState<string | null>(null);
 
   async function handleFile(file: File) {
-    if (!file.type.startsWith("image/")) {
-      setError("File must be an image.");
-      return;
-    }
     setError(null);
     setUploading(true);
-    const result = await uploadToCloudinary(file, "image");
+    const formData = new FormData();
+    formData.append("file", file);
+    const result = await uploadImageAction(formData);
     setUploading(false);
     if (!result.ok) {
       setError(result.error);
       return;
     }
-    onChange(result.url);
+    onChange(result.data.url);
   }
 
   return (
