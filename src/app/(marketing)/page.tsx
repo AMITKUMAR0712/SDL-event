@@ -14,6 +14,7 @@ import Link from "next/link";
 
 import { AnimatedCounter } from "@/components/shared/animated-counter";
 import { HeroCarousel } from "@/components/shared/hero-carousel";
+import { PopularCategoriesGrid } from "@/components/shared/popular-categories-grid";
 import { PopularCitiesGrid } from "@/components/shared/popular-cities-grid";
 import { QuickSearchForm } from "@/components/shared/quick-search-form";
 import { buttonVariants } from "@/components/ui/button";
@@ -335,31 +336,7 @@ export default async function HomePage() {
             <Sparkles className="size-5 text-primary" aria-hidden="true" />
             Popular categories
           </h2>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {categories.slice(0, 12).map((category) => (
-              <Link
-                key={category.slug}
-                href={`/categories/${category.slug}`}
-                className="group overflow-hidden rounded-xl border hover:border-primary"
-              >
-                <div className="relative h-20 w-full bg-accent">
-                  {category.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={category.imageUrl}
-                      alt={category.name}
-                      className="size-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex size-full items-center justify-center">
-                      <Sparkles className="size-6 text-muted-foreground" aria-hidden="true" />
-                    </div>
-                  )}
-                </div>
-                <p className="p-2 text-center text-sm font-medium">{category.name}</p>
-              </Link>
-            ))}
-          </div>
+          <PopularCategoriesGrid categories={categories} />
         </section>
       )}
     </main>
