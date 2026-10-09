@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { ForbiddenError, requireRole, UnauthorizedError } from "@/lib/authz";
-import { uploadImageToCloudinary } from "@/server/services/upload";
+import { describeUploadError, uploadImageToCloudinary } from "@/server/services/upload";
 
 export const runtime = "nodejs";
 
@@ -48,9 +48,8 @@ export async function POST(request: Request) {
     const { url } = await uploadImageToCloudinary(buffer);
     return NextResponse.json({ ok: true, data: { url } });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "unknown error";
     return NextResponse.json(
-      { ok: false, error: `Couldn't upload that image: ${message}` },
+      { ok: false, error: `Couldn't upload that image: ${describeUploadError(error)}` },
       { status: 502 },
     );
   }
