@@ -4,7 +4,6 @@ import { ImagePlus, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { Input } from "@/components/ui/input";
-import { uploadImageAction } from "@/server/actions/upload";
 
 export function ImageUploadField({
   value,
@@ -24,13 +23,20 @@ export function ImageUploadField({
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
-    const result = await uploadImageAction(formData);
-    setUploading(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const response = await fetch("/api/upload/image", { method: "POST", body: formData });
+      const result: { ok: true; data: { url: string } } | { ok: false; error: string } =
+        await response.json();
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      onChange(result.data.url);
+    } catch {
+      setError("Upload failed — check your connection and try again.");
+    } finally {
+      setUploading(false);
     }
-    onChange(result.data.url);
   }
 
   return (

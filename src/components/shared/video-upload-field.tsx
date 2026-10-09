@@ -4,7 +4,6 @@ import { Loader2, VideoIcon } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { Input } from "@/components/ui/input";
-import { uploadVideoAction } from "@/server/actions/upload";
 
 export function VideoUploadField({
   value,
@@ -26,13 +25,20 @@ export function VideoUploadField({
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
-    const result = await uploadVideoAction(formData);
-    setUploading(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const response = await fetch("/api/upload/video", { method: "POST", body: formData });
+      const result: { ok: true; data: { url: string } } | { ok: false; error: string } =
+        await response.json();
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      onChange(result.data.url);
+    } catch {
+      setError("Upload failed — check your connection and try again.");
+    } finally {
+      setUploading(false);
     }
-    onChange(result.data.url);
   }
 
   return (
@@ -77,6 +83,12 @@ export function VideoUploadField({
         </button>
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
+      {uploading && (
+        <p className="text-xs text-muted-foreground">
+          Larger videos can take a minute or two — this is uploading over your internet connection,
+          not stuck. Keep this page open.
+        </p>
+      )}
       <input
         ref={inputRef}
         type="file"
