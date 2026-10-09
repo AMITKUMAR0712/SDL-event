@@ -47,3 +47,13 @@ export function refundPercentFor(scheduledAt: Date, now: Date, policy: Cancellat
   if (hoursUntil >= policy.partialRefundBeforeHours) return policy.partialRefundPercent;
   return 0;
 }
+
+export function refundPercentForCancellation(
+  scheduledAt: Date,
+  now: Date,
+  policy: CancellationPolicy,
+  cancelledBy: BookingActor,
+): number {
+  if (cancelledBy === "OWNER") return 100;
+  return refundPercentFor(scheduledAt, now, policy);
+}

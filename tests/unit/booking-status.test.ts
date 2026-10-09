@@ -4,6 +4,7 @@ import {
   allowedNextStatuses,
   canTransition,
   refundPercentFor,
+  refundPercentForCancellation,
 } from "@/server/services/booking-status";
 
 describe("canTransition", () => {
@@ -64,5 +65,24 @@ describe("refundPercentFor", () => {
   it("gives no refund inside the no-refund window", () => {
     const now = new Date("2026-01-10T10:00:00Z"); // 2h before
     expect(refundPercentFor(scheduledAt, now, policy)).toBe(0);
+  });
+});
+
+describe("refundPercentForCancellation", () => {
+  const policy = {
+    fullRefundBeforeHours: 24,
+    partialRefundPercent: 50,
+    partialRefundBeforeHours: 4,
+  };
+  const scheduledAt = new Date("2026-01-10T12:00:00Z");
+  const twoHoursBefore = new Date("2026-01-10T10:00:00Z");
+
+  it("gives a full refund when the owner cancels, regardless of timing", () => {
+    expect(refundPercentForCancellation(scheduledAt, twoHoursBefore, policy, "OWNER")).toBe(100);
+  });
+
+  it("applies the configured cancellation windows to customer cancellations", () => {
+    expect(refundPercentForCancellation(scheduledAt, twoHoursBefore, policy, "CUSTOMER")).toBe(0);
+    expect(refundPercentForCancellation(scheduledAt, twoHoursBefore, policy, "ADMIN")).toBe(0);
   });
 });

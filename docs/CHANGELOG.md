@@ -711,3 +711,27 @@ introContent` (20 rows) and the three `SubscriptionPlan.name` values ("MakeGlowO
    registrations. Register one new vendor and one banquet owner; confirm the respective counts
    increase by one without waiting for the normal 30-second revalidation window.
 3. `pnpm typecheck && pnpm lint && pnpm test && pnpm build`.
+
+## Gateway-facing business and refund disclosures
+
+- Corrected the Contact page to identify SajDhajLo's operator as Amit Kumar, sole proprietor, and
+  removed the unregistered company claim. Updated the business address supplied by the proprietor.
+- Clarified that booking services are provided by independent beauty vendors and banquet/venue
+  owners, and that subscriptions are one-time period payments without automatic renewal.
+- Updated cancellation disclosures: customer cancellations use the configured 24-hour/4-hour
+  bands, while vendor/venue cancellations qualify for a full refund. Refunds must be requested and
+  are manually initiated through the payment provider after review; cancellation does not itself
+  transfer money back. Vendor/venue no-shows require support review.
+- Updated payment-data disclosures to match the transaction details stored by the application.
+- Changed the owner-cancellation calculation to mark 100% refund eligibility regardless of timing;
+  customer and admin cancellations continue to use the configured time bands.
+- No provider refund API was added. Cashfree/Razorpay merchant approval is a separate underwriting
+  decision and is not guaranteed by these website disclosures.
+
+### Manual checks
+
+1. Review `/terms`, `/refund-policy`, `/privacy`, and `/contact` on desktop and mobile.
+2. In a test booking, verify an owner cancellation records a 100% eligible refund even within four
+   hours, while customer cancellation still follows the 24-hour/4-hour bands.
+3. Submit eligible refund requests to support and initiate approved refunds manually in the
+   payment provider dashboard.

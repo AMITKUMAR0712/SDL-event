@@ -16,7 +16,7 @@ import {
   BookingActor,
   BookingStatus,
   canTransition,
-  refundPercentFor,
+  refundPercentForCancellation,
 } from "@/server/services/booking-status";
 import { redeemCoupon, validateCoupon } from "@/server/services/coupon";
 import { ensureInvoiceForBooking } from "@/server/services/invoice";
@@ -264,7 +264,12 @@ export async function transitionBooking(
       partialRefundPercent: 50,
       partialRefundBeforeHours: 4,
     });
-    const refundPercent = refundPercentFor(booking.scheduledAt, new Date(), policy);
+    const refundPercent = refundPercentForCancellation(
+      booking.scheduledAt,
+      new Date(),
+      policy,
+      actor,
+    );
     const refundPaise = percentOfPaise(booking.totalPaise, refundPercent);
     await updateBookingStatus(bookingId, {
       status: to,

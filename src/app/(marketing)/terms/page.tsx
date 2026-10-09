@@ -10,13 +10,15 @@ export default function TermsPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12 [&_a]:underline [&_h2]:mt-8 [&_h2]:font-heading [&_h2]:text-xl [&_li]:mt-1 [&_p]:mt-2 [&_p]:text-muted-foreground [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5">
       <h1 className="font-heading text-3xl">Terms of Service</h1>
-      <p className="text-muted-foreground">Last updated: 6 September 2026</p>
+      <p className="text-muted-foreground">Last updated: 9 October 2026</p>
 
       <h2>1. What SajDhajLo is</h2>
       <p>
         SajDhajLo is a marketplace connecting customers with independent beauty vendors and
         banquet/venue owners across India. We do not employ vendors or own venues — each listing is
-        an independent business responsible for the service or venue it provides.
+        an independent business responsible for the service or venue it provides. SajDhajLo is
+        operated by Amit Kumar as a sole proprietorship. Our business contact details are available
+        on the <Link href="/contact">Contact page</Link>.
       </p>
 
       <h2>2. Accounts</h2>
@@ -28,11 +30,10 @@ export default function TermsPage() {
 
       <h2>3. Bookings and payments</h2>
       <p>
-        When you book a vendor or venue, you enter into a direct arrangement with that vendor or
-        venue; SajDhajLo facilitates the booking and payment but is not a party to the underlying
-        service contract. All amounts are shown in Indian Rupees (INR), inclusive of applicable
-        taxes unless stated otherwise. Payments are processed by Cashfree; we never store your card
-        or bank details.
+        When you book a vendor or venue, the service is provided by that independent vendor or
+        venue. SajDhajLo facilitates discovery, booking and payment. Prices and any applicable taxes
+        are shown before you pay. Amounts are charged in Indian Rupees (INR). Payments are currently
+        processed through Cashfree; SajDhajLo does not store your card, UPI or bank credentials.
       </p>
 
       <h2>4. Cancellations and refunds</h2>
@@ -51,9 +52,11 @@ export default function TermsPage() {
 
       <h2>6. Subscriptions</h2>
       <p>
-        Vendor, venue, and customer subscriptions renew for the period you select and unlock the
-        features described on the plan at the time of purchase. Changing a plan&rsquo;s price only
-        affects new subscriptions, never one already in progress.
+        Vendor, venue, and customer subscriptions are one-time payments for the period selected at
+        checkout. They do not automatically renew or create recurring payment mandates; to continue
+        access after the period ends, make a new payment. The available plans, features and prices
+        are shown before purchase and may change for future purchases. A price change does not alter
+        a period already paid for.
       </p>
 
       <h2>7. Prohibited conduct</h2>

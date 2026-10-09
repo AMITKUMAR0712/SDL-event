@@ -4,7 +4,7 @@ import { ContactForm } from "@/components/shared/contact-form";
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: "How to reach SajDhajLo support, our grievance officer, and business inquiries.",
+  description: "How to reach SajDhajLo support, the business operator, and privacy requests.",
 };
 
 export default function ContactPage() {
@@ -33,27 +33,29 @@ export default function ContactPage() {
           </section>
 
           <section className="mt-8">
-            <h2 className="font-heading text-xl">Grievance officer (DPDP Act, 2023)</h2>
+            <h2 className="font-heading text-xl">Business operator</h2>
             <p className="mt-2 text-muted-foreground">
-              For data-privacy requests and grievances, reach us at the email above.
+              SajDhajLo is operated by Amit Kumar as a sole proprietorship.
             </p>
           </section>
 
           <section className="mt-8">
-            <h2 className="font-heading text-xl">Registered office</h2>
+            <h2 className="font-heading text-xl">Business address</h2>
             <p className="mt-2 text-muted-foreground">
-              TradeOrbit Global, Best Digital Market, C Block, Block C, Sector MU 1
+              C-317, C Block, Best Digital Market, Sector MU-1
               <br />
-              Greater Noida, Mathurapur, Uttar Pradesh 201310
+              Greater Noida, Uttar Pradesh 201310
             </p>
           </section>
 
           <section className="mt-8 rounded-xl border border-border bg-accent/40 p-4">
-            <h2 className="font-heading text-lg">Need a website, app, or custom software?</h2>
+            <h2 className="font-heading text-lg">Grievance and privacy contact</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              SajDhajLo is built by <strong>TradeOrbit Global Pvt Ltd</strong>. If your business
-              needs a website, mobile app, or custom software, you can reach out to the same team
-              using the details above.
+              Contact Amit Kumar at{" "}
+              <a href="mailto:info@sajdhajlo.com" className="underline">
+                info@sajdhajlo.com
+              </a>{" "}
+              or +91 99921 96879. Include your account email and booking number, if applicable.
             </p>
           </section>
         </div>

@@ -11,7 +11,7 @@ export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12 [&_a]:underline [&_h2]:mt-8 [&_h2]:font-heading [&_h2]:text-xl [&_li]:mt-1 [&_p]:mt-2 [&_p]:text-muted-foreground [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5">
       <h1 className="font-heading text-3xl">Privacy Policy</h1>
-      <p className="text-muted-foreground">Last updated: 6 September 2026</p>
+      <p className="text-muted-foreground">Last updated: 9 October 2026</p>
 
       <h2>1. Data we collect</h2>
       <ul>
@@ -27,8 +27,9 @@ export default function PrivacyPage() {
           documents you upload for approval.
         </li>
         <li>
-          Payment data: Cashfree processes and stores your card/UPI/bank details directly — we only
-          receive the payment outcome and a masked reference.
+          Payment data: our payment provider (currently Cashfree) processes your card, UPI or bank
+          credentials. SajDhajLo receives and stores payment status, order/payment references,
+          amount and related transaction records, but not your payment credentials.
         </li>
         <li>
           Usage data: pages viewed, searches made, and device/browser information, to keep the
@@ -71,7 +72,7 @@ export default function PrivacyPage() {
         </li>
       </ul>
       <p>
-        To exercise any of these, reach our grievance officer via the{" "}
+        To exercise any of these, contact the business operator via the{" "}
         <Link href="/contact">Contact page</Link>.
       </p>
 
