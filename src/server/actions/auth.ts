@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { AuthError } from "next-auth";
 
@@ -51,6 +52,10 @@ export async function registerAction(
   const result = await registerWithPassword(parsed.data);
   if (!result.ok) {
     return { ok: false, error: "An account with this email already exists." };
+  }
+
+  if (parsed.data.role === "VENDOR" || parsed.data.role === "BANQUET_OWNER") {
+    revalidatePath("/");
   }
 
   try {

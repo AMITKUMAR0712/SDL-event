@@ -182,11 +182,16 @@ export function VendorOnboardingWizard({
                     </Button>
                   }
                 />
-                <DialogContent className="sm:max-w-lg">
-                  <DialogHeader>
+                <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-hidden sm:max-w-3xl">
+                  <DialogHeader className="pr-9">
                     <DialogTitle>How to register your business</DialogTitle>
                   </DialogHeader>
-                  <video src={guideVideoUrl} controls className="w-full rounded-lg" />
+                  <video
+                    src={guideVideoUrl}
+                    controls
+                    playsInline
+                    className="max-h-[calc(100dvh-8rem)] w-full rounded-lg object-contain"
+                  />
                 </DialogContent>
               </Dialog>
             )}

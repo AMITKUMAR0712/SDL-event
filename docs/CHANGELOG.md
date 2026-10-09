@@ -693,3 +693,21 @@ introContent` (20 rows) and the three `SubscriptionPlan.name` values ("MakeGlowO
 3. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green (77 tests, including 5 new
    ones hitting the real Cashfree sandbox API). Full Playwright e2e suite (11 tests): all green,
    including both onboarding tests for the first time this session.
+
+## Vendor onboarding video and homepage account counts
+
+- Constrained the vendor registration guide video to the viewport and kept native playback
+  controls and the dialog close button accessible on large screens.
+- Homepage counters now start at 124 vendor accounts and 43 banquet-owner accounts, then
+  increment transactionally for new registrations. Account counters refresh immediately after
+  registration and are labelled as accounts rather than verified/published listings.
+- Added an integration test for the baseline values and account increments.
+
+### Manual smoke test
+
+1. Open the vendor onboarding guide on a large desktop display; confirm the video stays within
+   the viewport, its playback controls remain visible, and the close button can dismiss it.
+2. Check the homepage shows 124 vendor accounts and 43 banquet-owner accounts before new role
+   registrations. Register one new vendor and one banquet owner; confirm the respective counts
+   increase by one without waiting for the normal 30-second revalidation window.
+3. `pnpm typecheck && pnpm lint && pnpm test && pnpm build`.

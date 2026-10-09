@@ -1,4 +1,10 @@
 import { db } from "@/lib/db";
+import {
+  BANQUET_ACCOUNT_COUNT_BASELINE,
+  BANQUET_ACCOUNT_COUNT_KEY,
+  VENDOR_ACCOUNT_COUNT_BASELINE,
+  VENDOR_ACCOUNT_COUNT_KEY,
+} from "@/lib/marketplace-stats";
 
 export function findUserByEmail(email: string) {
   return db.user.findUnique({ where: { email } });
@@ -31,13 +37,41 @@ export function createUserWithPassword(input: {
   passwordHash: string;
   role: "CUSTOMER" | "VENDOR" | "BANQUET_OWNER";
 }) {
-  return db.user.create({
-    data: {
-      name: input.name,
-      email: input.email,
-      passwordHash: input.passwordHash,
-      role: input.role,
-    },
+  return db.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name: input.name,
+        email: input.email,
+        passwordHash: input.passwordHash,
+        role: input.role,
+      },
+    });
+
+    if (input.role === "VENDOR" || input.role === "BANQUET_OWNER") {
+      const counter =
+        input.role === "VENDOR"
+          ? { key: VENDOR_ACCOUNT_COUNT_KEY, baseline: VENDOR_ACCOUNT_COUNT_BASELINE }
+          : { key: BANQUET_ACCOUNT_COUNT_KEY, baseline: BANQUET_ACCOUNT_COUNT_BASELINE };
+
+      await tx.$executeRaw`
+        INSERT INTO \`Setting\` (\`key\`, \`value\`, \`updatedAt\`)
+        VALUES (${counter.key}, JSON_OBJECT('count', ${counter.baseline + 1}), CURRENT_TIMESTAMP(3))
+        ON DUPLICATE KEY UPDATE
+          \`value\` = JSON_SET(
+            \`value\`,
+            '$.count',
+            CAST(
+              COALESCE(
+                JSON_UNQUOTE(JSON_EXTRACT(\`value\`, '$.count')),
+                ${counter.baseline}
+              ) AS UNSIGNED
+            ) + 1
+          ),
+          \`updatedAt\` = CURRENT_TIMESTAMP(3)
+      `;
+    }
+
+    return user;
   });
 }
 

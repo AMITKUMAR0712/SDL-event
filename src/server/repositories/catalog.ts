@@ -1,6 +1,12 @@
 import { unstable_cache } from "next/cache";
 
 import { db } from "@/lib/db";
+import {
+  BANQUET_ACCOUNT_COUNT_BASELINE,
+  BANQUET_ACCOUNT_COUNT_KEY,
+  VENDOR_ACCOUNT_COUNT_BASELINE,
+  VENDOR_ACCOUNT_COUNT_KEY,
+} from "@/lib/marketplace-stats";
 
 /**
  * Cities/categories for the navbar's search box, mounted in the root layout —
@@ -33,14 +39,38 @@ export const getHeaderSearchOptions = unstable_cache(
   { revalidate: 3600, tags: [HEADER_SEARCH_OPTIONS_TAG] },
 );
 
-/** Real counts for the home page's trust-stats row — never hardcoded marketing numbers. */
+function readAccountCount(value: unknown, baseline: number): number {
+  if (value === null || value === undefined) return baseline;
+  if (
+    typeof value === "object" &&
+    "count" in value &&
+    typeof value.count === "number" &&
+    Number.isSafeInteger(value.count) &&
+    value.count >= baseline
+  ) {
+    return value.count;
+  }
+  throw new Error("Invalid homepage account counter setting.");
+}
+
+/** Account counters start at their launch baseline and increment on vendor/banquet registration. */
 export async function getMarketplaceStats() {
-  const [cities, vendors, banquets] = await Promise.all([
+  const [cities, vendorCounter, banquetCounter] = await Promise.all([
     db.city.count({ where: { isActive: true } }),
-    db.vendorProfile.count({ where: { isPublished: true } }),
-    db.banquetProfile.count({ where: { isPublished: true } }),
+    db.setting.findUnique({
+      where: { key: VENDOR_ACCOUNT_COUNT_KEY },
+      select: { value: true },
+    }),
+    db.setting.findUnique({
+      where: { key: BANQUET_ACCOUNT_COUNT_KEY },
+      select: { value: true },
+    }),
   ]);
-  return { cities, vendors, banquets };
+  return {
+    cities,
+    vendors: readAccountCount(vendorCounter?.value, VENDOR_ACCOUNT_COUNT_BASELINE),
+    banquets: readAccountCount(banquetCounter?.value, BANQUET_ACCOUNT_COUNT_BASELINE),
+  };
 }
 
 export function listCitiesForSelect() {

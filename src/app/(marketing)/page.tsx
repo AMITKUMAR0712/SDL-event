@@ -28,9 +28,8 @@ import {
   listActivePlansWithFeatures,
 } from "@/server/repositories/catalog";
 
-// Short instead of the usual hour-long ISR window: the hero's Cities/Verified
-// vendors/Banquets counts should reflect a vendor or banquet going live
-// within moments, not sit stale for up to an hour.
+// Keep marketplace stats fresh while registration actions also invalidate this
+// page as soon as a vendor or banquet-owner account is created.
 export const revalidate = 30;
 
 // NCR + other major metros surface first in "Popular cities" instead of
@@ -167,13 +166,13 @@ export default async function HomePage() {
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Verified vendors</dt>
+                <dt className="text-sm text-muted-foreground">Vendor accounts</dt>
                 <dd className="font-heading text-2xl">
                   <AnimatedCounter target={stats.vendors} />+
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Banquets</dt>
+                <dt className="text-sm text-muted-foreground">Banquet owner accounts</dt>
                 <dd className="font-heading text-2xl">
                   <AnimatedCounter target={stats.banquets} />+
                 </dd>
