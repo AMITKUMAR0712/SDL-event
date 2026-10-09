@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           documents you upload for approval.
         </li>
         <li>
-          Payment data: Razorpay processes and stores your card/UPI/bank details directly — we only
+          Payment data: Cashfree processes and stores your card/UPI/bank details directly — we only
           receive the payment outcome and a masked reference.
         </li>
         <li>
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
 
       <h2>3. Who we share it with</h2>
       <p>
-        We share only what each provider needs to do its job: Razorpay (payments), MSG91 (SMS/OTP
+        We share only what each provider needs to do its job: Cashfree (payments), MSG91 (SMS/OTP
         delivery), Resend (email delivery), Cloudinary (media storage), and, if you contact us via
         WhatsApp, Meta&rsquo;s WhatsApp Cloud API. We do not sell personal data.
       </p>

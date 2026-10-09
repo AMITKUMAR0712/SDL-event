@@ -101,6 +101,7 @@ enum BookingStatus {
 
 enum PaymentProvider {
   RAZORPAY
+  CASHFREE
 }
 
 enum PaymentStatus {
@@ -739,7 +740,7 @@ model Payment {
   id                String          @id @default(cuid())
   bookingId         String?
   subscriptionId    String?
-  provider          PaymentProvider @default(RAZORPAY)
+  provider          PaymentProvider @default(CASHFREE)
   providerOrderId   String?
   providerPaymentId String?
   amountPaise       Int

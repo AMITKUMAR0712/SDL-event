@@ -31,7 +31,7 @@ export default function RefundPolicyPage() {
       </ul>
       <p>
         If a vendor or venue cancels a confirmed booking, or fails to show up, you receive a full
-        refund regardless of timing. Refunds are issued to the original payment method via Razorpay
+        refund regardless of timing. Refunds are issued to the original payment method via Cashfree
         and typically settle within 5–7 business days, depending on your bank.
       </p>
 

@@ -18,7 +18,10 @@ const csp = [
   // www.googletagmanager.com: GTM + GA4 (src/app/layout.tsx) — without this
   // those scripts are silently blocked rather than failing loudly, which is
   // exactly what was happening before this line existed.
-  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com${isDev ? " 'unsafe-eval'" : ""}`,
+  // sdk.cashfree.com: Cashfree Checkout (active gateway). checkout.razorpay.com
+  // stays allowed too — Razorpay's code is dormant, not deleted, so this is a
+  // one-line revert if needed rather than a re-integration.
+  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://sdk.cashfree.com https://www.googletagmanager.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https: blob:",
   // Explicit, not left to the default-src fallback — scoped to our own
@@ -27,11 +30,18 @@ const csp = [
   // video field still gets blocked rather than silently trusted.
   "media-src 'self' https://res.cloudinary.com",
   "font-src 'self' data:",
-  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
-  "frame-src 'self' https://api.razorpay.com https://www.googletagmanager.com",
+  // *.cashfree.com is a deliberate wildcard, not a specific endpoint — their
+  // checkout flow talks to a few different subdomains (the payment session
+  // API, bank/UPI redirect handling) that aren't all individually documented.
+  // If a particular payment method still gets blocked in practice, that's
+  // the first thing to loosen further.
+  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.cashfree.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
+  "frame-src 'self' https://api.razorpay.com https://*.cashfree.com https://www.googletagmanager.com",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  // Cashfree's checkout modal submits a form directly to their domain
+  // (not just an iframe navigation) to start the hosted payment session.
+  "form-action 'self' https://*.cashfree.com",
   "frame-ancestors 'none'",
 ].join("; ");
 

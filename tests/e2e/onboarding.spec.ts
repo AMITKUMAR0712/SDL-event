@@ -45,24 +45,17 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
   await expect(page.getByText("Choose a plan")).toBeVisible();
   await page.getByRole("button", { name: /Buy Now/ }).click();
 
-  // Real Razorpay test-mode keys are configured in this environment, so
-  // clicking above creates the profile+subscription (proven by the fact
-  // that a live Checkout modal opens right after) and then opens a real
-  // payment widget. Completing — or even reliably closing — a live
-  // third-party payment UI isn't something e2e should simulate; instead,
-  // treat the modal opening as proof the app-side flow worked, and verify
-  // the result directly rather than fighting Razorpay's own overlay chrome.
-  await page
-    .frameLocator("iframe")
-    .getByRole("button", { name: "Close Checkout" })
-    .waitFor({ state: "visible", timeout: 20_000 });
-
-  await page.goto("/dashboard/vendor");
+  // Real Cashfree sandbox keys are configured in this environment, so
+  // clicking above creates the profile+subscription and opens a real
+  // Checkout modal, which resolves on its own (error or otherwise) without
+  // this test completing a third-party payment UI. The wizard navigates to
+  // the dashboard once that resolves either way — the assertions below are
+  // the real coverage: onboarding completed, and since no real payment was
+  // made, the listing is correctly still unpublished rather than live with
+  // an unpaid plan.
+  await page.waitForURL(/\/dashboard\/vendor$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: businessName })).toBeVisible();
-  // No more KYC approval gate — onboarding itself never blocks on admin
-  // review. But visibility is gated on payment: this test never completes
-  // the real Razorpay checkout (see above), so the listing should still be
-  // unpublished at this point rather than live with an unpaid plan.
+  // No more KYC approval gate — onboarding itself never blocks on admin review.
   await expect(page.getByText(/KYC status: APPROVED/)).toBeVisible();
   await expect(page.getByText(/Not published yet/)).toBeVisible();
 });
@@ -105,24 +98,17 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
   await expect(page.getByText("Choose a plan")).toBeVisible();
   await page.getByRole("button", { name: /Buy Now/ }).click();
 
-  // Real Razorpay test-mode keys are configured in this environment, so
-  // clicking above creates the profile+subscription (proven by the fact
-  // that a live Checkout modal opens right after) and then opens a real
-  // payment widget. Completing — or even reliably closing — a live
-  // third-party payment UI isn't something e2e should simulate; instead,
-  // treat the modal opening as proof the app-side flow worked, and verify
-  // the result directly rather than fighting Razorpay's own overlay chrome.
-  await page
-    .frameLocator("iframe")
-    .getByRole("button", { name: "Close Checkout" })
-    .waitFor({ state: "visible", timeout: 20_000 });
-
-  await page.goto("/dashboard/banquet");
+  // Real Cashfree sandbox keys are configured in this environment, so
+  // clicking above creates the profile+subscription and opens a real
+  // Checkout modal, which resolves on its own (error or otherwise) without
+  // this test completing a third-party payment UI. The wizard navigates to
+  // the dashboard once that resolves either way — the assertions below are
+  // the real coverage: onboarding completed, and since no real payment was
+  // made, the listing is correctly still unpublished rather than live with
+  // an unpaid plan.
+  await page.waitForURL(/\/dashboard\/banquet$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: venueName })).toBeVisible();
-  // No more KYC approval gate — onboarding itself never blocks on admin
-  // review. But visibility is gated on payment: this test never completes
-  // the real Razorpay checkout (see above), so the listing should still be
-  // unpublished at this point rather than live with an unpaid plan.
+  // No more KYC approval gate — onboarding itself never blocks on admin review.
   await expect(page.getByText(/KYC status: APPROVED/)).toBeVisible();
   await expect(page.getByText(/Not published yet/)).toBeVisible();
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { loadRazorpayCheckout } from "@/lib/razorpay-checkout";
+import { openCashfreeCheckout } from "@/lib/cashfree-checkout";
 import {
   initiateSubscriptionPaymentAction,
   verifySubscriptionPaymentAction,
@@ -14,8 +14,8 @@ export type ChargeSubscriptionResult =
   | { status: "script_error" };
 
 /**
- * Opens Razorpay Checkout for a subscription and resolves once the modal
- * closes, however it closes. Never throws: if Razorpay isn't configured yet
+ * Opens Cashfree Checkout for a subscription and resolves once the modal
+ * closes, however it closes. Never throws: if Cashfree isn't configured yet
  * in this environment (no keys set), it resolves with "not_configured" so
  * onboarding can still publish without charging — the dashboard's "Complete
  * payment" button covers whichever path didn't end in a captured payment.
@@ -26,36 +26,24 @@ export async function chargeSubscriptionAtCheckout(
   const order = await initiateSubscriptionPaymentAction(subscriptionId);
   if (!order.ok) return { status: "not_configured" };
 
+  let result;
   try {
-    await loadRazorpayCheckout();
+    result = await openCashfreeCheckout(order.data.paymentSessionId, order.data.mode);
   } catch {
     return { status: "script_error" };
   }
 
-  return new Promise<ChargeSubscriptionResult>((resolve) => {
-    const razorpay = new window.Razorpay!({
-      key: order.data.keyId,
-      amount: order.data.amountPaise,
-      currency: "INR",
-      order_id: order.data.orderId,
-      name: "SajDhajLo",
-      description: "Subscription plan payment",
-      handler: async (response) => {
-        const verified = await verifySubscriptionPaymentAction(
-          subscriptionId,
-          response.razorpay_order_id,
-          response.razorpay_payment_id,
-          response.razorpay_signature,
-        );
-        resolve(
-          verified.ok ? { status: "captured" } : { status: "failed", message: verified.error },
-        );
-      },
-      modal: { ondismiss: () => resolve({ status: "dismissed" }) },
-    });
-    razorpay.on("payment.failed", (response) =>
-      resolve({ status: "failed", message: response.error.description }),
-    );
-    razorpay.open();
-  });
+  if (result.error) {
+    return { status: "failed", message: result.error.message };
+  }
+
+  const verified = await verifySubscriptionPaymentAction(subscriptionId, order.data.orderId);
+  if (!verified.ok) {
+    // Could genuinely be a failure, or the modal was dismissed without
+    // paying — either way nothing was captured, so "dismissed" (rather than
+    // "failed") keeps onboarding from showing a scary error for a plain
+    // cancel.
+    return { status: "dismissed" };
+  }
+  return { status: "captured" };
 }

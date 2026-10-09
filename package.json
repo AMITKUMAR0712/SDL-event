@@ -25,6 +25,7 @@
     "@sentry/nextjs": "^10.73.0",
     "@upstash/redis": "^1.38.4",
     "bcryptjs": "^3.0.3",
+    "cashfree-pg": "^6.0.6",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.11.0",
     "cn": "^0.2.5",

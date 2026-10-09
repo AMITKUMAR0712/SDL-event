@@ -110,7 +110,7 @@ export function PlanPicker({
 
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-xl bg-accent/40 px-4 py-3 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <ShieldCheck className="size-4 text-primary" /> Secured by Razorpay
+          <ShieldCheck className="size-4 text-primary" /> Secured by Cashfree
         </span>
         <span className="flex items-center gap-1.5">
           <BadgeCheck className="size-4 text-primary" /> 100% safe & encrypted payments

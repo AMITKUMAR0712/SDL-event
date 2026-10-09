@@ -31,7 +31,7 @@ export default function TermsPage() {
         When you book a vendor or venue, you enter into a direct arrangement with that vendor or
         venue; SajDhajLo facilitates the booking and payment but is not a party to the underlying
         service contract. All amounts are shown in Indian Rupees (INR), inclusive of applicable
-        taxes unless stated otherwise. Payments are processed by Razorpay; we never store your card
+        taxes unless stated otherwise. Payments are processed by Cashfree; we never store your card
         or bank details.
       </p>
 

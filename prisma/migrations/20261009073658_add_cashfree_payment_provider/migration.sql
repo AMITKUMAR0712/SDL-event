@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `payment` MODIFY `provider` ENUM('RAZORPAY', 'CASHFREE') NOT NULL DEFAULT 'CASHFREE';

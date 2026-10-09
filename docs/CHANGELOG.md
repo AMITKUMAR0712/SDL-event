@@ -651,3 +651,45 @@ introContent` (20 rows) and the three `SubscriptionPlan.name` values ("MakeGlowO
    (8 tests): 6 pass; the 2 onboarding tests fail only on the pre-existing, unrelated live
    Razorpay checkout step (`.env`'s Razorpay keys are not valid for live order creation in this
    environment) — not a regression from this phase.
+
+## Payments switched from Razorpay to Cashfree
+
+- **Cashfree is now the active payment gateway** for both one-off booking payments and the
+  per-billing-period subscription charge, replacing Razorpay in that role. `cashfree-pg` (the
+  official Node SDK) creates orders and verifies webhook signatures server-side
+  (`src/server/services/cashfree.ts`); the browser opens Cashfree's own Checkout modal
+  (`src/lib/cashfree-checkout.ts`, a hand-rolled loader matching the existing
+  `razorpay-checkout.ts` pattern — the official `@cashfreepayments/cashfree-js` wrapper ships no
+  TypeScript types and is just a thin loader around the same CDN script, so it wasn't worth the
+  dependency). `/api/webhooks/cashfree` is the new authoritative webhook endpoint.
+- **Razorpay's code is dormant, not deleted** — env vars, the service, the webhook route, and its
+  CSP allowances are all still in place, so switching back is a one-line change rather than a
+  re-integration, if that's ever needed.
+- **Schema change**: `PaymentProvider` gained a `CASHFREE` value (migration
+  `add_cashfree_payment_provider`); `Payment.provider` now defaults to `CASHFREE`.
+- Unlike Razorpay's Checkout, Cashfree's modal doesn't hand the browser a verifiable
+  payment+signature pair, so the client-side "optimistic fast path" (`verifyBookingPaymentAction`
+  / `verifySubscriptionPaymentAction`) now confirms payment by asking Cashfree directly whether
+  the order was paid (`isCashfreeOrderPaid`), rather than checking a signature. The webhook
+  remains the authoritative path either way.
+- Cashfree's create-order API requires a customer phone number; booking payments already have one
+  (`Booking.contactPhone`), and subscription payments now require the paying user to have a phone
+  on file — surfaced as a clear "add a phone number" message rather than silently failing.
+- CSP (`next.config.ts`) updated: `sdk.cashfree.com` (script-src), `*.cashfree.com`
+  (connect-src/frame-src/form-action — their checkout flow spans a few subdomains that aren't all
+  individually documented, so this is a deliberate wildcard rather than an exact endpoint list).
+- Legal pages (privacy, refund policy, terms) updated to name Cashfree instead of Razorpay.
+- As a direct side effect, the two onboarding e2e tests that were blocked all session on a live
+  Razorpay checkout step now pass cleanly against Cashfree's sandbox.
+
+### Manual smoke test
+
+1. As a customer, open a vendor/banquet profile, submit a booking, then on `/account/bookings`
+   click "Pay now" — confirm a real Cashfree Checkout modal opens showing the correct amount and
+   phone number, with UPI/card/netbanking/wallet options.
+2. Register a new vendor or banquet owner and complete onboarding through to the plan step —
+   confirm the same Cashfree modal opens for the subscription charge, and that the dashboard
+   afterward shows "Payment pending" / "Not published yet" (since no real payment was completed).
+3. `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — all green (77 tests, including 5 new
+   ones hitting the real Cashfree sandbox API). Full Playwright e2e suite (11 tests): all green,
+   including both onboarding tests for the first time this session.

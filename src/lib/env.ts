@@ -24,7 +24,15 @@ const envSchema = z.object({
   MSG91_SENDER_ID: z.string().optional().default(""),
   MSG91_OTP_TEMPLATE_ID: z.string().optional().default(""),
 
-  // Payments (Razorpay)
+  // Payments (Cashfree — active gateway; Razorpay kept configured but
+  // unused so the swap is a one-line revert if needed, not a re-integration).
+  // Webhook signatures are verified with CASHFREE_SECRET_KEY itself — unlike
+  // Razorpay, Cashfree doesn't issue a separate webhook secret.
+  CASHFREE_APP_ID: z.string().optional().default(""),
+  CASHFREE_SECRET_KEY: z.string().optional().default(""),
+  CASHFREE_ENV: z.enum(["SANDBOX", "PRODUCTION"]).optional().default("SANDBOX"),
+
+  // Payments (Razorpay) — dormant, see above
   RAZORPAY_KEY_ID: z.string().optional().default(""),
   RAZORPAY_KEY_SECRET: z.string().optional().default(""),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional().default(""),

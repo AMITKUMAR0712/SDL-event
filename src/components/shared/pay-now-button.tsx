@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { loadRazorpayCheckout } from "@/lib/razorpay-checkout";
+import { openCashfreeCheckout } from "@/lib/cashfree-checkout";
 import { initiateBookingPaymentAction, verifyBookingPaymentAction } from "@/server/actions/payment";
 
 export function PayNowButton({ bookingId }: { bookingId: string }) {
@@ -23,50 +23,29 @@ export function PayNowButton({ bookingId }: { bookingId: string }) {
       return;
     }
 
+    let result;
     try {
-      await loadRazorpayCheckout();
+      result = await openCashfreeCheckout(order.data.paymentSessionId, order.data.mode);
     } catch {
       setPending(false);
       setMessage("Couldn't load the payment window. Check your connection and try again.");
       return;
     }
 
-    const razorpay = new window.Razorpay!({
-      key: order.data.keyId,
-      amount: order.data.amountPaise,
-      currency: "INR",
-      order_id: order.data.orderId,
-      name: "SajDhajLo",
-      description: "Booking payment",
-      handler: async (response) => {
-        const verified = await verifyBookingPaymentAction(
-          bookingId,
-          response.razorpay_order_id,
-          response.razorpay_payment_id,
-          response.razorpay_signature,
-        );
-        setPending(false);
-        if (!verified.ok) {
-          setMessage(verified.error);
-          return;
-        }
-        setMessage("Payment successful — booking confirmed.");
-        router.refresh();
-      },
-      modal: {
-        ondismiss: () => {
-          setPending(false);
-          setMessage("Payment window closed.");
-        },
-      },
-    });
-
-    razorpay.on("payment.failed", (response) => {
+    if (result.error) {
       setPending(false);
-      setMessage(`Payment failed: ${response.error.description}`);
-    });
+      setMessage(`Payment failed: ${result.error.message ?? "please try again."}`);
+      return;
+    }
 
-    razorpay.open();
+    const verified = await verifyBookingPaymentAction(bookingId, order.data.orderId);
+    setPending(false);
+    if (!verified.ok) {
+      setMessage(verified.error);
+      return;
+    }
+    setMessage("Payment successful — booking confirmed.");
+    router.refresh();
   }
 
   return (
