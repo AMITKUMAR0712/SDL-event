@@ -41,7 +41,14 @@ function startingRating() {
 
 export type OnboardingResult =
   | { ok: true; slug: string; subscriptionId: string | null }
-  | { ok: false; reason: "PLAN_NOT_FOUND" | "CITY_NOT_FOUND" };
+  | { ok: false; reason: "PLAN_NOT_FOUND" | "CITY_NOT_FOUND" | "PHONE_TAKEN" };
+
+/** Null if the phone is free to use (by nobody, or already this same
+ * user's own phone) — a value means it belongs to a different account. */
+async function phoneTakenByAnotherUser(userId: string, phone: string): Promise<boolean> {
+  const existing = await db.user.findUnique({ where: { phone }, select: { id: true } });
+  return existing !== null && existing.id !== userId;
+}
 
 export async function completeVendorOnboarding(
   userId: string,
@@ -59,19 +66,23 @@ export async function completeVendorOnboarding(
     return { ok: true, slug: existing.slug, subscriptionId: subscription?.id ?? null };
   }
 
-  const [plan, catalogEntries, city] = await Promise.all([
+  const [plan, catalogEntries, city, phoneTaken] = await Promise.all([
     findPlanByCode(input.planCode),
     findServiceCatalogByIds(input.serviceCatalogIds),
     db.city.findUnique({ where: { id: input.cityId }, select: { stateId: true } }),
+    phoneTakenByAnotherUser(userId, input.phone),
   ]);
   if (!plan) return { ok: false, reason: "PLAN_NOT_FOUND" };
   if (!city) return { ok: false, reason: "CITY_NOT_FOUND" };
+  if (phoneTaken) return { ok: false, reason: "PHONE_TAKEN" };
 
   const slug = uniqueSlug(input.businessName, userId);
   const primaryCategoryId = catalogEntries[0]?.categoryId;
   const primaryCategorySlug = catalogEntries[0]?.category.slug;
 
   const subscriptionId = await db.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: userId }, data: { phone: input.phone } });
+
     const address = await tx.address.create({
       data: {
         userId,
@@ -161,16 +172,20 @@ export async function completeBanquetOnboarding(
     return { ok: true, slug: existing.slug, subscriptionId: subscription?.id ?? null };
   }
 
-  const [plan, city] = await Promise.all([
+  const [plan, city, phoneTaken] = await Promise.all([
     findPlanByCode(input.planCode),
     db.city.findUnique({ where: { id: input.cityId }, select: { stateId: true } }),
+    phoneTakenByAnotherUser(userId, input.phone),
   ]);
   if (!plan) return { ok: false, reason: "PLAN_NOT_FOUND" };
   if (!city) return { ok: false, reason: "CITY_NOT_FOUND" };
+  if (phoneTaken) return { ok: false, reason: "PHONE_TAKEN" };
 
   const slug = uniqueSlug(input.venueName, userId);
 
   const subscriptionId = await db.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: userId }, data: { phone: input.phone } });
+
     const address = await tx.address.create({
       data: {
         userId,

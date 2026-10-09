@@ -38,9 +38,16 @@ type Props = {
   plans: PlanPickerPlan[];
   accountName: string | null;
   accountEmail: string | null;
+  accountPhone: string | null;
 };
 
-export function BanquetOnboardingWizard({ cities, plans, accountName, accountEmail }: Props) {
+export function BanquetOnboardingWizard({
+  cities,
+  plans,
+  accountName,
+  accountEmail,
+  accountPhone,
+}: Props) {
   const router = useRouter();
   const { update } = useSession();
   const [step, setStep] = useState(0);
@@ -53,6 +60,10 @@ export function BanquetOnboardingWizard({ cities, plans, accountName, accountEma
       cityId: "",
       addressLine1: "",
       pincode: "",
+      // Stored (and pre-filled here) as +91XXXXXXXXXX, but the field itself
+      // takes a plain 10-digit number to match every other phone input in
+      // the app — see bookingContactPhoneSchema.
+      phone: accountPhone?.replace(/^\+91/, "") ?? "",
       totalHalls: 1,
       vegPricePerPlatePaise: 0,
       nonVegPricePerPlatePaise: 0,
@@ -81,7 +92,7 @@ export function BanquetOnboardingWizard({ cities, plans, accountName, accountEma
 
   const stepFields: (keyof BanquetOnboardingInput)[][] = [
     ["venueName", "totalHalls"],
-    ["cityId", "addressLine1", "pincode"],
+    ["cityId", "addressLine1", "pincode", "phone"],
     ["vegPricePerPlatePaise", "nonVegPricePerPlatePaise"],
     [],
     ["planCode"],
@@ -233,6 +244,24 @@ export function BanquetOnboardingWizard({ cities, plans, accountName, accountEma
                   <FormLabel>Pincode</FormLabel>
                   <FormControl>
                     <Input inputMode="numeric" maxLength={6} placeholder="e.g. 110001" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Venue phone number</FormLabel>
+                  <FormControl>
+                    <Input
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="Your 10-digit mobile number"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

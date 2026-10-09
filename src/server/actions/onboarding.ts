@@ -22,16 +22,23 @@ export async function completeVendorOnboardingAction(
 
   const result = await completeVendorOnboarding(session.user.id, parsed.data);
   if (!result.ok) {
-    return {
-      ok: false,
-      error:
-        result.reason === "CITY_NOT_FOUND"
-          ? "That city is no longer available — please pick another."
-          : "The selected plan no longer exists.",
-    };
+    return { ok: false, error: onboardingErrorMessage(result.reason) };
   }
 
   return { ok: true, data: { slug: result.slug, subscriptionId: result.subscriptionId } };
+}
+
+function onboardingErrorMessage(
+  reason: "PLAN_NOT_FOUND" | "CITY_NOT_FOUND" | "PHONE_TAKEN",
+): string {
+  switch (reason) {
+    case "CITY_NOT_FOUND":
+      return "That city is no longer available — please pick another.";
+    case "PHONE_TAKEN":
+      return "That phone number is already linked to another account.";
+    default:
+      return "The selected plan no longer exists.";
+  }
 }
 
 export async function completeBanquetOnboardingAction(
@@ -46,13 +53,7 @@ export async function completeBanquetOnboardingAction(
 
   const result = await completeBanquetOnboarding(session.user.id, parsed.data);
   if (!result.ok) {
-    return {
-      ok: false,
-      error:
-        result.reason === "CITY_NOT_FOUND"
-          ? "That city is no longer available — please pick another."
-          : "The selected plan no longer exists.",
-    };
+    return { ok: false, error: onboardingErrorMessage(result.reason) };
   }
 
   return { ok: true, data: { slug: result.slug, subscriptionId: result.subscriptionId } };

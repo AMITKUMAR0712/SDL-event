@@ -48,6 +48,7 @@ type Props = {
   plans: PlanPickerPlan[];
   accountName: string | null;
   accountEmail: string | null;
+  accountPhone: string | null;
   guideVideoUrl: string | null;
 };
 
@@ -57,6 +58,7 @@ export function VendorOnboardingWizard({
   plans,
   accountName,
   accountEmail,
+  accountPhone,
   guideVideoUrl,
 }: Props) {
   const router = useRouter();
@@ -71,6 +73,10 @@ export function VendorOnboardingWizard({
       cityId: "",
       addressLine1: "",
       pincode: "",
+      // Stored (and pre-filled here) as +91XXXXXXXXXX, but the field itself
+      // takes a plain 10-digit number to match every other phone input in
+      // the app — see bookingContactPhoneSchema.
+      phone: accountPhone?.replace(/^\+91/, "") ?? "",
       servesInStudio: true,
       servesAtHome: false,
       homeServiceRadiusKm: 0,
@@ -101,7 +107,7 @@ export function VendorOnboardingWizard({
 
   const stepFields: (keyof VendorOnboardingInput)[][] = [
     ["businessName"],
-    ["cityId", "addressLine1", "pincode"],
+    ["cityId", "addressLine1", "pincode", "phone"],
     ["serviceCatalogIds"],
     [],
     ["planCode"],
@@ -251,6 +257,24 @@ export function VendorOnboardingWizard({
                   <FormLabel>Pincode</FormLabel>
                   <FormControl>
                     <Input inputMode="numeric" maxLength={6} placeholder="e.g. 110001" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business phone number</FormLabel>
+                  <FormControl>
+                    <Input
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="Your 10-digit mobile number"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

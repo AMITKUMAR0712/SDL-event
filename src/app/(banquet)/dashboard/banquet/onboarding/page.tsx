@@ -2,10 +2,12 @@ import { BackButton } from "@/components/shared/back-button";
 import { BanquetOnboardingWizard } from "@/components/shared/banquet-onboarding-wizard";
 import { auth } from "@/lib/auth";
 import { listActivePlansWithFeatures, listCitiesForSelect } from "@/server/repositories/catalog";
+import { findUserById } from "@/server/repositories/user";
 
 export default async function BanquetOnboardingPage() {
-  const [session, cities, plans] = await Promise.all([
-    auth(),
+  const session = await auth();
+  const [account, cities, plans] = await Promise.all([
+    session ? findUserById(session.user.id) : null,
     listCitiesForSelect(),
     listActivePlansWithFeatures("BANQUET"),
   ]);
@@ -23,6 +25,7 @@ export default async function BanquetOnboardingPage() {
           plans={plans}
           accountName={session?.user.name ?? null}
           accountEmail={session?.user.email ?? null}
+          accountPhone={account?.phone ?? null}
         />
       </div>
     </main>
