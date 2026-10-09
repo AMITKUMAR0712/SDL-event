@@ -28,7 +28,7 @@ export function SubscriptionPayButton({ subscriptionId }: { subscriptionId: stri
         setMessage(result.message ? `Payment failed: ${result.message}` : "Payment failed.");
         break;
       case "not_configured":
-        setMessage("Online payments aren't turned on for this account yet.");
+        setMessage(result.message ?? "Online payments aren't turned on for this account yet.");
         break;
       case "script_error":
         setMessage("Couldn't load the payment window. Check your connection and try again.");

@@ -10,21 +10,23 @@ export type ChargeSubscriptionResult =
   | { status: "captured" }
   | { status: "dismissed" }
   | { status: "failed"; message?: string }
-  | { status: "not_configured" }
+  | { status: "not_configured"; message?: string }
   | { status: "script_error" };
 
 /**
  * Opens Cashfree Checkout for a subscription and resolves once the modal
- * closes, however it closes. Never throws: if Cashfree isn't configured yet
- * in this environment (no keys set), it resolves with "not_configured" so
- * onboarding can still publish without charging — the dashboard's "Complete
- * payment" button covers whichever path didn't end in a captured payment.
+ * closes, however it closes. Never throws: if the order couldn't even be
+ * initiated — Cashfree not configured, no phone on file, amount too low,
+ * etc. — it resolves with "not_configured" (plus the real reason as
+ * `message`, rather than a one-size-fits-all string) so onboarding can
+ * still publish without charging — the dashboard's "Complete payment"
+ * button covers whichever path didn't end in a captured payment.
  */
 export async function chargeSubscriptionAtCheckout(
   subscriptionId: string,
 ): Promise<ChargeSubscriptionResult> {
   const order = await initiateSubscriptionPaymentAction(subscriptionId);
-  if (!order.ok) return { status: "not_configured" };
+  if (!order.ok) return { status: "not_configured", message: order.error };
 
   let result;
   try {
