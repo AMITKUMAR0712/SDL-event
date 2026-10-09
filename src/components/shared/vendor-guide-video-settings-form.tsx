@@ -35,6 +35,26 @@ export function VendorGuideVideoSettingsForm({ initial }: { initial: VendorGuide
     router.refresh();
   }
 
+  async function removeVideo() {
+    if (!window.confirm("Remove the guide video? This hides the button and clears it.")) return;
+    setUrl("");
+    setIsActive(false);
+    setPending(true);
+    setError(null);
+    setSaved(false);
+    const result = await updateSettingAction(
+      "vendor_guide_video",
+      JSON.stringify({ url: "", isActive: false }),
+    );
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setSaved(true);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-3 rounded-lg border border-border p-4">
       <p className="font-medium">Vendor onboarding guide video</p>
@@ -57,9 +77,16 @@ export function VendorGuideVideoSettingsForm({ initial }: { initial: VendorGuide
         Active (show the button in onboarding)
       </label>
       {saved && <p className="text-sm text-muted-foreground">Saved.</p>}
-      <Button size="sm" onClick={save} disabled={pending}>
-        {pending ? "Saving..." : "Save"}
-      </Button>
+      <div className="flex gap-2">
+        <Button size="sm" onClick={save} disabled={pending}>
+          {pending ? "Saving..." : "Save"}
+        </Button>
+        {url && (
+          <Button size="sm" variant="destructive" onClick={removeVideo} disabled={pending}>
+            Remove video
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

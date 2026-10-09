@@ -18,9 +18,11 @@ export function VideoUploadField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewBroken, setPreviewBroken] = useState(false);
 
   async function handleFile(file: File) {
     setError(null);
+    setPreviewBroken(false);
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
@@ -37,15 +39,27 @@ export function VideoUploadField({
     <div className="space-y-2">
       {value && (
         <video
+          key={value}
           src={value}
           controls
+          onError={() => setPreviewBroken(true)}
           className="h-32 w-full rounded-lg border border-border object-cover"
         />
+      )}
+      {value && previewBroken && (
+        <p className="text-xs text-destructive">
+          This link doesn&apos;t play as a video — a share-page link (like a Google Drive, Claude,
+          or ScreenApp link) won&apos;t work here. Use &quot;Upload from device&quot; below, or
+          paste a direct video file link instead.
+        </p>
       )}
       <Input
         placeholder={`${label} URL (or upload a file below)`}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          setPreviewBroken(false);
+          onChange(e.target.value);
+        }}
       />
       <div className="flex items-center gap-2">
         <button

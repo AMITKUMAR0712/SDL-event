@@ -20,6 +20,9 @@ function shouldShow(url: string): boolean {
 
 export function PopupVideoModal({ title, url }: { title: string; url: string }) {
   const [open, setOpen] = useState(() => shouldShow(url));
+  const [broken, setBroken] = useState(false);
+
+  if (broken) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -27,7 +30,14 @@ export function PopupVideoModal({ title, url }: { title: string; url: string }) 
         <DialogHeader>
           <DialogTitle>{title || "Welcome to SajDhajLo"}</DialogTitle>
         </DialogHeader>
-        <video src={url} controls autoPlay muted className="w-full rounded-lg" />
+        <video
+          src={url}
+          controls
+          autoPlay
+          muted
+          onError={() => setBroken(true)}
+          className="w-full rounded-lg"
+        />
       </DialogContent>
     </Dialog>
   );

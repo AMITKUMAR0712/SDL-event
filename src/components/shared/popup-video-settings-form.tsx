@@ -37,6 +37,27 @@ export function PopupVideoSettingsForm({ initial }: { initial: PopupVideoSetting
     router.refresh();
   }
 
+  async function removeVideo() {
+    if (!window.confirm("Remove the popup video? This turns the popup off and clears it.")) return;
+    setTitle("");
+    setUrl("");
+    setIsActive(false);
+    setPending(true);
+    setError(null);
+    setSaved(false);
+    const result = await updateSettingAction(
+      "popup_video",
+      JSON.stringify({ title: "", url: "", isActive: false }),
+    );
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setSaved(true);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-3 rounded-lg border border-border p-4">
       <p className="font-medium">Homepage popup video</p>
@@ -60,9 +81,16 @@ export function PopupVideoSettingsForm({ initial }: { initial: PopupVideoSetting
         Active (show the popup on the site)
       </label>
       {saved && <p className="text-sm text-muted-foreground">Saved.</p>}
-      <Button size="sm" onClick={save} disabled={pending}>
-        {pending ? "Saving..." : "Save"}
-      </Button>
+      <div className="flex gap-2">
+        <Button size="sm" onClick={save} disabled={pending}>
+          {pending ? "Saving..." : "Save"}
+        </Button>
+        {(url || title) && (
+          <Button size="sm" variant="destructive" onClick={removeVideo} disabled={pending}>
+            Remove video
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
