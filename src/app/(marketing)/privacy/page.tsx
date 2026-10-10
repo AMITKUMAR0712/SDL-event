@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { MetaPixelConsentSettingsButton } from "@/components/shared/meta-pixel-consent";
+
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
@@ -47,8 +49,9 @@ export default function PrivacyPage() {
       <h2>3. Who we share it with</h2>
       <p>
         We share only what each provider needs to do its job: Cashfree (payments), MSG91 (SMS/OTP
-        delivery), Resend (email delivery), Cloudinary (media storage), and, if you contact us via
-        WhatsApp, Meta&rsquo;s WhatsApp Cloud API. We do not sell personal data.
+        delivery), Resend (email delivery), Cloudinary (media storage), Google Tag Manager and
+        Google Analytics 4 (site analytics), and Meta (the homepage Meta Pixel if you opt in, and
+        WhatsApp Cloud API if you contact us via WhatsApp). We do not sell personal data.
       </p>
 
       <h2>4. Your rights under the DPDP Act, 2023</h2>
@@ -86,8 +89,15 @@ export default function PrivacyPage() {
       <h2>6. Cookies</h2>
       <p>
         We use strictly necessary cookies to keep you signed in and to enforce the free-search quota
-        described on our search pages. We do not use third-party advertising cookies.
+        described on our search pages. Google Tag Manager and Google Analytics 4 are loaded
+        separately for site analytics. On the homepage, Meta Pixel is loaded only if you opt in; it
+        may use cookies and sends page-view and device/browser data to Meta for advertising
+        measurement. The Meta Pixel choice does not control Google Tag Manager or Google Analytics
+        4. You can change or withdraw your Meta Pixel choice here:
       </p>
+      <div className="mt-3">
+        <MetaPixelConsentSettingsButton />
+      </div>
 
       <h2>7. Security</h2>
       <p>

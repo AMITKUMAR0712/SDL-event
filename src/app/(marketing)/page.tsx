@@ -14,6 +14,7 @@ import Link from "next/link";
 
 import { AnimatedCounter } from "@/components/shared/animated-counter";
 import { HeroCarousel } from "@/components/shared/hero-carousel";
+import { MetaPixelPageView } from "@/components/shared/meta-pixel-consent";
 import { PopularCategoriesGrid } from "@/components/shared/popular-categories-grid";
 import { PopularCitiesGrid } from "@/components/shared/popular-cities-grid";
 import { QuickSearchForm } from "@/components/shared/quick-search-form";
@@ -113,6 +114,7 @@ export default async function HomePage() {
 
   return (
     <main className="flex flex-1 flex-col">
+      <MetaPixelPageView />
       {/* Hero */}
       <section className="relative isolate">
         <HeroCarousel

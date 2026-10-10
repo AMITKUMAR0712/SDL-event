@@ -4,6 +4,12 @@ All notable changes to SajDhajLo (named GlowMakeOver, and MakeGlowOver before th
 "Post-launch — Rebrand to GlowMakeOver" and "Post-launch — Rebrand to SajDhajLo" below) are
 recorded here, one entry per phase.
 
+## 10 October 2026 — Consent-gated Meta Pixel
+
+- Added an opt-in prompt for the homepage Meta Pixel, persisted visitors' choices, and provided a
+  way to revisit the choice from the Privacy Policy. Updated the policy to disclose Meta Pixel and
+  existing Google analytics behavior.
+
 ## Phase 0 — Scaffold and tooling
 
 - Next.js 16 (App Router, Turbopack) + TypeScript strict + Tailwind CSS v4 + shadcn/ui
