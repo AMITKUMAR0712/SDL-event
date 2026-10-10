@@ -21,7 +21,7 @@ const csp = [
   // sdk.cashfree.com: Cashfree Checkout (active gateway). checkout.razorpay.com
   // stays allowed too — Razorpay's code is dormant, not deleted, so this is a
   // one-line revert if needed rather than a re-integration.
-  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://sdk.cashfree.com https://www.googletagmanager.com${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://sdk.cashfree.com https://www.googletagmanager.com https://connect.facebook.net${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https: blob:",
   // Explicit, not left to the default-src fallback — scoped to our own
@@ -35,7 +35,7 @@ const csp = [
   // API, bank/UPI redirect handling) that aren't all individually documented.
   // If a particular payment method still gets blocked in practice, that's
   // the first thing to loosen further.
-  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.cashfree.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
+  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.cashfree.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com https://*.sentry.io https://*.ingest.us.sentry.io${isDev ? " ws://localhost:* ws://192.168.*:*" : ""}`,
   "frame-src 'self' https://api.razorpay.com https://*.cashfree.com https://www.googletagmanager.com",
   "object-src 'none'",
   "base-uri 'self'",

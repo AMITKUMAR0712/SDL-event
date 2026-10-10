@@ -9,6 +9,8 @@ recorded here, one entry per phase.
 - Added a consent-gated Meta Pixel opt-in, persisted visitors' choices, and provided a way to revisit
   the choice from the Privacy Policy. Pixel tracking remains limited to homepage page views and
   confirmed subscription payments.
+- Allowed Meta's Pixel script and event endpoints in the Content Security Policy after a live
+  browser check showed `fbevents.js` was being blocked.
 - Added `/payment-success` for server-verified subscription payments. Cashfree checkout routes to
   it only after payment verification; cancellations and failed/unverified payments do not. The
   Meta `Subscribe` event uses the stored INR amount and payment ID for event de-duplication.
