@@ -3,9 +3,6 @@ import { expect, test } from "@playwright/test";
 test("vendor onboarding wizard completes and shows the new profile on the dashboard", async ({
   page,
 }) => {
-  // The real Cashfree sandbox call below has been observed taking just
-  // over the default 30s test timeout to fully load the modal's payment
-  // methods, so this test needs more headroom than the suite default.
   test.setTimeout(60_000);
   const suffix = Date.now();
   const email = `e2e-vendor-onboard-${suffix}@example.com`;
@@ -52,48 +49,27 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
 
   // Step 5: plan (default already selected) -> submit
   await expect(page.getByText("Choose a plan")).toBeVisible();
+  await page.route(/https:\/\/(?:test|secure)\.payu\.in\/_payment$/, async (route) => {
+    const fields = new URLSearchParams(route.request().postData() ?? "");
+    expect(fields.get("amount")).toMatch(/^\d+\.\d{2}$/);
+    expect(fields.get("hash")).toMatch(/^[a-f\d]{128}$/i);
+    await route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: "PayU checkout intercepted",
+    });
+  });
   await page.getByRole("button", { name: /Buy Now/ }).click();
 
-  // Real Cashfree sandbox keys are configured in this environment, so
-  // clicking above creates the profile+subscription (proven by the fact
-  // that a real Checkout modal opens right after, with the phone number
-  // just entered) and then opens a real payment widget. The modal stays
-  // open waiting for a real interaction, which a live third-party payment
-  // UI isn't something e2e should simulate — so this only waits for proof
-  // the modal opened, then navigates directly rather than waiting on the
-  // wizard's own navigation (blocked on that same open modal).
-  // `.first()` on a bare "iframe" locator is unreliable here: other
-  // scripts (GTM, etc.) can add iframes to the DOM, and a plain CSS
-  // locator doesn't know which one is Cashfree's. Target it by its actual
-  // src so this isn't dependent on DOM order, and assert on the "Payment
-  // Options for +91..." text, which only renders once the real payment
-  // methods have loaded from Cashfree — unambiguous, visible proof the
-  // modal fully opened.
-  await page.waitForTimeout(5_000);
-  console.log(
-    "DEBUG iframes:",
-    await page.evaluate(() =>
-      Array.from(document.querySelectorAll("iframe")).map((f) => ({
-        src: f.src,
-        title: f.title,
-        name: f.name,
-        id: f.id,
-        w: f.offsetWidth,
-        h: f.offsetHeight,
-      })),
-    ),
-  );
-
-  await page
-    .frameLocator('iframe[src*="cashfree.com"]')
-    .getByText(/Payment Options for/)
-    .waitFor({ state: "visible", timeout: 45_000 });
+  await expect
+    .poll(() => new URL(page.url()).pathname, { timeout: 30_000 })
+    .toMatch(/\/dashboard\/vendor|\/_payment/);
 
   await page.goto("/dashboard/vendor");
   await expect(page.getByRole("heading", { name: businessName })).toBeVisible();
   // No more KYC approval gate — onboarding itself never blocks on admin
-  // review. But visibility is gated on payment: this test never completes
-  // the real Cashfree checkout (see above), so the listing should still be
+  // review. But visibility is gated on payment: this test intercepts the
+  // PayU checkout without completing payment, so the listing should still be
   // unpublished at this point rather than live with an unpaid plan.
   await expect(page.getByText(/Not published yet/)).toBeVisible();
 });
@@ -101,9 +77,6 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
 test("banquet onboarding wizard completes and shows the new profile on the dashboard", async ({
   page,
 }) => {
-  // The real Cashfree sandbox call below has been observed taking just
-  // over the default 30s test timeout to fully load the modal's payment
-  // methods, so this test needs more headroom than the suite default.
   test.setTimeout(60_000);
   const suffix = Date.now();
   const email = `e2e-banquet-onboard-${suffix}@example.com`;
@@ -144,33 +117,27 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
 
   // Step 5: plan -> submit
   await expect(page.getByText("Choose a plan")).toBeVisible();
+  await page.route(/https:\/\/(?:test|secure)\.payu\.in\/_payment$/, async (route) => {
+    const fields = new URLSearchParams(route.request().postData() ?? "");
+    expect(fields.get("amount")).toMatch(/^\d+\.\d{2}$/);
+    expect(fields.get("hash")).toMatch(/^[a-f\d]{128}$/i);
+    await route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: "PayU checkout intercepted",
+    });
+  });
   await page.getByRole("button", { name: /Buy Now/ }).click();
 
-  // Real Cashfree sandbox keys are configured in this environment, so
-  // clicking above creates the profile+subscription (proven by the fact
-  // that a real Checkout modal opens right after, with the phone number
-  // just entered) and then opens a real payment widget. The modal stays
-  // open waiting for a real interaction, which a live third-party payment
-  // UI isn't something e2e should simulate — so this only waits for proof
-  // the modal opened, then navigates directly rather than waiting on the
-  // wizard's own navigation (blocked on that same open modal).
-  // `.first()` on a bare "iframe" locator is unreliable here: other
-  // scripts (GTM, etc.) can add iframes to the DOM, and a plain CSS
-  // locator doesn't know which one is Cashfree's. Target it by its actual
-  // src so this isn't dependent on DOM order, and assert on the "Payment
-  // Options for +91..." text, which only renders once the real payment
-  // methods have loaded from Cashfree — unambiguous, visible proof the
-  // modal fully opened.
-  await page
-    .frameLocator('iframe[src*="cashfree.com"]')
-    .getByText(/Payment Options for/)
-    .waitFor({ state: "visible", timeout: 45_000 });
+  await expect
+    .poll(() => new URL(page.url()).pathname, { timeout: 30_000 })
+    .toMatch(/\/dashboard\/banquet|\/_payment/);
 
   await page.goto("/dashboard/banquet");
   await expect(page.getByRole("heading", { name: venueName })).toBeVisible();
   // No more KYC approval gate — onboarding itself never blocks on admin
-  // review. But visibility is gated on payment: this test never completes
-  // the real Cashfree checkout (see above), so the listing should still be
+  // review. But visibility is gated on payment: this test intercepts the
+  // PayU checkout without completing payment, so the listing should still be
   // unpublished at this point rather than live with an unpaid plan.
   await expect(page.getByText(/KYC status: APPROVED/)).toBeVisible();
   await expect(page.getByText(/Not published yet/)).toBeVisible();

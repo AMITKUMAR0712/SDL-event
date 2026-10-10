@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { PlanPicker, type PlanPickerPlan } from "@/components/shared/plan-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -52,6 +53,7 @@ export function BanquetOnboardingWizard({
   const { update } = useSession();
   const [step, setStep] = useState(0);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [checkoutEmail, setCheckoutEmail] = useState(accountEmail ?? "");
 
   const form = useForm<BanquetOnboardingInput>({
     resolver: zodResolver(banquetOnboardingSchema),
@@ -109,6 +111,11 @@ export function BanquetOnboardingWizard({
 
   async function onSubmit(values: BanquetOnboardingInput) {
     setServerError(null);
+    const parsedCheckoutEmail = z.string().email().safeParse(checkoutEmail);
+    if (!parsedCheckoutEmail.success) {
+      setServerError("Enter a valid email for the payment receipt.");
+      return;
+    }
     const result = await completeBanquetOnboardingAction(values);
     if (!result.ok) {
       setServerError(result.error);
@@ -120,11 +127,11 @@ export function BanquetOnboardingWizard({
     if (result.data.subscriptionId) {
       // Publishing never waits on this — it only affects whether the new
       // subscription shows as paid on the dashboard afterwards.
-      const payment = await chargeSubscriptionAtCheckout(result.data.subscriptionId);
-      if (payment.status === "captured") {
-        router.push(`/payment-success?paymentId=${encodeURIComponent(payment.paymentId)}`);
-        return;
-      }
+      const payment = await chargeSubscriptionAtCheckout(
+        result.data.subscriptionId,
+        parsedCheckoutEmail.data,
+      );
+      if (payment.status === "redirecting") return;
     }
 
     router.push("/dashboard/banquet");
@@ -331,21 +338,39 @@ export function BanquetOnboardingWizard({
         )}
 
         {step === 4 && (
-          <FormField
-            control={form.control}
-            name="planCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Choose a plan</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Pick how long you want to stay listed — pricing and lead limits are fixed by
-                  SajDhajLo, never negotiable per venue.
-                </p>
-                <PlanPicker plans={plans} value={field.value} onChange={field.onChange} />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <>
+            <div>
+              <label htmlFor="banquet-payment-email" className="mb-1 block text-sm font-medium">
+                Email for payment receipt
+              </label>
+              <Input
+                id="banquet-payment-email"
+                type="email"
+                autoComplete="email"
+                value={checkoutEmail}
+                onChange={(event) => setCheckoutEmail(event.target.value)}
+                required
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Used for the PayU receipt only; your account email won&apos;t change.
+              </p>
+            </div>
+            <FormField
+              control={form.control}
+              name="planCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Choose a plan</FormLabel>
+                  <p className="text-sm text-muted-foreground">
+                    Pick how long you want to stay listed — pricing and lead limits are fixed by
+                    SajDhajLo, never negotiable per venue.
+                  </p>
+                  <PlanPicker plans={plans} value={field.value} onChange={field.onChange} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
         )}
 
         <div className="flex justify-between pt-4">

@@ -1,14 +1,14 @@
 "use server";
 
+import { z } from "zod";
+
 import { requireOwnership, requireRole } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { rateLimit } from "@/lib/rate-limit";
 import type { ActionResult } from "@/server/actions/auth";
 import { findBookingById } from "@/server/repositories/booking";
-import { isCashfreeOrderPaid } from "@/server/services/cashfree";
 import {
-  capturePayment,
   initiateBookingPayment,
   InitiatePaymentResult,
   initiateSubscriptionPayment,
@@ -17,8 +17,8 @@ import {
 export type CheckoutOrder = {
   orderId: string;
   amountPaise: number;
-  paymentSessionId: string;
-  mode: "sandbox" | "production";
+  checkoutUrl: string;
+  fields: Record<string, string>;
 };
 
 function paymentInitiateErrorMessage(
@@ -41,7 +41,11 @@ function paymentInitiateErrorMessage(
 
 export async function initiateBookingPaymentAction(
   bookingId: string,
+  checkoutEmail: string,
 ): Promise<ActionResult<CheckoutOrder>> {
+  const parsedEmail = z.string().email().safeParse(checkoutEmail);
+  if (!parsedEmail.success) return { ok: false, error: "Enter a valid email for this payment." };
+
   const booking = await findBookingById(bookingId);
   if (!booking) return { ok: false, error: "Booking not found." };
   const session = await requireOwnership(booking.customerId);
@@ -51,11 +55,11 @@ export async function initiateBookingPaymentAction(
     return { ok: false, error: "Too many payment attempts. Try again later." };
   }
 
-  if (!env.CASHFREE_APP_ID || !env.CASHFREE_SECRET_KEY) {
+  if (!env.PAYU_KEY || !env.PAYU_SALT) {
     return { ok: false, error: "Payments aren't configured on this environment yet." };
   }
 
-  const result = await initiateBookingPayment(bookingId);
+  const result = await initiateBookingPayment(bookingId, parsedEmail.data);
   if (!result.ok) {
     return { ok: false, error: paymentInitiateErrorMessage(result.reason, "Booking") };
   }
@@ -64,46 +68,19 @@ export async function initiateBookingPaymentAction(
     data: {
       orderId: result.orderId,
       amountPaise: result.amountPaise,
-      paymentSessionId: result.paymentSessionId,
-      mode: env.CASHFREE_ENV === "PRODUCTION" ? "production" : "sandbox",
+      checkoutUrl: result.checkout.url,
+      fields: result.checkout.fields,
     },
   };
 }
 
-/**
- * Called from the browser right after Cashfree Checkout's modal closes —
- * an optimistic fast path so the customer sees "Confirmed" immediately
- * instead of waiting on webhook delivery lag. Unlike Razorpay, Cashfree's
- * checkout doesn't hand the browser a verifiable payment+signature pair, so
- * this confirms the order's real status with a server-to-server Cashfree
- * call instead of checking a signature. The webhook
- * (`/api/webhooks/cashfree`) remains the authoritative path and will reach
- * the same state even if this call never happens (network drop, tab closed
- * mid-checkout); `capturePayment` is idempotent, so whichever arrives first
- * does the work.
- */
-export async function verifyBookingPaymentAction(
-  bookingId: string,
-  orderId: string,
-): Promise<ActionResult> {
-  const booking = await findBookingById(bookingId);
-  if (!booking) return { ok: false, error: "Booking not found." };
-  await requireOwnership(booking.customerId);
-
-  const payment = await db.payment.findFirst({ where: { bookingId, providerOrderId: orderId } });
-  if (!payment) return { ok: false, error: "No matching payment order for this booking." };
-
-  const status = await isCashfreeOrderPaid(orderId);
-  if (!status.paid) return { ok: false, error: "Payment not completed yet." };
-
-  await capturePayment(orderId, status.cfPaymentId, { source: "client-verify", orderId });
-
-  return { ok: true, data: undefined };
-}
-
 export async function initiateSubscriptionPaymentAction(
   subscriptionId: string,
+  checkoutEmail: string,
 ): Promise<ActionResult<CheckoutOrder>> {
+  const parsedEmail = z.string().email().safeParse(checkoutEmail);
+  if (!parsedEmail.success) return { ok: false, error: "Enter a valid email for this payment." };
+
   const session = await requireRole(["CUSTOMER", "VENDOR", "BANQUET_OWNER"]);
 
   const subscription = await db.subscription.findUnique({ where: { id: subscriptionId } });
@@ -116,11 +93,11 @@ export async function initiateSubscriptionPaymentAction(
     return { ok: false, error: "Too many payment attempts. Try again later." };
   }
 
-  if (!env.CASHFREE_APP_ID || !env.CASHFREE_SECRET_KEY) {
+  if (!env.PAYU_KEY || !env.PAYU_SALT) {
     return { ok: false, error: "Payments aren't configured on this environment yet." };
   }
 
-  const result = await initiateSubscriptionPayment(subscriptionId);
+  const result = await initiateSubscriptionPayment(subscriptionId, parsedEmail.data);
   if (!result.ok) {
     return { ok: false, error: paymentInitiateErrorMessage(result.reason, "Subscription") };
   }
@@ -129,33 +106,8 @@ export async function initiateSubscriptionPaymentAction(
     data: {
       orderId: result.orderId,
       amountPaise: result.amountPaise,
-      paymentSessionId: result.paymentSessionId,
-      mode: env.CASHFREE_ENV === "PRODUCTION" ? "production" : "sandbox",
+      checkoutUrl: result.checkout.url,
+      fields: result.checkout.fields,
     },
   };
-}
-
-/** Same optimistic-verify pattern as verifyBookingPaymentAction, for subscription orders. */
-export async function verifySubscriptionPaymentAction(
-  subscriptionId: string,
-  orderId: string,
-): Promise<ActionResult<{ paymentId: string }>> {
-  const session = await requireRole(["CUSTOMER", "VENDOR", "BANQUET_OWNER"]);
-
-  const subscription = await db.subscription.findUnique({ where: { id: subscriptionId } });
-  if (!subscription || subscription.userId !== session.user.id) {
-    return { ok: false, error: "Subscription not found." };
-  }
-
-  const payment = await db.payment.findFirst({
-    where: { subscriptionId, providerOrderId: orderId },
-  });
-  if (!payment) return { ok: false, error: "No matching payment order for this subscription." };
-
-  const status = await isCashfreeOrderPaid(orderId);
-  if (!status.paid) return { ok: false, error: "Payment not completed yet." };
-
-  await capturePayment(orderId, status.cfPaymentId, { source: "client-verify", orderId });
-
-  return { ok: true, data: { paymentId: payment.id } };
 }

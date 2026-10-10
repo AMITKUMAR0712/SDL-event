@@ -90,7 +90,10 @@ export default async function BanquetDashboardPage() {
           </p>
           {!isPaid && (
             <div className="mt-3">
-              <SubscriptionPayButton subscriptionId={subscription.id} />
+              <SubscriptionPayButton
+                subscriptionId={subscription.id}
+                defaultEmail={session?.user.email ?? ""}
+              />
             </div>
           )}
         </div>

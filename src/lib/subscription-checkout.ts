@@ -1,51 +1,28 @@
 "use client";
 
-import { openCashfreeCheckout } from "@/lib/cashfree-checkout";
-import {
-  initiateSubscriptionPaymentAction,
-  verifySubscriptionPaymentAction,
-} from "@/server/actions/payment";
+import { submitPayUCheckout } from "@/lib/payu-checkout";
+import { initiateSubscriptionPaymentAction } from "@/server/actions/payment";
 
 export type ChargeSubscriptionResult =
-  | { status: "captured"; paymentId: string }
-  | { status: "dismissed" }
-  | { status: "failed"; message?: string }
+  | { status: "redirecting" }
   | { status: "not_configured"; message?: string }
   | { status: "script_error" };
 
 /**
- * Opens Cashfree Checkout for a subscription and resolves once the modal
- * closes, however it closes. Never throws: if the order couldn't even be
- * initiated — Cashfree not configured, no phone on file, amount too low,
- * etc. — it resolves with "not_configured" (plus the real reason as
- * `message`, rather than a one-size-fits-all string) so onboarding can
- * still publish without charging — the dashboard's "Complete payment"
- * button covers whichever path didn't end in a captured payment.
+ * Posts the signed checkout form to PayU. The signed callback is verified on
+ * the server before any payment effects are applied.
  */
 export async function chargeSubscriptionAtCheckout(
   subscriptionId: string,
+  checkoutEmail: string,
 ): Promise<ChargeSubscriptionResult> {
-  const order = await initiateSubscriptionPaymentAction(subscriptionId);
+  const order = await initiateSubscriptionPaymentAction(subscriptionId, checkoutEmail);
   if (!order.ok) return { status: "not_configured", message: order.error };
 
-  let result;
   try {
-    result = await openCashfreeCheckout(order.data.paymentSessionId, order.data.mode);
+    submitPayUCheckout(order.data.checkoutUrl, order.data.fields);
   } catch {
     return { status: "script_error" };
   }
-
-  if (result.error) {
-    return { status: "failed", message: result.error.message };
-  }
-
-  const verified = await verifySubscriptionPaymentAction(subscriptionId, order.data.orderId);
-  if (!verified.ok) {
-    // Could genuinely be a failure, or the modal was dismissed without
-    // paying — either way nothing was captured, so "dismissed" (rather than
-    // "failed") keeps onboarding from showing a scary error for a plain
-    // cancel.
-    return { status: "dismissed" };
-  }
-  return { status: "captured", paymentId: verified.data.paymentId };
+  return { status: "redirecting" };
 }

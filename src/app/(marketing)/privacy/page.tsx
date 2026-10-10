@@ -13,7 +13,7 @@ export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12 [&_a]:underline [&_h2]:mt-8 [&_h2]:font-heading [&_h2]:text-xl [&_li]:mt-1 [&_p]:mt-2 [&_p]:text-muted-foreground [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5">
       <h1 className="font-heading text-3xl">Privacy Policy</h1>
-      <p className="text-muted-foreground">Last updated: 9 October 2026</p>
+      <p className="text-muted-foreground">Last updated: 10 October 2026</p>
 
       <h2>1. Data we collect</h2>
       <ul>
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
           documents you upload for approval.
         </li>
         <li>
-          Payment data: our payment provider (currently Cashfree) processes your card, UPI or bank
+          Payment data: our payment provider (currently PayU) processes your card, UPI or bank
           credentials. SajDhajLo receives and stores payment status, order/payment references,
           amount and related transaction records, but not your payment credentials.
         </li>
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
 
       <h2>3. Who we share it with</h2>
       <p>
-        We share only what each provider needs to do its job: Cashfree (payments), MSG91 (SMS/OTP
+        We share only what each provider needs to do its job: PayU (payments), MSG91 (SMS/OTP
         delivery), Resend (email delivery), Cloudinary (media storage), Google Tag Manager and
         Google Analytics 4 (site analytics), and Meta (the Meta Pixel on the homepage and confirmed
         subscription-success page if you opt in, and WhatsApp Cloud API if you contact us via

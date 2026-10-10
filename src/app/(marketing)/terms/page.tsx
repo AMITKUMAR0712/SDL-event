@@ -10,7 +10,7 @@ export default function TermsPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12 [&_a]:underline [&_h2]:mt-8 [&_h2]:font-heading [&_h2]:text-xl [&_li]:mt-1 [&_p]:mt-2 [&_p]:text-muted-foreground [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5">
       <h1 className="font-heading text-3xl">Terms of Service</h1>
-      <p className="text-muted-foreground">Last updated: 9 October 2026</p>
+      <p className="text-muted-foreground">Last updated: 10 October 2026</p>
 
       <h2>1. What SajDhajLo is</h2>
       <p>
@@ -33,7 +33,7 @@ export default function TermsPage() {
         When you book a vendor or venue, the service is provided by that independent vendor or
         venue. SajDhajLo facilitates discovery, booking and payment. Prices and any applicable taxes
         are shown before you pay. Amounts are charged in Indian Rupees (INR). Payments are currently
-        processed through Cashfree; SajDhajLo does not store your card, UPI or bank credentials.
+        processed through PayU; SajDhajLo does not store your card, UPI or bank credentials.
       </p>
 
       <h2>4. Cancellations and refunds</h2>

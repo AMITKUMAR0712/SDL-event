@@ -4,6 +4,30 @@ All notable changes to SajDhajLo (named GlowMakeOver, and MakeGlowOver before th
 "Post-launch — Rebrand to GlowMakeOver" and "Post-launch — Rebrand to SajDhajLo" below) are
 recorded here, one entry per phase.
 
+## 10 October 2026 — PayU hosted checkout
+
+- Replaced Cashfree as the active booking and subscription gateway with PayU Hosted Checkout.
+  The server signs every checkout request, verifies the callback hash, then confirms the transaction
+  directly with PayU before applying booking or subscription effects.
+- Added `PAYU_KEY`, `PAYU_SALT`, and `PAYU_ENV` configuration. Existing Cashfree payment records
+  and webhook handling remain available for historical transactions; local credentials stay out
+  of version control.
+- Added a receipt-email field for PayU checkout. It is prefilled from the account when available
+  and does not update the account email.
+- Updated payment-provider records, privacy/terms wording, onboarding tests, and provider branding.
+
+### Manual smoke test
+
+1. Put PayU test credentials in the ignored local `.env` as `PAYU_KEY`, `PAYU_SALT`, and
+   `PAYU_ENV="TEST"`; never commit or paste the salt.
+2. As a customer, start a booking payment; confirm PayU test checkout opens, then complete a test
+   payment and verify the booking becomes confirmed only after the callback is server-verified.
+3. As a vendor or banquet owner, submit onboarding with a plan; confirm checkout returns to
+   `/payment-success` only after server verification and the subscription shows paid.
+4. Try a cancelled or failed test payment and confirm it does not activate the booking or plan.
+5. Remove/blank the account email in a test account and confirm the checkout email can be supplied
+   without changing the stored account email.
+
 ## 10 October 2026 — Consent-gated Meta Pixel
 
 - Added a consent-gated Meta Pixel opt-in, persisted visitors' choices, and provided a way to revisit

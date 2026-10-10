@@ -58,14 +58,16 @@ export async function POST(req: NextRequest) {
 async function handlePaymentCaptured(body: RazorpayWebhookPayload) {
   const entity = body.payload.payment?.entity;
   if (!entity) return;
-  await capturePayment(entity.order_id, entity.id, body);
+  await capturePayment("RAZORPAY", entity.order_id, entity.id, body);
 }
 
 async function handlePaymentFailed(body: RazorpayWebhookPayload) {
   const entity = body.payload.payment?.entity;
   if (!entity) return;
 
-  const payment = await db.payment.findFirst({ where: { providerOrderId: entity.order_id } });
+  const payment = await db.payment.findFirst({
+    where: { provider: "RAZORPAY", providerOrderId: entity.order_id },
+  });
   if (!payment || payment.status === "FAILED") return;
 
   await db.payment.update({

@@ -24,10 +24,12 @@ const envSchema = z.object({
   MSG91_SENDER_ID: z.string().optional().default(""),
   MSG91_OTP_TEMPLATE_ID: z.string().optional().default(""),
 
-  // Payments (Cashfree — active gateway; Razorpay kept configured but
-  // unused so the swap is a one-line revert if needed, not a re-integration).
-  // Webhook signatures are verified with CASHFREE_SECRET_KEY itself — unlike
-  // Razorpay, Cashfree doesn't issue a separate webhook secret.
+  // Payments (PayU hosted checkout — active gateway)
+  PAYU_KEY: z.string().optional().default(""),
+  PAYU_SALT: z.string().optional().default(""),
+  PAYU_ENV: z.enum(["TEST", "PRODUCTION"]).optional().default("TEST"),
+
+  // Legacy gateways retained for historical payments and callbacks.
   CASHFREE_APP_ID: z.string().optional().default(""),
   CASHFREE_SECRET_KEY: z.string().optional().default(""),
   CASHFREE_ENV: z.enum(["SANDBOX", "PRODUCTION"]).optional().default("SANDBOX"),

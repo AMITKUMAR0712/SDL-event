@@ -81,6 +81,7 @@ describe("capturePayment (integration, hits the real dev DB)", () => {
     const payment = await db.payment.create({
       data: {
         bookingId: booking.id,
+        provider: "CASHFREE",
         providerOrderId: orderId,
         amountPaise: 50_000,
         idempotencyKey: `capture-test-${suffix}`,
@@ -90,7 +91,7 @@ describe("capturePayment (integration, hits the real dev DB)", () => {
   });
 
   it("marks the payment CAPTURED and confirms the booking", async () => {
-    await capturePayment(orderId, `pay_test_${suffix}`, { test: true });
+    await capturePayment("CASHFREE", orderId, `pay_test_${suffix}`, { test: true });
 
     const payment = await db.payment.findUniqueOrThrow({ where: { id: paymentId } });
     expect(payment.status).toBe("CAPTURED");
@@ -104,7 +105,10 @@ describe("capturePayment (integration, hits the real dev DB)", () => {
     // Simulate the webhook and the client-verify path both firing for the
     // same payment: this must never double-transition the booking or crash.
     await expect(
-      capturePayment(orderId, `pay_test_${suffix}`, { test: true, secondCall: true }),
+      capturePayment("CASHFREE", orderId, `pay_test_${suffix}`, {
+        test: true,
+        secondCall: true,
+      }),
     ).resolves.toBeUndefined();
 
     const booking = await db.booking.findUniqueOrThrow({ where: { id: bookingId } });

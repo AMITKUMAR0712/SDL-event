@@ -57,14 +57,16 @@ async function handlePaymentSuccess(event: ReturnType<typeof verifyCashfreeWebho
   const orderId = event.object.data?.order?.order_id;
   const cfPaymentId = event.object.data?.payment?.cf_payment_id;
   if (!orderId || !cfPaymentId) return;
-  await capturePayment(orderId, cfPaymentId, event.object);
+  await capturePayment("CASHFREE", orderId, cfPaymentId, event.object);
 }
 
 async function handlePaymentFailed(event: ReturnType<typeof verifyCashfreeWebhookSignature>) {
   const orderId = event.object.data?.order?.order_id;
   if (!orderId) return;
 
-  const payment = await db.payment.findFirst({ where: { providerOrderId: orderId } });
+  const payment = await db.payment.findFirst({
+    where: { provider: "CASHFREE", providerOrderId: orderId },
+  });
   if (!payment || payment.status === "FAILED") return;
 
   await db.payment.update({
