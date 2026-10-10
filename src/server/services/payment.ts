@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { findBookingById } from "@/server/repositories/booking";
+import { findCapturedSubscriptionPayment } from "@/server/repositories/payment";
 import { transitionBooking } from "@/server/services/booking";
 import { createCashfreeOrder } from "@/server/services/cashfree";
 import { syncPublishStatusForUser } from "@/server/services/subscription";
@@ -18,6 +19,13 @@ export type InitiatePaymentResult =
         | "PROVIDER_ERROR"
         | "PHONE_REQUIRED";
     };
+
+export async function getSubscriptionPaymentConfirmation(paymentId: string, userId: string) {
+  const payment = await findCapturedSubscriptionPayment(paymentId);
+  if (!payment || payment.subscription?.userId !== userId) return null;
+
+  return { paymentId: payment.id, amountPaise: payment.amountPaise };
+}
 
 /** Amount-too-low is a distinct, expected failure (surfaced to the caller
  * as a clean reason code); anything else from the Cashfree API/SDK is an

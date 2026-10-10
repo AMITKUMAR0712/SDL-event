@@ -1,7 +1,15 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import Script from "next/script";
-import { createContext, type ReactNode, useContext, useState, useSyncExternalStore } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -12,8 +20,25 @@ const consentListeners = new Set<() => void>();
 type ConsentChoice = "granted" | "denied" | null;
 type ConsentSnapshot = ConsentChoice | "unresolved";
 
+type MetaPixel = {
+  (command: "init", pixelId: string): void;
+  (
+    command: "track",
+    eventName: string,
+    parameters?: Record<string, string | number>,
+    options?: { eventID?: string },
+  ): void;
+};
+
+declare global {
+  interface Window {
+    fbq?: MetaPixel;
+  }
+}
+
 type MetaPixelConsentContextValue = {
   choice: ConsentSnapshot;
+  pixelReady: boolean;
   choose: (choice: Exclude<ConsentChoice, null>) => void;
   openPreferences: () => void;
 };
@@ -52,11 +77,13 @@ function useMetaPixelConsent() {
 }
 
 export function MetaPixelConsentProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const choice = useSyncExternalStore(
     subscribeToConsent,
     getConsentSnapshot,
     getServerConsentSnapshot,
   );
+  const [pixelReady, setPixelReady] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
 
   const choose = (nextChoice: Exclude<ConsentChoice, null>) => {
@@ -68,8 +95,25 @@ export function MetaPixelConsentProvider({ children }: { children: ReactNode }) 
   const openPreferences = () => setPreferencesOpen(true);
 
   return (
-    <MetaPixelConsentContext.Provider value={{ choice, choose, openPreferences }}>
+    <MetaPixelConsentContext.Provider value={{ choice, pixelReady, choose, openPreferences }}>
       {children}
+      {choice === "granted" && (pathname === "/" || pathname === "/payment-success") && (
+        <Script
+          id="meta-pixel-base"
+          strategy="afterInteractive"
+          onReady={() => setPixelReady(true)}
+        >
+          {`!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;
+s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${META_PIXEL_ID}');`}
+        </Script>
+      )}
       {(choice === null || preferencesOpen) && (
         <aside
           aria-label="Meta Pixel tracking preferences"
@@ -77,10 +121,10 @@ export function MetaPixelConsentProvider({ children }: { children: ReactNode }) 
         >
           <p className="font-medium">Choose whether to allow Meta Pixel</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            If allowed, Meta Pixel runs on the homepage for advertising measurement and may send
-            page-view and device/browser data to Meta or use cookies. This choice controls Meta
-            Pixel only; Google Tag Manager and Google Analytics run separately. You can change your
-            choice from the Privacy Policy.
+            If allowed, Meta Pixel records homepage page views and verified subscription payments
+            for advertising measurement. It may send device/browser data to Meta or use cookies.
+            This choice controls Meta Pixel only; Google Tag Manager and Google Analytics run
+            separately. You can change your choice from the Privacy Policy.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button type="button" onClick={() => choose("granted")}>
@@ -97,24 +141,40 @@ export function MetaPixelConsentProvider({ children }: { children: ReactNode }) 
 }
 
 export function MetaPixelPageView() {
-  const { choice } = useMetaPixelConsent();
+  const { choice, pixelReady } = useMetaPixelConsent();
 
-  if (choice !== "granted") return null;
+  useEffect(() => {
+    if (choice === "granted" && pixelReady) window.fbq?.("track", "PageView");
+  }, [choice, pixelReady]);
 
-  return (
-    <Script id="meta-pixel" strategy="afterInteractive">
-      {`!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;
-s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${META_PIXEL_ID}');
-fbq('track', 'PageView');`}
-    </Script>
-  );
+  return null;
+}
+
+export function MetaPixelSubscribeEvent({
+  eventId,
+  valuePaise,
+}: {
+  eventId: string;
+  valuePaise: number;
+}) {
+  const { choice, pixelReady } = useMetaPixelConsent();
+
+  useEffect(() => {
+    if (choice !== "granted" || !pixelReady || !window.fbq) return;
+
+    const eventKey = `sajdhajlo-meta-subscribe:${eventId}`;
+    if (window.localStorage.getItem(eventKey)) return;
+
+    window.fbq(
+      "track",
+      "Subscribe",
+      { value: valuePaise / 100, currency: "INR" },
+      { eventID: eventId },
+    );
+    window.localStorage.setItem(eventKey, "1");
+  }, [choice, eventId, pixelReady, valuePaise]);
+
+  return null;
 }
 
 export function MetaPixelConsentSettingsButton() {

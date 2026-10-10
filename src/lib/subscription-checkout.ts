@@ -7,7 +7,7 @@ import {
 } from "@/server/actions/payment";
 
 export type ChargeSubscriptionResult =
-  | { status: "captured" }
+  | { status: "captured"; paymentId: string }
   | { status: "dismissed" }
   | { status: "failed"; message?: string }
   | { status: "not_configured"; message?: string }
@@ -47,5 +47,5 @@ export async function chargeSubscriptionAtCheckout(
     // cancel.
     return { status: "dismissed" };
   }
-  return { status: "captured" };
+  return { status: "captured", paymentId: verified.data.paymentId };
 }

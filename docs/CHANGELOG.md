@@ -6,9 +6,22 @@ recorded here, one entry per phase.
 
 ## 10 October 2026 — Consent-gated Meta Pixel
 
-- Added an opt-in prompt for the homepage Meta Pixel, persisted visitors' choices, and provided a
-  way to revisit the choice from the Privacy Policy. Updated the policy to disclose Meta Pixel and
-  existing Google analytics behavior.
+- Added a consent-gated Meta Pixel opt-in, persisted visitors' choices, and provided a way to revisit
+  the choice from the Privacy Policy. Pixel tracking remains limited to homepage page views and
+  confirmed subscription payments.
+- Added `/payment-success` for server-verified subscription payments. Cashfree checkout routes to
+  it only after payment verification; cancellations and failed/unverified payments do not. The
+  Meta `Subscribe` event uses the stored INR amount and payment ID for event de-duplication.
+
+### Manual smoke test
+
+1. As a vendor or banquet owner, open a plan payment and close the Cashfree modal; confirm you
+   return to onboarding/dashboard and do not reach `/payment-success`.
+2. Complete a sandbox subscription payment; confirm `/payment-success` shows only after server
+   verification and the correct dashboard link is offered.
+3. With Meta consent enabled, inspect the Subscribe event for the payment's INR amount; reload the
+   success page and confirm it does not fire again for the same payment ID.
+4. Reject Meta consent and repeat a sandbox payment; confirm no Meta event is sent.
 
 ## Phase 0 — Scaffold and tooling
 

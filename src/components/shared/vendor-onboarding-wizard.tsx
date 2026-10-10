@@ -135,7 +135,11 @@ export function VendorOnboardingWizard({
     if (result.data.subscriptionId) {
       // Publishing never waits on this — it only affects whether the new
       // subscription shows as paid on the dashboard afterwards.
-      await chargeSubscriptionAtCheckout(result.data.subscriptionId);
+      const payment = await chargeSubscriptionAtCheckout(result.data.subscriptionId);
+      if (payment.status === "captured") {
+        router.push(`/payment-success?paymentId=${encodeURIComponent(payment.paymentId)}`);
+        return;
+      }
     }
 
     router.push("/dashboard/vendor");

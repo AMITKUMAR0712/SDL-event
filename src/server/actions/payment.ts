@@ -139,7 +139,7 @@ export async function initiateSubscriptionPaymentAction(
 export async function verifySubscriptionPaymentAction(
   subscriptionId: string,
   orderId: string,
-): Promise<ActionResult> {
+): Promise<ActionResult<{ paymentId: string }>> {
   const session = await requireRole(["CUSTOMER", "VENDOR", "BANQUET_OWNER"]);
 
   const subscription = await db.subscription.findUnique({ where: { id: subscriptionId } });
@@ -157,5 +157,5 @@ export async function verifySubscriptionPaymentAction(
 
   await capturePayment(orderId, status.cfPaymentId, { source: "client-verify", orderId });
 
-  return { ok: true, data: undefined };
+  return { ok: true, data: { paymentId: payment.id } };
 }

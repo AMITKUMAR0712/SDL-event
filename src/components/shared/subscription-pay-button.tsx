@@ -18,8 +18,7 @@ export function SubscriptionPayButton({ subscriptionId }: { subscriptionId: stri
     setPending(false);
     switch (result.status) {
       case "captured":
-        setMessage("Payment successful — your plan is now active.");
-        router.refresh();
+        router.push(`/payment-success?paymentId=${encodeURIComponent(result.paymentId)}`);
         break;
       case "dismissed":
         setMessage("Payment window closed.");

@@ -50,8 +50,9 @@ export default function PrivacyPage() {
       <p>
         We share only what each provider needs to do its job: Cashfree (payments), MSG91 (SMS/OTP
         delivery), Resend (email delivery), Cloudinary (media storage), Google Tag Manager and
-        Google Analytics 4 (site analytics), and Meta (the homepage Meta Pixel if you opt in, and
-        WhatsApp Cloud API if you contact us via WhatsApp). We do not sell personal data.
+        Google Analytics 4 (site analytics), and Meta (the Meta Pixel on the homepage and confirmed
+        subscription-success page if you opt in, and WhatsApp Cloud API if you contact us via
+        WhatsApp). We do not sell personal data.
       </p>
 
       <h2>4. Your rights under the DPDP Act, 2023</h2>
@@ -90,10 +91,11 @@ export default function PrivacyPage() {
       <p>
         We use strictly necessary cookies to keep you signed in and to enforce the free-search quota
         described on our search pages. Google Tag Manager and Google Analytics 4 are loaded
-        separately for site analytics. On the homepage, Meta Pixel is loaded only if you opt in; it
-        may use cookies and sends page-view and device/browser data to Meta for advertising
-        measurement. The Meta Pixel choice does not control Google Tag Manager or Google Analytics
-        4. You can change or withdraw your Meta Pixel choice here:
+        separately for site analytics. If you opt in, Meta Pixel sends homepage page views and
+        verified subscription events, including the subscription value in INR, to Meta for
+        advertising measurement; it may also use cookies and device/browser data. The Meta Pixel
+        choice does not control Google Tag Manager or Google Analytics 4. You can change or withdraw
+        your Meta Pixel choice here:
       </p>
       <div className="mt-3">
         <MetaPixelConsentSettingsButton />
