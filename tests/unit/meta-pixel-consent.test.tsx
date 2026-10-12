@@ -59,7 +59,7 @@ describe("Meta Pixel consent", () => {
     render(<ConsentHarness />);
     await screen.findByRole("complementary", { name: "Meta Pixel tracking preferences" });
 
-    fireEvent.click(screen.getByRole("button", { name: "Reject" }));
+    fireEvent.click(screen.getByRole("button", { name: "No thanks" }));
 
     expect(window.localStorage.getItem("sajdhajlo-meta-pixel-consent")).toBe("denied");
     expect(document.getElementById("meta-pixel-base")).toBeNull();
@@ -72,7 +72,7 @@ describe("Meta Pixel consent", () => {
 
     render(<ConsentHarness />);
     await screen.findByRole("complementary", { name: "Meta Pixel tracking preferences" });
-    fireEvent.click(screen.getByRole("button", { name: "Allow Meta Pixel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Allow" }));
 
     await waitFor(() => {
       expect(track).toHaveBeenCalledWith(

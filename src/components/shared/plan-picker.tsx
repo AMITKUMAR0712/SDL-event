@@ -35,10 +35,12 @@ export function PlanPicker({
   plans,
   value,
   onChange,
+  disabled = false,
 }: {
   plans: PlanPickerPlan[];
   value: string;
   onChange: (code: string) => void;
+  disabled?: boolean;
 }) {
   const popularIndex = plans.length >= 2 ? Math.min(1, plans.length - 1) : -1;
 
@@ -52,10 +54,12 @@ export function PlanPicker({
             <button
               key={plan.code}
               type="button"
+              disabled={disabled}
               onClick={() => onChange(plan.code)}
               className={cn(
                 "relative flex flex-col rounded-2xl border-2 bg-card p-5 text-left shadow-sm transition hover:shadow-md",
                 selected ? "border-primary! ring-2 ring-primary/30" : "border-border",
+                disabled && "cursor-not-allowed opacity-70",
               )}
             >
               {popular && (

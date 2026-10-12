@@ -1,12 +1,37 @@
 import { expect, test } from "@playwright/test";
 
-test("vendor onboarding wizard completes and shows the new profile on the dashboard", async ({
-  page,
-}) => {
-  // The real Cashfree sandbox call below has been observed taking just
-  // over the default 30s test timeout to fully load the modal's payment
-  // methods, so this test needs more headroom than the suite default.
+declare global {
+  interface Window {
+    __cashfreeCheckoutAttempts?: number;
+  }
+}
+
+async function mockCancelledCashfreeCheckout(page: import("@playwright/test").Page) {
+  await page.route("https://sdk.cashfree.com/js/v3/cashfree.js", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: `window.Cashfree = function () { return { checkout: async function () {
+        window.__cashfreeCheckoutAttempts = (window.__cashfreeCheckoutAttempts || 0) + 1;
+        return { error: { message: "Checkout dismissed in test" } };
+      } }; };`,
+    }),
+  );
+}
+
+async function expectPaymentRetry(page: import("@playwright/test").Page) {
+  await expect(
+    page.getByText("Your setup is saved, but checkout did not complete. Please try again below."),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Try payment again" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Try payment again" }).click();
+  await expect.poll(() => page.evaluate(() => window.__cashfreeCheckoutAttempts)).toBe(2);
+  await expect(page.getByRole("button", { name: "Try payment again" })).toBeVisible();
+}
+
+test("vendor can retry payment without restarting onboarding", async ({ page }) => {
   test.setTimeout(60_000);
+  await mockCancelledCashfreeCheckout(page);
   const suffix = Date.now();
   const email = `e2e-vendor-onboard-${suffix}@example.com`;
   const businessName = `E2E Glow Studio ${suffix}`;
@@ -54,40 +79,7 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
   await expect(page.getByText("Choose a plan")).toBeVisible();
   await page.getByRole("button", { name: /Buy Now/ }).click();
 
-  // Real Cashfree sandbox keys are configured in this environment, so
-  // clicking above creates the profile+subscription (proven by the fact
-  // that a real Checkout modal opens right after, with the phone number
-  // just entered) and then opens a real payment widget. The modal stays
-  // open waiting for a real interaction, which a live third-party payment
-  // UI isn't something e2e should simulate — so this only waits for proof
-  // the modal opened, then navigates directly rather than waiting on the
-  // wizard's own navigation (blocked on that same open modal).
-  // `.first()` on a bare "iframe" locator is unreliable here: other
-  // scripts (GTM, etc.) can add iframes to the DOM, and a plain CSS
-  // locator doesn't know which one is Cashfree's. Target it by its actual
-  // src so this isn't dependent on DOM order, and assert on the "Payment
-  // Options for +91..." text, which only renders once the real payment
-  // methods have loaded from Cashfree — unambiguous, visible proof the
-  // modal fully opened.
-  await page.waitForTimeout(5_000);
-  console.log(
-    "DEBUG iframes:",
-    await page.evaluate(() =>
-      Array.from(document.querySelectorAll("iframe")).map((f) => ({
-        src: f.src,
-        title: f.title,
-        name: f.name,
-        id: f.id,
-        w: f.offsetWidth,
-        h: f.offsetHeight,
-      })),
-    ),
-  );
-
-  await page
-    .frameLocator('iframe[src*="cashfree.com"]')
-    .getByText(/Payment Options for/)
-    .waitFor({ state: "visible", timeout: 45_000 });
+  await expectPaymentRetry(page);
 
   await page.goto("/dashboard/vendor");
   await expect(page.getByRole("heading", { name: businessName })).toBeVisible();
@@ -98,13 +90,9 @@ test("vendor onboarding wizard completes and shows the new profile on the dashbo
   await expect(page.getByText(/Not published yet/)).toBeVisible();
 });
 
-test("banquet onboarding wizard completes and shows the new profile on the dashboard", async ({
-  page,
-}) => {
-  // The real Cashfree sandbox call below has been observed taking just
-  // over the default 30s test timeout to fully load the modal's payment
-  // methods, so this test needs more headroom than the suite default.
+test("banquet owner can retry payment without restarting onboarding", async ({ page }) => {
   test.setTimeout(60_000);
+  await mockCancelledCashfreeCheckout(page);
   const suffix = Date.now();
   const email = `e2e-banquet-onboard-${suffix}@example.com`;
   const venueName = `E2E Grand Venue ${suffix}`;
@@ -146,25 +134,7 @@ test("banquet onboarding wizard completes and shows the new profile on the dashb
   await expect(page.getByText("Choose a plan")).toBeVisible();
   await page.getByRole("button", { name: /Buy Now/ }).click();
 
-  // Real Cashfree sandbox keys are configured in this environment, so
-  // clicking above creates the profile+subscription (proven by the fact
-  // that a real Checkout modal opens right after, with the phone number
-  // just entered) and then opens a real payment widget. The modal stays
-  // open waiting for a real interaction, which a live third-party payment
-  // UI isn't something e2e should simulate — so this only waits for proof
-  // the modal opened, then navigates directly rather than waiting on the
-  // wizard's own navigation (blocked on that same open modal).
-  // `.first()` on a bare "iframe" locator is unreliable here: other
-  // scripts (GTM, etc.) can add iframes to the DOM, and a plain CSS
-  // locator doesn't know which one is Cashfree's. Target it by its actual
-  // src so this isn't dependent on DOM order, and assert on the "Payment
-  // Options for +91..." text, which only renders once the real payment
-  // methods have loaded from Cashfree — unambiguous, visible proof the
-  // modal fully opened.
-  await page
-    .frameLocator('iframe[src*="cashfree.com"]')
-    .getByText(/Payment Options for/)
-    .waitFor({ state: "visible", timeout: 45_000 });
+  await expectPaymentRetry(page);
 
   await page.goto("/dashboard/banquet");
   await expect(page.getByRole("heading", { name: venueName })).toBeVisible();

@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { getNextSubscriptionPeriodEnd } from "@/lib/subscription-period";
 import { findBookingById } from "@/server/repositories/booking";
 import { findCapturedSubscriptionPayment } from "@/server/repositories/payment";
 import { transitionBooking } from "@/server/services/booking";
@@ -107,7 +108,7 @@ export async function initiateSubscriptionPayment(
 
   const order = await tryCreateOrder(
     subscription.priceSnapshotPaise,
-    subscriptionId,
+    crypto.randomBytes(12).toString("hex"),
     subscription.userId,
     subscription.user.phone,
   );
@@ -160,19 +161,25 @@ export async function capturePayment(
       include: { plan: true },
     });
     if (subscription) {
-      const periodDays =
-        subscription.plan.billingPeriod === "MONTHLY"
-          ? 30
-          : subscription.plan.billingPeriod === "QUARTERLY"
-            ? 90
-            : subscription.plan.billingPeriod === "HALF_YEARLY"
-              ? 182
-              : 365;
+      const now = new Date();
+      const previousCapturedPayment = await db.payment.findFirst({
+        where: {
+          subscriptionId: subscription.id,
+          status: "CAPTURED",
+          id: { not: payment.id },
+        },
+        select: { id: true },
+      });
       await db.subscription.update({
         where: { id: subscription.id },
         data: {
           status: "ACTIVE",
-          currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+          currentPeriodEnd: getNextSubscriptionPeriodEnd(
+            subscription.plan.billingPeriod,
+            subscription.currentPeriodEnd,
+            previousCapturedPayment !== null,
+            now,
+          ),
         },
       });
       // Re-publish immediately if this payment renewed a lapsed plan —

@@ -39,6 +39,7 @@ import { VendorOnboardingInput, vendorOnboardingSchema } from "@/schemas/onboard
 import { completeVendorOnboardingAction } from "@/server/actions/onboarding";
 
 const STORAGE_KEY = "onboarding:vendor";
+const PENDING_SUBSCRIPTION_KEY = `${STORAGE_KEY}:pending-subscription`;
 
 const STEPS = ["Business", "Location", "Services", "Documents", "Plan"] as const;
 
@@ -65,6 +66,8 @@ export function VendorOnboardingWizard({
   const { update } = useSession();
   const [step, setStep] = useState(0);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
+  const [pendingSubscriptionId, setPendingSubscriptionId] = useState<string | null>(null);
 
   const form = useForm<VendorOnboardingInput>({
     resolver: zodResolver(vendorOnboardingSchema),
@@ -95,6 +98,11 @@ export function VendorOnboardingWizard({
         // ignore corrupt saved state
       }
     }
+    const pendingSubscriptionId = localStorage.getItem(PENDING_SUBSCRIPTION_KEY);
+    if (pendingSubscriptionId) {
+      setPendingSubscriptionId(pendingSubscriptionId);
+      setStep(STEPS.length - 1);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -124,26 +132,45 @@ export function VendorOnboardingWizard({
 
   async function onSubmit(values: VendorOnboardingInput) {
     setServerError(null);
-    const result = await completeVendorOnboardingAction(values);
-    if (!result.ok) {
-      setServerError(result.error);
-      return;
-    }
-    localStorage.removeItem(STORAGE_KEY);
-    await update(); // refresh the JWT so session.user.vendorId picks up the new profile
+    setPaymentMessage(null);
 
-    if (result.data.subscriptionId) {
-      // Publishing never waits on this — it only affects whether the new
-      // subscription shows as paid on the dashboard afterwards.
-      const payment = await chargeSubscriptionAtCheckout(result.data.subscriptionId);
-      if (payment.status === "captured") {
-        router.push(`/payment-success?paymentId=${encodeURIComponent(payment.paymentId)}`);
+    let activeSubscriptionId = pendingSubscriptionId;
+    if (!activeSubscriptionId) {
+      const result = await completeVendorOnboardingAction(values);
+      if (!result.ok) {
+        setServerError(result.error);
         return;
+      }
+
+      activeSubscriptionId = result.data.subscriptionId;
+      await update(); // refresh the JWT so session.user.vendorId picks up the new profile
+      if (activeSubscriptionId) {
+        setPendingSubscriptionId(activeSubscriptionId);
+        localStorage.setItem(PENDING_SUBSCRIPTION_KEY, activeSubscriptionId);
       }
     }
 
-    router.push("/dashboard/vendor");
-    router.refresh();
+    if (!activeSubscriptionId) {
+      localStorage.removeItem(STORAGE_KEY);
+      router.push("/dashboard/vendor");
+      router.refresh();
+      return;
+    }
+
+    const payment = await chargeSubscriptionAtCheckout(activeSubscriptionId);
+    if (payment.status === "captured") {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(PENDING_SUBSCRIPTION_KEY);
+      router.push(`/payment-success?paymentId=${encodeURIComponent(payment.paymentId)}`);
+      return;
+    }
+
+    setStep(STEPS.length - 1);
+    setPaymentMessage(
+      payment.status === "dismissed"
+        ? "Payment was cancelled. Your setup is saved—use the button below to try again."
+        : "Your setup is saved, but checkout did not complete. Please try again below.",
+    );
   }
 
   const servesAtHome = form.watch("servesAtHome");
@@ -165,6 +192,11 @@ export function VendorOnboardingWizard({
         {serverError && (
           <Alert variant="destructive">
             <AlertDescription>{serverError}</AlertDescription>
+          </Alert>
+        )}
+        {paymentMessage && (
+          <Alert>
+            <AlertDescription>{paymentMessage}</AlertDescription>
           </Alert>
         )}
 
@@ -395,10 +427,16 @@ export function VendorOnboardingWizard({
               <FormItem>
                 <FormLabel>Choose a plan</FormLabel>
                 <p className="text-sm text-muted-foreground">
-                  Pick how long you want to stay listed — pricing and lead limits are fixed by
-                  SajDhajLo, never negotiable per vendor.
+                  {pendingSubscriptionId
+                    ? "Your setup is saved. Retry payment for the plan you selected."
+                    : "Pick how long you want to stay listed — pricing and lead limits are set by SajDhajLo."}
                 </p>
-                <PlanPicker plans={plans} value={field.value} onChange={field.onChange} />
+                <PlanPicker
+                  plans={plans}
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={Boolean(pendingSubscriptionId)}
+                />
                 <FormMessage />
               </FormItem>
             )}
@@ -406,7 +444,12 @@ export function VendorOnboardingWizard({
         )}
 
         <div className="flex justify-between pt-4">
-          <Button type="button" variant="outline" onClick={goBack} disabled={step === 0}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={goBack}
+            disabled={step === 0 || Boolean(pendingSubscriptionId)}
+          >
             Back
           </Button>
           {step < STEPS.length - 1 ? (
@@ -426,10 +469,12 @@ export function VendorOnboardingWizard({
               disabled={form.formState.isSubmitting}
             >
               {form.formState.isSubmitting
-                ? "Opening payment..."
-                : selectedPlan
-                  ? `Buy Now — ${formatPaiseAsINR(selectedPlan.pricePaise)}`
-                  : "Buy Now"}
+                ? "Opening secure checkout..."
+                : pendingSubscriptionId
+                  ? "Try payment again"
+                  : selectedPlan
+                    ? `Buy Now — ${formatPaiseAsINR(selectedPlan.pricePaise)}`
+                    : "Buy Now"}
             </Button>
           )}
         </div>

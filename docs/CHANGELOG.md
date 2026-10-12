@@ -4,6 +4,25 @@ All notable changes to SajDhajLo (named GlowMakeOver, and MakeGlowOver before th
 "Post-launch — Rebrand to GlowMakeOver" and "Post-launch — Rebrand to SajDhajLo" below) are
 recorded here, one entry per phase.
 
+## 12 October 2026 — Subscription expiry and onboarding payment retry
+
+- Subscription payments now use the plan's configured duration in days (30, 90, 182, or 365) and
+  preserve remaining time when an active subscription is renewed early.
+- Vendor and banquet onboarding keep the saved plan step open after a cancelled or incomplete
+  checkout, allowing a payment retry without creating the profile or subscription again. Each
+  retry gets a fresh Cashfree order ID.
+- Made the Meta consent prompt more compact and welcoming while clearly describing Meta's data use
+  and keeping consent optional.
+
+### Manual smoke test
+
+1. Complete vendor onboarding, dismiss Cashfree checkout, and confirm the plan step offers a retry
+   without asking you to start setup again; repeat for banquet onboarding.
+2. Complete a sandbox subscription payment for each configured term and verify the end date is 30,
+   90, 182, or 365 days from the payment date; verify an early renewal preserves the current time.
+3. Open the homepage in a clean browser and confirm the compact Meta prompt offers Allow and No
+   thanks; reject it and confirm no Meta Pixel event is sent.
+
 ## 10 October 2026 — Consent-gated Meta Pixel
 
 - Added a consent-gated Meta Pixel opt-in, persisted visitors' choices, and provided a way to revisit
@@ -18,7 +37,7 @@ recorded here, one entry per phase.
 ### Manual smoke test
 
 1. As a vendor or banquet owner, open a plan payment and close the Cashfree modal; confirm you
-   return to onboarding/dashboard and do not reach `/payment-success`.
+   remain on the saved plan step with a retry option and do not reach `/payment-success`.
 2. Complete a sandbox subscription payment; confirm `/payment-success` shows only after server
    verification and the correct dashboard link is offered.
 3. With Meta consent enabled, inspect the Subscribe event for the payment's INR amount; reload the

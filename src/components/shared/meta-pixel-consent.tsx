@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 import {
@@ -117,21 +118,24 @@ fbq('init', '${META_PIXEL_ID}');`}
       {(choice === null || preferencesOpen) && (
         <aside
           aria-label="Meta Pixel tracking preferences"
-          className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-2xl rounded-xl border border-border bg-background p-5 text-foreground shadow-lg md:bottom-4"
+          className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-lg rounded-xl border border-border bg-background p-4 text-foreground shadow-lg md:inset-x-4 md:bottom-4"
         >
-          <p className="font-medium">Choose whether to allow Meta Pixel</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            If allowed, Meta Pixel records homepage page views and verified subscription payments
-            for advertising measurement. It may send device/browser data to Meta or use cookies.
-            This choice controls Meta Pixel only; Google Tag Manager and Google Analytics run
-            separately. You can change your choice from the Privacy Policy.
+          <p className="font-medium">Help SajDhajLo understand our ads</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Allow us to share visits and confirmed subscriptions with Meta to measure our ads. Meta
+            may use cookies or device data. Your choice won&apos;t affect your account or payments;
+            site analytics run separately.{" "}
+            <Link href="/privacy" className="underline underline-offset-2">
+              Learn more
+            </Link>
+            .
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button type="button" onClick={() => choose("granted")}>
-              Allow Meta Pixel
+          <div className="mt-3 flex gap-2">
+            <Button type="button" size="sm" onClick={() => choose("granted")}>
+              Allow
             </Button>
-            <Button type="button" variant="outline" onClick={() => choose("denied")}>
-              Reject
+            <Button type="button" size="sm" variant="outline" onClick={() => choose("denied")}>
+              No thanks
             </Button>
           </div>
         </aside>
