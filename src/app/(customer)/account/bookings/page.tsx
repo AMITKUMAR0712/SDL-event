@@ -30,9 +30,7 @@ export default async function MyBookingsPage() {
             <p className="mt-1 text-sm">Total: {formatPaiseAsINR(b.totalPaise)}</p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <BookingActions bookingId={b.id} status={b.status} actorRole="CUSTOMER" />
-              {b.status === "PENDING" && (
-                <PayNowButton bookingId={b.id} defaultEmail={session.user.email ?? ""} />
-              )}
+              {b.status === "PENDING" && <PayNowButton bookingId={b.id} />}
               {b.status === "COMPLETED" && (
                 <a
                   href={`/api/invoices/${b.id}`}

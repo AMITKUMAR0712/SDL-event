@@ -1,59 +1,55 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { submitPayUCheckout } from "@/lib/payu-checkout";
-import { initiateBookingPaymentAction } from "@/server/actions/payment";
+import { openCashfreeCheckout } from "@/lib/cashfree-checkout";
+import { initiateBookingPaymentAction, verifyBookingPaymentAction } from "@/server/actions/payment";
 
-export function PayNowButton({
-  bookingId,
-  defaultEmail,
-}: {
-  bookingId: string;
-  defaultEmail: string;
-}) {
+export function PayNowButton({ bookingId }: { bookingId: string }) {
+  const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [checkoutEmail, setCheckoutEmail] = useState(defaultEmail);
 
   async function onClick() {
     setPending(true);
     setMessage(null);
 
-    const order = await initiateBookingPaymentAction(bookingId, checkoutEmail);
+    const order = await initiateBookingPaymentAction(bookingId);
     if (!order.ok) {
       setPending(false);
       setMessage(order.error);
       return;
     }
 
+    let result;
     try {
-      submitPayUCheckout(order.data.checkoutUrl, order.data.fields);
+      result = await openCashfreeCheckout(order.data.paymentSessionId, order.data.mode);
     } catch {
       setPending(false);
-      setMessage("Couldn't open PayU checkout. Check your connection and try again.");
+      setMessage("Couldn't load the payment window. Check your connection and try again.");
+      return;
     }
+
+    if (result.error) {
+      setPending(false);
+      setMessage(`Payment failed: ${result.error.message ?? "please try again."}`);
+      return;
+    }
+
+    const verified = await verifyBookingPaymentAction(bookingId, order.data.orderId);
+    setPending(false);
+    if (!verified.ok) {
+      setMessage(verified.error);
+      return;
+    }
+    setMessage("Payment successful — booking confirmed.");
+    router.refresh();
   }
 
   return (
     <div>
-      <label htmlFor={`payu-email-${bookingId}`} className="mb-1 block text-xs font-medium">
-        Email for payment receipt
-      </label>
-      <Input
-        id={`payu-email-${bookingId}`}
-        type="email"
-        autoComplete="email"
-        value={checkoutEmail}
-        onChange={(event) => setCheckoutEmail(event.target.value)}
-        disabled={pending}
-        required
-      />
-      <p className="mt-1 text-xs text-muted-foreground">
-        Used for the PayU receipt only; your account email won&apos;t change.
-      </p>
       <Button size="sm" variant="outline" onClick={onClick} disabled={pending}>
         {pending ? "..." : "Pay now"}
       </Button>
