@@ -61,6 +61,10 @@ export function RegisterForm() {
     // would keep showing "Login/Register" until the user clicked away and
     // back, even though they're already signed in.
     await update();
+    if (result.data.role === "VENDOR") {
+      localStorage.removeItem("onboarding:vendor");
+      localStorage.removeItem("onboarding:vendor:pending-subscription");
+    }
     router.push(ROLE_REDIRECT[result.data.role] ?? "/");
     router.refresh();
   }
